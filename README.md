@@ -15,7 +15,7 @@ The local node is intended for development, wallet experiments, and reproducible
 
 1. Install and start Docker.
 2. Clone the repository and open the project root.
-3. Run `make bitcoin-up` to build the local image and start `bitcoind`.
+3. Run `make bitcoin-up` to build the local image and start the local Bitcoin Core node.
 4. Run `make bitcoin-wallet-ready` to load the demo wallet or create it if missing.
 5. Run `make bitcoin-mine` to mine 101 blocks and fund the wallet.
 6. Run `make bitcoin-balance` or `make bitcoin-utxos` to inspect wallet funds.

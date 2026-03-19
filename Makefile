@@ -56,7 +56,7 @@ help:
 	@echo "║   make bitcoin-down          - Stop and remove the container   ║"
 	@echo "║   make bitcoin-reset-data    - Remove local regtest data       ║"
 	@echo "║   make bitcoin-restart       - Recreate the regtest container  ║"
-	@echo "║   make bitcoin-logs          - Follow bitcoind logs            ║"
+	@echo "║   make bitcoin-logs          - Follow node logs                ║"
 	@echo "║   make bitcoin-shell         - Open shell inside the container ║"
 	@echo "║   make bitcoin-status        - Show regtest chain status       ║"
 	@echo "║   make bitcoin-blockcount    - Show current block height       ║"
