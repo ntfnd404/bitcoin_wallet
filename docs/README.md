@@ -4,6 +4,7 @@ This folder contains learning, planning, and workflow documents for the local Bi
 
 ## Documents
 
+- `commands.md` contains the full command reference for the project `Makefile`.
 - `learning-goals.md` defines what to learn from this project and local RPC practice.
 - `app-rpc-contract.md` defines the planned contract between the app layer and Bitcoin Core RPC.
 - `rpc-learning-path.md` defines a practical command-by-command training route.
