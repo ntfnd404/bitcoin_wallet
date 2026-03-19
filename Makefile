@@ -7,7 +7,7 @@ DOCKERFILE ?= docker/Dockerfile
 BITCOIN_IMAGE ?= bitcoin-wallet-bitcoin-core
 
 # Container name used by `docker run` and `docker exec`.
-BITCOIN_CONTAINER ?= bitcoin-wallet-bitcoind
+BITCOIN_CONTAINER ?= bitcoin-wallet-bitcoin
 
 # Local config and blockchain storage paths.
 BITCOIN_CONF ?= $(CURDIR)/docker/bitcoin.conf
