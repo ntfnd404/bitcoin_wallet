@@ -1,5 +1,5 @@
 name: bitcoin_wallet
-description: "A new Flutter project."
+description: "Demo Bitcoin wallet with a local Bitcoin Core regtest node."
 publish_to: 'none'
 version: 0.1.0+1
 
