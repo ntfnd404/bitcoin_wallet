@@ -37,7 +37,7 @@ DOCKER ?= docker
 BITCOIN_NODE_CLI = $(DOCKER) exec $(BITCOIN_CONTAINER) bitcoin-cli -regtest -rpcuser=$(BITCOIN_RPC_USER) -rpcpassword=$(BITCOIN_RPC_PASSWORD)
 BITCOIN_WALLET_CLI = $(BITCOIN_NODE_CLI) -rpcwallet=$(BITCOIN_WALLET)
 
-.PHONY: help bitcoin-build bitcoin-up bitcoin-down bitcoin-reset-data bitcoin-restart bitcoin-logs bitcoin-cli bitcoin-shell bitcoin-status bitcoin-wallet-create bitcoin-wallet-load bitcoin-wallet-ready bitcoin-balance bitcoin-address bitcoin-address-legacy bitcoin-address-p2sh-segwit bitcoin-address-bech32 bitcoin-address-taproot bitcoin-mine bitcoin-send bitcoin-utxos bitcoin-utxo
+.PHONY: help bitcoin-build bitcoin-up bitcoin-down bitcoin-reset-data bitcoin-restart bitcoin-logs bitcoin-cli bitcoin-shell bitcoin-status bitcoin-blockcount bitcoin-network-info bitcoin-wallets bitcoin-wallet-info bitcoin-wallet-create bitcoin-wallet-load bitcoin-wallet-ready bitcoin-balances bitcoin-balance bitcoin-address bitcoin-address-legacy bitcoin-address-p2sh-segwit bitcoin-address-bech32 bitcoin-address-taproot bitcoin-mine bitcoin-send bitcoin-transactions bitcoin-transaction bitcoin-raw-transaction bitcoin-mempool bitcoin-utxos bitcoin-utxo
 
 .DEFAULT_GOAL := help
 
@@ -59,12 +59,17 @@ help:
 	@echo "║   make bitcoin-logs          - Follow bitcoind logs            ║"
 	@echo "║   make bitcoin-shell         - Open shell inside the container ║"
 	@echo "║   make bitcoin-status        - Show regtest chain status       ║"
+	@echo "║   make bitcoin-blockcount    - Show current block height       ║"
+	@echo "║   make bitcoin-network-info  - Show network RPC info           ║"
+	@echo "║   make bitcoin-wallets       - List loaded wallets             ║"
 	@echo "║   make bitcoin-cli           - Run bitcoin-cli with ARGS=...   ║"
 	@echo "╠════════════════════════════════════════════════════════════════╣"
 	@echo "║ Wallet operations:                                             ║"
 	@echo "║   make bitcoin-wallet-create - Create the demo wallet          ║"
 	@echo "║   make bitcoin-wallet-load   - Load the demo wallet            ║"
 	@echo "║   make bitcoin-wallet-ready  - Load or create the wallet       ║"
+	@echo "║   make bitcoin-wallet-info   - Show wallet RPC info            ║"
+	@echo "║   make bitcoin-balances      - Show confirmed balances         ║"
 	@echo "║   make bitcoin-balance       - Show wallet balance             ║"
 	@echo "║   make bitcoin-address       - Create address by ADDRESS_TYPE  ║"
 	@echo "║   make bitcoin-address-legacy - Create legacy address          ║"
@@ -73,6 +78,12 @@ help:
 	@echo "║   make bitcoin-address-taproot - Create taproot address        ║"
 	@echo "║   make bitcoin-send          - Send AMOUNT to ADDRESS          ║"
 	@echo "║   make bitcoin-mine          - Mine 101 blocks to an address   ║"
+	@echo "╠════════════════════════════════════════════════════════════════╣"
+	@echo "║ Transaction operations:                                        ║"
+	@echo "║   make bitcoin-transactions - List wallet transactions         ║"
+	@echo "║   make bitcoin-transaction  - Show wallet transaction by TXID  ║"
+	@echo "║   make bitcoin-raw-transaction - Decode chain tx by TXID       ║"
+	@echo "║   make bitcoin-mempool      - Show current mempool             ║"
 	@echo "╠════════════════════════════════════════════════════════════════╣"
 	@echo "║ UTXO operations:                                               ║"
 	@echo "║   make bitcoin-utxos         - List wallet UTXOs               ║"
@@ -138,6 +149,18 @@ bitcoin-cli:
 bitcoin-status:
 	@$(BITCOIN_NODE_CLI) getblockchaininfo
 
+# Show the current chain height.
+bitcoin-blockcount:
+	@$(BITCOIN_NODE_CLI) getblockcount
+
+# Show node network and peer-to-peer information.
+bitcoin-network-info:
+	@$(BITCOIN_NODE_CLI) getnetworkinfo
+
+# List wallets currently loaded in the node.
+bitcoin-wallets:
+	@$(BITCOIN_NODE_CLI) listwallets
+
 # Open a shell inside the running Bitcoin Core container.
 bitcoin-shell:
 	@$(DOCKER) exec -it $(BITCOIN_CONTAINER) sh
@@ -158,6 +181,14 @@ bitcoin-wallet-load:
 bitcoin-wallet-ready:
 	@$(BITCOIN_NODE_CLI) loadwallet "$(BITCOIN_WALLET)" >/dev/null 2>&1 || \
 	$(BITCOIN_NODE_CLI) createwallet "$(BITCOIN_WALLET)"
+
+# Show detailed RPC information about the selected wallet.
+bitcoin-wallet-info: bitcoin-wallet-ready
+	@$(BITCOIN_WALLET_CLI) getwalletinfo
+
+# Show confirmed, unconfirmed, and immature balances.
+bitcoin-balances: bitcoin-wallet-ready
+	@$(BITCOIN_WALLET_CLI) getbalances
 
 # Create a fresh regtest address for receives or mining rewards.
 # Supported values: legacy, p2sh-segwit, bech32, bech32m.
@@ -194,6 +225,30 @@ bitcoin-send: bitcoin-wallet-ready
 bitcoin-mine: bitcoin-wallet-ready
 	@ADDR=`$(BITCOIN_WALLET_CLI) getnewaddress`; \
 	$(BITCOIN_NODE_CLI) generatetoaddress 101 $$ADDR
+
+
+# ============================================
+# Transaction operations
+# ============================================
+# List recent wallet transactions.
+bitcoin-transactions: bitcoin-wallet-ready
+	@$(BITCOIN_WALLET_CLI) listtransactions "*" 100 0 true
+
+# Show a wallet transaction by TXID.
+# Example: `make bitcoin-transaction TXID=<txid>`.
+bitcoin-transaction: bitcoin-wallet-ready
+	@if [ -z "$(TXID)" ]; then echo "TXID is required"; exit 1; fi
+	@$(BITCOIN_WALLET_CLI) gettransaction "$(TXID)"
+
+# Decode a transaction from the active chain or mempool by TXID.
+# Example: `make bitcoin-raw-transaction TXID=<txid>`.
+bitcoin-raw-transaction:
+	@if [ -z "$(TXID)" ]; then echo "TXID is required"; exit 1; fi
+	@$(BITCOIN_NODE_CLI) getrawtransaction "$(TXID)" true
+
+# Show all transactions currently sitting in the mempool.
+bitcoin-mempool:
+	@$(BITCOIN_NODE_CLI) getrawmempool true
 
 
 # ============================================
