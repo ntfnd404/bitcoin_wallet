@@ -17,13 +17,13 @@ Understand how wallet actions create transactions, how those transactions appear
 
 ## Recommended commands
 
-1. `make bitcoin-send ADDRESS=<bcrt-address> AMOUNT=0.5`
-2. `make bitcoin-transactions`
-3. `make bitcoin-transaction TXID=<txid>`
-4. `make bitcoin-raw-transaction TXID=<txid>`
-5. `make bitcoin-mempool`
-6. `make bitcoin-utxos`
-7. `make bitcoin-utxo TXID=<txid> VOUT=0`
+1. `make btc-send ADDRESS=<bcrt-address> AMOUNT=0.5`
+2. `make btc-transactions`
+3. `make btc-transaction TXID=<txid>`
+4. `make btc-raw-transaction TXID=<txid>`
+5. `make btc-mempool`
+6. `make btc-utxos`
+7. `make btc-utxo TXID=<txid> VOUT=0`
 
 ## Exit criteria
 

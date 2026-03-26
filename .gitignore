@@ -7,7 +7,6 @@
 .atom/
 .build/
 .buildlog/
-.docker/bitcoin/
 .history
 .svn/
 .swiftpm/
@@ -44,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Exclude Claude Code session data but track project skills.
+.claude/**
+!.claude/skills/
+!.claude/skills/**
+.DS_Store

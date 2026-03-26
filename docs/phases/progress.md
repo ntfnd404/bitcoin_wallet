@@ -13,11 +13,16 @@ This document tracks what has already been completed, what is currently in progr
 
 ### Phase 01: Regtest foundation
 
-- [x] Add a local Docker image for Bitcoin Core.
+- [x] Add a thin Docker image for the local Bitcoin Core startup flow.
+- [x] Pin upstream base image by tag and SHA256 digest for full reproducibility.
+- [x] Add OCI image labels (title, description, created, revision) stamped at build time.
+- [x] Add `.dockerignore` to reduce build context to `docker/bitcoin.conf` only.
 - [x] Add `regtest` configuration in `docker/bitcoin.conf`.
-- [x] Add `Makefile` commands for node lifecycle.
-- [x] Add `Makefile` commands for wallet and UTXO workflows.
-- [x] Add project documentation for startup and troubleshooting.
+- [x] Consolidate all infrastructure constants into `Makefile` as single source of truth.
+- [x] Add `Makefile` commands for node lifecycle, wallet, transaction, and UTXO workflows.
+- [x] Move persistent local state to the named Docker volume `bitcoin-wallet-regtest-data`.
+- [x] Add project documentation for startup, upgrade, reset, and troubleshooting.
+- [x] Add reusable Claude Code commands in `.claude/commands/`.
 
 ### Phase 02: RPC wallet basics
 

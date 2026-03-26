@@ -15,16 +15,16 @@ Build confidence with Bitcoin Core RPC and understand the wallet surface before 
 
 ## Recommended commands
 
-1. `make bitcoin-status`
-2. `make bitcoin-blockcount`
-3. `make bitcoin-network-info`
-4. `make bitcoin-wallet-info`
-5. `make bitcoin-wallets`
-6. `make bitcoin-address-legacy`
-7. `make bitcoin-address-p2sh-segwit`
-8. `make bitcoin-address-bech32`
-9. `make bitcoin-address-taproot`
-10. `make bitcoin-balances`
+1. `make btc-status`
+2. `make btc-blockcount`
+3. `make btc-network-info`
+4. `make btc-wallet-info`
+5. `make btc-wallets`
+6. `make btc-address-legacy`
+7. `make btc-address-p2sh-segwit`
+8. `make btc-address-bech32`
+9. `make btc-address-taproot`
+10. `make btc-balances`
 
 ## Exit criteria
 
