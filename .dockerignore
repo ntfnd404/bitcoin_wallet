@@ -1,0 +1,6 @@
+# Exclude everything from the build context by default.
+# The Dockerfile only needs docker/bitcoin.conf — nothing else from this repo.
+**
+
+# Allow only the config file baked into the image.
+!docker/bitcoin.conf
