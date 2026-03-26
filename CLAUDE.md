@@ -2,9 +2,37 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Key documents (read before working)
+
+- **[docs/project/conventions.md](./docs/project/conventions.md)** — architecture, wallet types, code rules. The constitution. Always follow.
+- **[docs/project/workflow.md](./docs/project/workflow.md)** — AIDD process: phase lifecycle, agent roles, skill commands, quality gates.
+- **[docs/project/guidelines.md](./docs/project/guidelines.md)** — Flutter/Dart AI interaction guidelines.
+- **[docs/project/code-style-guide.md](./docs/project/code-style-guide.md)** — Dart formatting and naming conventions.
+
+## Working on a feature
+
+Before any code changes:
+1. Read `docs/feature/.active_ticket` — find the current ticket ID (e.g. `FEAT-001`).
+2. Read `docs/feature/phase/<TICKET>/phase-N.md` — session brief (tasks + context).
+3. Read `docs/feature/plan/<TICKET>-phase-N.md` — implementation details.
+4. Read `docs/feature/prd/<TICKET>-phase-N.prd.md` — acceptance criteria.
+5. Propose the change plan and wait for explicit OK.
+
+After code changes:
+1. Run `flutter analyze` — zero warnings required before marking any task done.
+2. Run `dart format lib/` on changed files.
+3. Mark completed tasks `[x]` in `docs/feature/phase/<TICKET>/phase-N.md` and `docs/feature/tasklist-<TICKET>.md`.
+4. Show diff and explain what changed.
+5. Stop and wait for confirmation before the next task.
+
 ## Project overview
 
-A Flutter wallet app paired with a local Bitcoin Core `regtest` node running in Docker. The node is for development, RPC learning, and reproducible demos — not mainnet or testnet.
+A Flutter wallet app paired with a local Bitcoin Core `regtest` node running in Docker.
+Demonstrates Bitcoin engineering: HD wallets, BIP39/32/84/86, all address types, UTXO model, coin selection, Bitcoin Script.
+
+Two wallet types:
+- **Node Wallet** (custodial) — Bitcoin Core manages keys, Flutter is a UI over RPC.
+- **HD Wallet** (non-custodial) — BIP39 mnemonic in app, keys in flutter_secure_storage.
 
 ## Common commands
 
@@ -66,17 +94,34 @@ The `Makefile` is the single source of truth for all infrastructure constants an
 RPC is exposed on `127.0.0.1:18443` (RPC) and `127.0.0.1:18444` (P2P).
 
 ### Flutter app (`lib/`)
-- Lives in `lib/core/` — currently early-stage
-- Planned to connect to the local node via Bitcoin Core RPC HTTP calls
-- App-layer models and RPC contract are tracked in `docs/app-rpc-contract.md` (Phase 04)
+- Clean Architecture: Data → Domain → Presentation
+- Feature-first module structure: `lib/feature/<feature>/`
+- BLoC state management — no Cubits
+- See [docs/project/conventions.md](./docs/project/conventions.md) for full architecture rules
 
 ### Project phases
 | Phase | Status | Focus |
 |-------|--------|-------|
 | 01 | completed | Docker + Makefile foundation |
-| 02 | in progress | RPC wallet basics, address types, balances |
-| 03 | planned | Send flow, transactions, mempool, UTXO tracing |
-| 04 | planned | Flutter ↔ Bitcoin Core RPC integration |
+| 02 | in progress | Flutter RPC client, node status, wallet state, balances |
+| 03 | planned | Address generation (all types), QR display |
+| 04 | planned | Transaction history, UTXO inspection |
+| 05 | planned | Send flow, coin selection strategies, manual UTXO |
+| 06 | planned | BIP39 seed phrase, BIP84 key derivation, self-signing |
+| 07 | planned | Bitcoin Script, OP_RETURN, script decoder |
+| 08 | planned | Multi-platform polish, demo setup |
+
+## Commit messages
+
+Follow conventional commits:
+- `feat:` — new feature
+- `fix:` — bug fix
+- `refactor:` — code change without behaviour change
+- `chore:` — tooling, config, build, deps
+- `docs:` — documentation only
+- `test:` — tests only
+
+Format: `type(scope): description` where scope is the feature or module (e.g. `feat(wallet): add BIP84 derivation`).
 
 ## Operational rules
 
@@ -93,7 +138,55 @@ RPC is exposed on `127.0.0.1:18443` (RPC) and `127.0.0.1:18444` (P2P).
 
 ## Documentation layout
 
-- `docs/rpc-learning-path.md` — structured learning path (Junior → Middle → Advanced)
-- `docs/phases/progress.md` — current phase status and per-phase checklist
-- `.claude/skills/` — skills: `/bitcoin-regtest-operator`, `/bitcoin-rpc-learning`, `/flutter-bitcoin-rpc-integration`, `/bitcoin-core-upgrade`, `/regtest-scenario`, `/prd-writing`
-- Update `docs/phases/progress.md` when a phase meaningfully changes.
+Two layers: `docs/project/` (persistent, stays in master) and `docs/feature/` (branch workspace, cleaned up before merge).
+
+### docs/project/ — persistent
+
+| Path | Purpose |
+|------|---------|
+| `conventions.md` | Architecture and code rules — the constitution |
+| `workflow.md` | AIDD process, phase lifecycle, agent roles, quality gates |
+| `guidelines.md` | Flutter/Dart AI interaction guidelines |
+| `code-style-guide.md` | Dart formatting and naming conventions |
+| `adr/` | Architecture Decision Records (cross-feature decisions) |
+| `templates/` | Abstract templates for all AIDD document types |
+| `phases/` | Project-level roadmap (8 phases + product requirements) |
+
+### docs/feature/ — branch workspace
+
+| Path | Purpose |
+|------|---------|
+| `.active_ticket` | Current ticket ID (e.g. `FEAT-001`) |
+| `idea-<TICKET>.md` | Problem statement + user stories + acceptance criteria |
+| `vision-<TICKET>.md` | Full technical design (written by researcher) |
+| `tasklist-<TICKET>.md` | Master checklist — progress across all phases |
+| `<TICKET>-phase-N-summary.md` | Completion summary per phase (root level) |
+| `phase/<TICKET>/phase-N.md` | Session brief — Implementer reads this first |
+| `plan/<TICKET>-phase-N.md` | Implementation plan — exact files, code, steps |
+| `prd/<TICKET>-phase-N.prd.md` | Formal requirements — QA and Reviewer baseline |
+| `research/<TICKET>-phase-N.md` | Research notes per phase |
+| `qa/<TICKET>-phase-N.md` | QA record with PS/NE/MC/IV scenarios + verdict |
+
+### Agents and skills
+
+| Path | Purpose |
+|------|---------|
+| `.claude/agents/analyst.md` | `idea.md` → `prd/` |
+| `.claude/agents/researcher.md` | `idea.md` + `prd/` → `vision.md` + `research/` |
+| `.claude/agents/implementer.md` | `phase/` + `plan/` → code + tasklist `[x]` |
+| `.claude/agents/reviewer.md` | diff + plan + prd → `*-summary.md` + verdict |
+| `.claude/agents/qa.md` | prd + phase/ → `qa/` record |
+| `.claude/skills/new-ticket/` | `/new-ticket FEAT-002` — scaffold idea + .active_ticket |
+| `.claude/skills/new-phase/` | `/new-phase 3` — scaffold phase/, plan/, prd/, research/ stubs |
+| `.claude/skills/start-phase/` | `/start-phase 3` — load context before implementation |
+| `.claude/skills/complete-phase/` | `/complete-phase 3` — verify checklist + run checks |
+| `.claude/skills/run-checks/` | `/run-checks` — format + analyze + test |
+| `.claude/skills/ship-feature/` | `/ship-feature` — CHANGELOG + cleanup checklist |
+
+### Quality gates
+
+```
+IDEA_READY → PRD_READY → RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY
+→ (per phase) IMPLEMENT_STEP_OK → REVIEW_OK → QA_PASS
+→ RELEASE_READY → DOCS_UPDATED
+```
