@@ -16,7 +16,6 @@ Set up a local Bitcoin Core environment that is reproducible, isolated, and easy
 6. Added OCI image labels (`title`, `description`, `created`, `revision`) stamped at build time.
 7. Added named Docker volume storage for local persistent `regtest` state.
 8. Added README and `docs/` instructions for startup, upgrade, reset, and troubleshooting.
-9. Added reusable Claude Code commands in `.claude/commands/` for node operations, RPC learning, and app integration.
 
 ## Exit criteria
 

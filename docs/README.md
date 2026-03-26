@@ -1,39 +1,68 @@
 # Documentation
 
-This folder contains learning, planning, and workflow documents for the local Bitcoin Core `regtest` setup.
+This folder is structured into two layers: persistent project-level docs and a per-branch feature workspace.
 
-## Infrastructure standard
+---
 
-- `Makefile` is the only supported operational entry point and the single source of truth for all infrastructure constants (`BITCOIN_CORE_VERSION`, `BITCOIN_BASE_IMAGE`, `BITCOIN_IMAGE`, ports, volume name).
-- `docker/Dockerfile` defines the thin project image built on a pinned upstream Bitcoin Core base image (tag + SHA256 digest).
-- `docker/bitcoin.conf` is the tracked config source baked into that image at build time.
-- `.dockerignore` limits the Docker build context to `docker/bitcoin.conf` only.
-- `bitcoin-wallet-regtest-data` is the persisted Docker volume for node and wallet state.
+## docs/project/ — persistent (stays in master)
 
-## Documents
+| Path | Purpose |
+|------|---------|
+| `conventions.md` | Architecture, wallet types, code rules — the constitution |
+| `workflow.md` | AIDD process: phase lifecycle, agent roles, skill commands, quality gates |
+| `guidelines.md` | Flutter/Dart AI interaction guidelines |
+| `code-style-guide.md` | Dart formatting and naming conventions |
+| `adr/` | Architecture Decision Records (cross-feature decisions) |
+| `templates/` | Abstract templates for all AIDD document types |
+| `phases/` | Project-level roadmap: 8 phases + product requirements |
+| `app-rpc-contract.md` | Planned contract between Flutter app and Bitcoin Core RPC |
+| `learning-goals.md` | Learning objectives for this project |
+| `rpc-learning-path.md` | Structured Bitcoin RPC learning path |
 
-- `learning-goals.md` — what to learn from this project and local RPC practice.
-- `app-rpc-contract.md` — planned contract between the app layer and Bitcoin Core RPC.
-- `rpc-learning-path.md` — practical command-by-command training route.
-- `phases/README.md` — indexes the project phases and their statuses.
-- `phases/progress.md` — tracks completed, current, and upcoming work as a checklist.
+### Templates
 
-## Skills
+| Template | Used for |
+|----------|---------|
+| `idea.md` | Feature idea stub (analyst input) |
+| `vision.md` | Technical design (researcher output) |
+| `tasklist.md` | Master phase checklist |
+| `phase_brief.md` | Session brief for implementer (`phase/TICKET/phase-N.md`) |
+| `phase_plan.md` | Implementation plan (`plan/TICKET-phase-N.md`) |
+| `phase_prd.md` | Formal requirements (`prd/TICKET-phase-N.prd.md`) |
+| `phase_research.md` | Research notes (`research/TICKET-phase-N.md`) |
+| `phase_qa.md` | QA record (`qa/TICKET-phase-N.md`) |
+| `phase_summary.md` | Completion summary (`TICKET-phase-N-summary.md`) |
 
-Reusable Claude Code skills live in `.claude/skills/`. Invoke with `/skill-name`:
+---
 
-| Skill | When to use |
-|---|---|
-| `/bitcoin-regtest-operator` | Node lifecycle, diagnostics, wallet readiness |
-| `/bitcoin-rpc-learning` | Guided RPC practice following `docs/rpc-learning-path.md` |
-| `/flutter-bitcoin-rpc-integration` | App layer planning and implementation |
-| `/bitcoin-core-upgrade` | Upgrade Bitcoin Core version (version + digest update) |
-| `/regtest-scenario` | Set up a reproducible chain state for testing or demo |
-| `/prd-writing` | Write a Product Requirements Document |
+## docs/feature/ — branch workspace (cleaned before merge)
 
-## Suggested reading order
+One active ticket per branch. Ticket ID is in `docs/feature/.active_ticket`.
 
-1. `learning-goals.md`
-2. `rpc-learning-path.md`
-3. `app-rpc-contract.md`
-4. `phases/README.md`
+```
+docs/feature/
+├── .active_ticket                    ← current ticket ID
+├── idea-TICKET.md                    ← IDEA_READY
+├── vision-TICKET.md                  ← RESEARCH_DONE
+├── tasklist-TICKET.md                ← master progress checklist
+├── TICKET-phase-N-summary.md         ← COMPLETE (one per finished phase, root level)
+│
+├── phase/TICKET/phase-N.md           ← TASKLIST_READY (session brief, implementer reads)
+├── plan/TICKET-phase-N.md            ← PLAN_APPROVED (exact files, code, steps)
+├── prd/TICKET-phase-N.prd.md         ← PRD_READY (acceptance criteria)
+├── research/TICKET-phase-N.md        ← RESEARCH_DONE (per-phase research)
+└── qa/TICKET-phase-N.md              ← QA_PASS / QA_FAIL
+```
+
+---
+
+## Workflow reference
+
+See [docs/project/workflow.md](./project/workflow.md) for:
+- Full quality gate chain
+- Agent roles and I/O contracts
+- Skill commands (`/new-ticket`, `/new-phase`, `/start-phase`, etc.)
+- Team agents parallelism pattern
+
+---
+
