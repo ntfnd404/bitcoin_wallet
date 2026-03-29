@@ -118,6 +118,26 @@ Values accessed from such a map are `Object?` — null-check or cast before use.
 
 ---
 
+## Extractions before return
+
+Never inline casts, transformations, or non-trivial expressions in a `return` statement.
+Extract to a named local variable on a separate line — it makes the type visible and the intent clear.
+
+```dart
+// ❌ Never
+return body['result'] as Map<String, Object?>;
+return items.where((e) => e.isActive).toList();
+
+// ✅ Always
+final result = body['result'] as Map<String, Object?>;
+return result;
+
+final activeItems = items.where((e) => e.isActive).toList();
+return activeItems;
+```
+
+---
+
 ## Dependencies (pubspec.yaml)
 
 - Exact versions: `crypto: 3.0.7` not `^3.0.7`
