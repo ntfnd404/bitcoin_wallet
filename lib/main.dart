@@ -1,16 +1,21 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:developer';
 
-void main() {
-  runApp(const MainApp());
-}
+import 'package:flutter/widgets.dart';
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+import 'app.dart';
+import 'core/di/app_dependencies_builder.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
-    );
-  }
-}
+void main() => runZonedGuarded(
+  () {
+    WidgetsFlutterBinding.ensureInitialized();
+    final dependencies = AppDependenciesBuilder().build();
+
+    runApp(App(dependencies: dependencies));
+  },
+  (error, stack) => log(
+    '$error\n$stack',
+    name: 'main',
+    level: 1000,
+  ),
+);
