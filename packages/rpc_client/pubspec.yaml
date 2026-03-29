@@ -8,4 +8,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  http: any
+  http: 1.6.0
+
+dev_dependencies:
+  test: 1.30.0
