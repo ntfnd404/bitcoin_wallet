@@ -258,7 +258,7 @@ abstract interface class KeyDerivationService {
 ### RPC Client
 
 ```dart
-// packages/rpc/lib/src/bitcoin_rpc_client.dart
+// packages/rpc_client/lib/src/bitcoin_rpc_client.dart
 class BitcoinRpcClient {
   // POST http://bitcoin:bitcoin@127.0.0.1:18443
   Future<Map<String, dynamic>> call(String method, [List<dynamic> params = const []]);

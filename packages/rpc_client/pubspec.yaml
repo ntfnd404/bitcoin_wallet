@@ -1,0 +1,11 @@
+name: rpc_client
+description: Bitcoin Core JSON-RPC transport
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  http: any

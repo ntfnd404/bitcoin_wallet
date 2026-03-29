@@ -9,7 +9,7 @@ environment:
 workspace:
   - packages/domain
   - packages/data
-  - packages/rpc
+  - packages/rpc_client
   - packages/storage
   - packages/ui_kit
 

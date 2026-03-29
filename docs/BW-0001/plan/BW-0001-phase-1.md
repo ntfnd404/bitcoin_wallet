@@ -91,7 +91,7 @@ abstract final class AppConstants {
 
 ---
 
-### `packages/rpc/lib/src/bitcoin_rpc_client.dart` (created)
+### `packages/rpc_client/lib/src/bitcoin_rpc_client.dart` (created)
 
 **Current state:** file does not exist.
 
@@ -210,7 +210,7 @@ Flutter code
 1. Update `pubspec.yaml` — add dependencies
 2. Run `flutter pub get`
 3. Create `lib/core/constants/app_constants.dart`
-4. Create `packages/rpc/lib/src/bitcoin_rpc_client.dart`
+4. Create `packages/rpc_client/lib/src/bitcoin_rpc_client.dart`
 5. Run `flutter analyze` — verify no warnings
 6. Format: `dart format lib/`
 7. Verify RPC manually (node must be running: `make btc-up`)

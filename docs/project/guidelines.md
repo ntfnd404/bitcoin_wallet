@@ -18,7 +18,7 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 - Feature-first: `lib/feature/<name>/` with `bloc/`, `di/`, `view/`
 - Shared domain: `packages/domain/lib/src/entity/`, `repository/`, `service/`
 - Data layer: `packages/data/lib/src/repository/`, `service/`
-- Infra adapters: `packages/rpc/`, `packages/storage/`
+- Infra adapters: `packages/rpc_client/`, `packages/storage/`
 - Design system: `packages/ui_kit/`
 - Shared app code: `lib/common/widgets/`, `extensions/`, `utils/`
 

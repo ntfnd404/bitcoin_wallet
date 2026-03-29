@@ -58,7 +58,7 @@ After Phase 1, the following become possible:
 - [x] 1.2 Create directory structure
   Acceptance: structure matches `docs/BW-0001/vision-BW-0001.md`
 
-### `packages/rpc/lib/src/bitcoin_rpc_client.dart`
+### `packages/rpc_client/lib/src/bitcoin_rpc_client.dart`
 
 - [x] 1.3 Implement BitcoinRpcClient
   Acceptance: calling `getblockchaininfo` returns `chain: regtest`

@@ -90,8 +90,8 @@ Presentation → Domain ← Data
 
 - **Presentation** — Flutter UI + BLoC. Lives in `lib/`. Depends on `domain` interfaces only.
 - **Domain** — entities + repository/service interfaces. Pure Dart, no Flutter. `packages/domain`.
-- **Data** — repository and service implementations. `packages/data`. Uses `domain`, `rpc`, `storage`.
-- **Infra adapters** — `rpc`, `storage`: each wraps one external system, no domain knowledge.
+- **Data** — repository and service implementations. `packages/data`. Uses `domain`, `rpc_client`, `storage`.
+- **Infra adapters** — `rpc_client`, `storage`: each wraps one external system, no domain knowledge.
 - **Design system** — `ui_kit`: Flutter-only, no domain knowledge.
 
 ### Full project structure
@@ -144,13 +144,13 @@ bitcoin_wallet/                             # Flutter app — workspace root
 │   │       └── service/                    # abstract interface Bip39Service, KeyDerivationService
 │   │
 │   ├── data/                               # Implements domain interfaces
-│   │   └── lib/src/                        # Depends on: domain, rpc, storage
+│   │   └── lib/src/                        # Depends on: domain, rpc_client, storage
 │   │       ├── repository/                 # NodeWalletRepositoryImpl, HdWalletRepositoryImpl, SeedRepositoryImpl
 │   │       └── service/                    # Bip39ServiceImpl, KeyDerivationServiceImpl
 │   │
 │   │   ╔═ INFRA ════════════════════════════════════════════════════════╗
 │   │
-│   ├── rpc/                                # Bitcoin Core JSON-RPC HTTP client
+│   ├── rpc_client/                                # Bitcoin Core JSON-RPC HTTP client
 │   │   └── lib/src/                        # Pure Dart — no domain knowledge
 │   │       └── bitcoin_rpc_client.dart     # BitcoinRpcClient, RpcException
 │   │
@@ -177,9 +177,9 @@ lib/ (Flutter app)
   ├── feature/wallet/  ──→  data, domain, ui_kit
   │
   └── [packages]
-        data      ──→  domain, rpc, storage
+        data      ──→  domain, rpc_client, storage
         ui_kit    ──→  Flutter SDK
-        rpc       ──→  http
+        rpc_client ──→  http
         storage   ──→  flutter_secure_storage
         domain    ──→  (nothing — stable core)
 ```
@@ -189,8 +189,8 @@ lib/ (Flutter app)
 | Type | Packages | Rule | Dependencies |
 |------|----------|------|--------------|
 | **core** | `domain` | Entities + interfaces. Pure Dart. Zero deps. Never knows about Flutter or infra. | — |
-| **core** | `data` | Implements domain interfaces. Orchestrates infra adapters. | `domain`, `rpc`, `storage` |
-| **infra** | `rpc`, `storage` | Each wraps exactly one external system. No domain knowledge. | external lib only |
+| **core** | `data` | Implements domain interfaces. Orchestrates infra adapters. | `domain`, `rpc_client`, `storage` |
+| **infra** | `rpc_client`, `storage` | Each wraps exactly one external system. No domain knowledge. | external lib only |
 | **ui** | `ui_kit` | Design system: tokens, typography, theme. No domain knowledge. | Flutter SDK only |
 | **integration** | *(future)* | External protocol or SDK with its own logic/UI (WalletConnect, MFA, TPM…). | `domain` + `ui_kit` if needed |
 

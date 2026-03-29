@@ -32,7 +32,7 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
   - Acceptance: structure matches `docs/vision-BW-0001.md`
 
 - [x] **1.3 BitcoinRpcClient**
-  - File: `packages/rpc/lib/src/bitcoin_rpc_client.dart`
+  - File: `packages/rpc_client/lib/src/bitcoin_rpc_client.dart`
   - HTTP POST to `http://bitcoin:bitcoin@127.0.0.1:18443`
   - Method `call(method, params)` → `Future<Map<String, dynamic>>`
   - Acceptance: `getblockchaininfo` returns `chain: regtest`

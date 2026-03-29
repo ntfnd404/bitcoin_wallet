@@ -14,7 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
   pointycastle: any
-  rpc:
-    path: ../rpc
+  rpc_client:
+    path: ../rpc_client
   storage:
     path: ../storage
