@@ -11,17 +11,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Working on a feature
 
+Feature branches are named `BW-000N-<description>` (e.g. `BW-0001-wallet-creation`).
+Each feature has its own workspace folder `docs/BW-000N/` — **not merged to master**.
+
 Before any code changes:
-1. Read `docs/feature/.active_ticket` — find the current ticket ID (e.g. `FEAT-001`).
-2. Read `docs/feature/phase/<TICKET>/phase-N.md` — session brief (tasks + context).
-3. Read `docs/feature/plan/<TICKET>-phase-N.md` — implementation details.
-4. Read `docs/feature/prd/<TICKET>-phase-N.prd.md` — acceptance criteria.
+1. Read `docs/<TICKET>/.active_ticket` — confirm the current ticket ID (e.g. `BW-0001`).
+2. Read `docs/<TICKET>/phase/<TICKET>/phase-N.md` — session brief (tasks + context).
+3. Read `docs/<TICKET>/plan/<TICKET>-phase-N.md` — implementation details.
+4. Read `docs/<TICKET>/prd/<TICKET>-phase-N.prd.md` — acceptance criteria.
 5. Propose the change plan and wait for explicit OK.
 
 After code changes:
 1. Run `flutter analyze` — zero warnings required before marking any task done.
 2. Run `dart format lib/` on changed files.
-3. Mark completed tasks `[x]` in `docs/feature/phase/<TICKET>/phase-N.md` and `docs/feature/tasklist-<TICKET>.md`.
+3. Mark completed tasks `[x]` in `docs/<TICKET>/phase/<TICKET>/phase-N.md` and `docs/<TICKET>/tasklist-<TICKET>.md`.
 4. Show diff and explain what changed.
 5. Stop and wait for confirmation before the next task.
 
@@ -138,7 +141,7 @@ Format: `type(scope): description` where scope is the feature or module (e.g. `f
 
 ## Documentation layout
 
-Two layers: `docs/project/` (persistent, stays in master) and `docs/feature/` (branch workspace, cleaned up before merge).
+Two layers: `docs/project/` (persistent, stays in master) and `docs/BW-000N/` (branch workspace, never merged to master).
 
 ### docs/project/ — persistent
 
@@ -152,11 +155,14 @@ Two layers: `docs/project/` (persistent, stays in master) and `docs/feature/` (b
 | `templates/` | Abstract templates for all AIDD document types |
 | `phases/` | Project-level roadmap (8 phases + product requirements) |
 
-### docs/feature/ — branch workspace
+### docs/BW-000N/ — branch workspace (never merged to master)
+
+Each feature gets its own folder named after the ticket ID (e.g. `docs/BW-0001/`).
+Lives only in its feature branch `BW-000N-<description>`.
 
 | Path | Purpose |
 |------|---------|
-| `.active_ticket` | Current ticket ID (e.g. `FEAT-001`) |
+| `.active_ticket` | Current ticket ID (e.g. `BW-0001`) |
 | `idea-<TICKET>.md` | Problem statement + user stories + acceptance criteria |
 | `vision-<TICKET>.md` | Full technical design (written by researcher) |
 | `tasklist-<TICKET>.md` | Master checklist — progress across all phases |
@@ -176,7 +182,7 @@ Two layers: `docs/project/` (persistent, stays in master) and `docs/feature/` (b
 | `.claude/agents/implementer.md` | `phase/` + `plan/` → code + tasklist `[x]` |
 | `.claude/agents/reviewer.md` | diff + plan + prd → `*-summary.md` + verdict |
 | `.claude/agents/qa.md` | prd + phase/ → `qa/` record |
-| `.claude/skills/new-ticket/` | `/new-ticket FEAT-002` — scaffold idea + .active_ticket |
+| `.claude/skills/new-ticket/` | `/new-ticket BW-0002` — scaffold idea + .active_ticket |
 | `.claude/skills/new-phase/` | `/new-phase 3` — scaffold phase/, plan/, prd/, research/ stubs |
 | `.claude/skills/start-phase/` | `/start-phase 3` — load context before implementation |
 | `.claude/skills/complete-phase/` | `/complete-phase 3` — verify checklist + run checks |

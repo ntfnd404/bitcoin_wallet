@@ -1,4 +1,4 @@
-# Vision: Wallet Creation, Address Generation, Seed Phrase (FEAT-001)
+# Vision: Wallet Creation, Address Generation, Seed Phrase (BW-0001)
 
 Status: `RESEARCH_DONE`
 Date: 2026-03-26
@@ -7,7 +7,7 @@ Date: 2026-03-26
 
 ## Overview
 
-This document is the authoritative technical design for FEAT-001.
+This document is the authoritative technical design for BW-0001.
 It covers architecture, dependency decisions, Bitcoin specifics, and data flows.
 
 Two wallet types coexist in a single app:

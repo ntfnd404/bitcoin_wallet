@@ -25,7 +25,9 @@ Each status lives in the header of its document. A status is the gate — the ne
 - `templates/` — abstract templates for all document types
 - `project-prd/` — project-level roadmap (phases overview, not AIDD artifacts)
 
-**`docs/feature/`** — branch workspace, cleaned up before merge:
+**`docs/BW-000N/`** — branch workspace, **never merged to master**:
+- Each feature gets its own folder named after the ticket ID (e.g. `docs/BW-0001/`)
+- Lives only in branch `BW-000N-<description>` (e.g. `BW-0001-wallet-creation`)
 - `idea-TICKET.md`, `vision-TICKET.md`, `tasklist-TICKET.md`
 - `TICKET-phase-N-summary.md` (root level, one per completed phase)
 - `phase/TICKET/phase-N.md` — session briefs
@@ -40,12 +42,12 @@ Each status lives in the header of its document. A status is the gate — the ne
 
 | Agent | Input | Output | Gate advanced |
 |-------|-------|--------|---------------|
-| `analyst` | `idea-TICKET.md` | `prd/TICKET-phase-N.prd.md` | `IDEA_READY → PRD_READY` |
-| `researcher` | `idea.md` + `prd/` | `vision-TICKET.md` + `research/TICKET-phase-N.md` | `PRD_READY → RESEARCH_DONE` |
-| `planner` | `vision.md` + `prd/` + `research/` | `plan/TICKET-phase-N.md` + `phase/TICKET/phase-N.md` | `RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY` |
-| `implementer` | `phase/TICKET/phase-N.md` + `plan/TICKET-phase-N.md` | code + tasklist `[x]` | `TASKLIST_READY → IMPLEMENT_STEP_OK` |
-| `reviewer` | diff + plan + prd + phase/ | `TICKET-phase-N-summary.md` + verdict | `IMPLEMENT_STEP_OK → REVIEW_OK` |
-| `qa` | prd + phase/ + plan/ | `qa/TICKET-phase-N.md` | `REVIEW_OK → QA_PASS / QA_FAIL` |
+| `analyst` | `docs/BW-000N/idea-TICKET.md` | `docs/BW-000N/prd/TICKET-phase-N.prd.md` | `IDEA_READY → PRD_READY` |
+| `researcher` | `idea.md` + `prd/` | `docs/BW-000N/vision-TICKET.md` + `research/TICKET-phase-N.md` | `PRD_READY → RESEARCH_DONE` |
+| `planner` | `vision.md` + `prd/` + `research/` | `docs/BW-000N/plan/TICKET-phase-N.md` + `phase/TICKET/phase-N.md` | `RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY` |
+| `implementer` | `docs/BW-000N/phase/TICKET/phase-N.md` + `plan/TICKET-phase-N.md` | code + tasklist `[x]` | `TASKLIST_READY → IMPLEMENT_STEP_OK` |
+| `reviewer` | diff + plan + prd + phase/ | `docs/BW-000N/TICKET-phase-N-summary.md` + verdict | `IMPLEMENT_STEP_OK → REVIEW_OK` |
+| `qa` | prd + phase/ + plan/ | `docs/BW-000N/qa/TICKET-phase-N.md` | `REVIEW_OK → QA_PASS / QA_FAIL` |
 
 ---
 
@@ -53,7 +55,7 @@ Each status lives in the header of its document. A status is the gate — the ne
 
 | Skill | Usage | What it does |
 |-------|-------|-------------|
-| `/new-ticket` | `/new-ticket FEAT-002` | Creates `idea-FEAT002.md` stub + sets `.active_ticket` |
+| `/new-ticket` | `/new-ticket BW-0002` | Creates `docs/BW-0002/idea-BW-0002.md` stub + sets `.active_ticket` |
 | `/new-phase` | `/new-phase 3` | Scaffolds stubs in `phase/`, `plan/`, `prd/`, `research/` |
 | `/start-phase` | `/start-phase 3` | Loads and summarizes context; proposes first task |
 | `/complete-phase` | `/complete-phase 3` | Verifies all tasks `[x]`, runs checks, prompts for review |
@@ -123,14 +125,18 @@ Use `Agent` tool with `subagent_type=general-purpose` and role context from `.cl
 ## Starting a new feature
 
 ```sh
-/new-ticket FEAT-002            # creates idea stub + sets .active_ticket
-# Fill docs/feature/idea-FEAT002.md
+git checkout -b BW-0002-<description>   # create feature branch first
+/new-ticket BW-0002                      # creates docs/BW-0002/ + idea stub + .active_ticket
+# Fill docs/BW-0002/idea-BW-0002.md
 # Run analyst agent → PRDs
 # Run researcher agent → vision + research
 # Run planner agent → phase briefs + plans
-/new-phase 1                    # verify stubs exist or create them
-/start-phase 1                  # load context, begin implementation
+/new-phase 1                             # verify stubs exist or create them
+/start-phase 1                           # load context, begin implementation
 ```
+
+> **Branch convention:** `BW-000N-<kebab-case-description>` (e.g. `BW-0001-wallet-creation`).
+> `docs/BW-000N/` lives only in the feature branch — excluded from the merge to master.
 
 ---
 

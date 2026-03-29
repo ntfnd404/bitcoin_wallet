@@ -1,6 +1,6 @@
-# FEAT001-6: UI-Screens
+# BW-0001-6: UI-Screens
 
 Status: `STUB`
-Ticket: FEAT-001
+Ticket: BW-0001
 
 > Fill using template: `docs/project/templates/phase_prd.md`

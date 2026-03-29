@@ -1,4 +1,4 @@
-# Idea: Wallet Creation, Address Generation, Seed Phrase (FEAT-001)
+# Idea: Wallet Creation, Address Generation, Seed Phrase (BW-0001)
 
 Status: `IDEA_READY`
 Date: 2026-03-26

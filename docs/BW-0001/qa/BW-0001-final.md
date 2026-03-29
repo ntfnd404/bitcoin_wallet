@@ -1,4 +1,4 @@
-# QA: FEAT-001 Final — Wallet Creation, Address Generation, Seed Phrase
+# QA: BW-0001 Final — Wallet Creation, Address Generation, Seed Phrase
 
 Status: `PENDING` — to be filled after all phases complete and REVIEW_OK
 

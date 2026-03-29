@@ -1,7 +1,7 @@
 # Phase 5: BLoC
 
 Status: `STUB`
-Ticket: FEAT-001
+Ticket: BW-0001
 
 > Fill using template: `docs/project/templates/phase_brief.md`
 

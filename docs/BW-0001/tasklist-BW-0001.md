@@ -1,7 +1,7 @@
-# Tasklist: FEAT-001 — Wallet Creation, Address Generation, Seed Phrase
+# Tasklist: BW-0001 — Wallet Creation, Address Generation, Seed Phrase
 
 Status: `TASKLIST_READY`
-Context: Idea `docs/idea-FEAT001.md` · Vision `docs/vision-FEAT001.md`
+Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ---
 
@@ -31,7 +31,7 @@ Context: Idea `docs/idea-FEAT001.md` · Vision `docs/vision-FEAT001.md`
   - `lib/core/constants/`, `lib/data/api/`, `lib/data/repository/`, `lib/data/storage/`,
     `lib/data/service/`, `lib/domain/model/`, `lib/domain/repository/`, `lib/domain/service/`,
     `lib/feature/wallet/`, `lib/routing/`
-  - Acceptance: structure matches `docs/vision-FEAT001.md`
+  - Acceptance: structure matches `docs/vision-BW-0001.md`
 
 - [ ] **1.3 BitcoinRpcClient**
   - File: `lib/data/api/bitcoin_rpc_client.dart`
