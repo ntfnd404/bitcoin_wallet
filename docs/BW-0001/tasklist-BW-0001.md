@@ -10,12 +10,12 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 | Phase | Tasks | Done |
 |-------|-------|------|
 | 1. Foundation | 3 | 3 |
-| 2. Domain | 4 | 0 |
+| 2. Domain | 5 | 0 |
 | 3. Data: RPC + Node Wallet | 3 | 0 |
 | 4. Data: HD Wallet + Key Derivation | 4 | 0 |
 | 5. BLoC | 3 | 0 |
 | 6. UI: Screens | 6 | 0 |
-| 7. Navigation & DI | 2 | 0 |
+| 7. Navigation & Integration | 2 | 0 |
 
 ---
 
@@ -61,6 +61,13 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
   - `lib/core/constants/app_constants.dart`
   - `rpcUrl`, `rpcUser`, `rpcPassword`, derivation paths per `AddressType`
   - Acceptance: no magic strings in code; all values are named constants
+
+- [ ] **2.5 DI scaffold**
+  - `lib/core/di/app_dependencies.dart` — immutable container (fields = domain interfaces)
+  - `lib/core/di/app_dependencies_builder.dart` — composition root (stub, filled in Phases 3–4)
+  - `lib/app.dart` — `AppScope` (InheritedWidget) + `App` widget (replaces `MainApp`)
+  - `lib/main.dart` — `runZonedGuarded` + `AppDependenciesBuilder().build()` + `AppScope`
+  - Acceptance: app compiles and launches; `AppScope.of(context)` is accessible in widget tree
 
 ---
 
@@ -159,10 +166,11 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
     WalletDetailScreen, AddressScreen
   - Acceptance: navigation works on all platforms
 
-- [ ] **7.2 Update main.dart**
-  - `MaterialApp` with Navigator (no `.router`)
-  - Initialize DI (WalletScope at root)
-  - Acceptance: app launches and shows WalletListScreen
+- [ ] **7.2 Wire navigation and WalletScope**
+  - Add `AppRouter` and named routes to `MaterialApp` in `lib/app.dart`
+  - Wrap `MaterialApp` with `WalletScope` (feature DI) inside `App`
+  - Fill `AppDependenciesBuilder` with all remaining implementations
+  - Acceptance: app launches and shows `WalletListScreen`; all BLoC deps resolved
 
 ---
 
