@@ -41,6 +41,7 @@ class BitcoinRpcClient {
       throw RpcException(method, error as Map<String, Object?>);
     }
     final result = body['result'] as Map<String, Object?>;
+
     return result;
   }
 }

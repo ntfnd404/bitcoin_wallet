@@ -118,23 +118,23 @@ Values accessed from such a map are `Object?` — null-check or cast before use.
 
 ---
 
-## Extractions before return
+## Empty line before `return`
 
-Never inline casts, transformations, or non-trivial expressions in a `return` statement.
-Extract to a named local variable on a separate line — it makes the type visible and the intent clear.
+Always add an empty line before `return` when there is preceding code in the block.
+This visually separates the result from the logic that produces it.
 
 ```dart
 // ❌ Never
-return body['result'] as Map<String, Object?>;
-return items.where((e) => e.isActive).toList();
-
-// ✅ Always
 final result = body['result'] as Map<String, Object?>;
 return result;
 
-final activeItems = items.where((e) => e.isActive).toList();
-return activeItems;
+// ✅ Always
+final result = body['result'] as Map<String, Object?>;
+
+return result;
 ```
+
+Exception: a single-expression function body (arrow `=>`) or a `return` that is the only statement in the block does not need an empty line.
 
 ---
 
