@@ -37,6 +37,7 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 
 - Dart 3+, null safety everywhere
 - **Never `!` operator** — always null-check with a local variable or pattern matching
+- **Never `dynamic`** — use `Object` or `Object?`; JSON maps typed as `Map<String, Object?>`
 - **Never `print`** — use `dart:developer` log
 - Prefer `const` constructors
 - Trailing commas in multi-line constructs

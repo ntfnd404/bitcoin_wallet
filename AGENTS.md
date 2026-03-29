@@ -189,6 +189,7 @@ Full rules in [docs/project/conventions.md](docs/project/conventions.md) and [do
 
 ### Code style
 - No `!` operator — extract to local variable, null-check, use promoted type
+- No `dynamic` — use `Object` or `Object?`; JSON maps are `Map<String, Object?>`
 - No `print` — use `dart:developer` log
 - No magic numbers — named constants
 - Always curly braces in control flow

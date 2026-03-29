@@ -265,6 +265,7 @@ class WalletRepositoryImpl implements WalletRepository { ... }
 
 - Dart 3+ with null safety
 - **Never `!` operator** — always null-check with a local variable
+- **Never `dynamic`** — use `Object` (non-nullable) or `Object?` (nullable); JSON maps are `Map<String, Object?>`
 - **Never `print`** — use `dart:developer` log or a proper logger
 - Trailing commas in multi-line constructs
 - Curly braces in all `if`/`for`/`while`
@@ -298,6 +299,7 @@ class WalletRepositoryImpl implements WalletRepository { ... }
 - Mainnet/testnet keys or real funds
 - Hardcoded credentials outside of configuration constants
 - `!` operator
+- `dynamic` — use `Object` or `Object?` instead
 - `print`
 - Cubit
 - GetIt / service locator

@@ -17,9 +17,9 @@ class BitcoinRpcClient {
         _credentials = base64Encode(utf8.encode('$user:$password')),
         _client = client ?? http.Client();
 
-  Future<Map<String, dynamic>> call(
+  Future<Map<String, Object?>> call(
     String method, [
-    List<dynamic> params = const [],
+    List<Object> params = const [],
   ]) async {
     final response = await _client.post(
       Uri.parse(_url),
@@ -35,18 +35,18 @@ class BitcoinRpcClient {
       }),
     );
     log('RPC $method → ${response.statusCode}', name: 'bitcoin_rpc');
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final body = jsonDecode(response.body) as Map<String, Object?>;
     final error = body['error'];
     if (error != null) {
-      throw RpcException(method, error as Map<String, dynamic>);
+      throw RpcException(method, error as Map<String, Object?>);
     }
-    return body['result'] as Map<String, dynamic>;
+    return body['result'] as Map<String, Object?>;
   }
 }
 
 class RpcException implements Exception {
   final String method;
-  final Map<String, dynamic> error;
+  final Map<String, Object?> error;
 
   const RpcException(this.method, this.error);
 

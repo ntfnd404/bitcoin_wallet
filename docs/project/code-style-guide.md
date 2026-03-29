@@ -99,6 +99,25 @@ if (value == null) return;
 
 ---
 
+## Type Safety — no `dynamic`
+
+Never use `dynamic`. Use `Object` (non-nullable) or `Object?` (nullable) instead.
+
+```dart
+// ❌ Never
+Map<String, dynamic> result;
+List<dynamic> params;
+
+// ✅ Always
+Map<String, Object?> result;  // JSON values can be null
+List<Object> params;          // RPC params are non-null
+```
+
+When working with JSON (`jsonDecode`), cast explicitly to `Map<String, Object?>`.
+Values accessed from such a map are `Object?` — null-check or cast before use.
+
+---
+
 ## Dependencies (pubspec.yaml)
 
 - Exact versions: `crypto: 3.0.7` not `^3.0.7`
