@@ -26,7 +26,7 @@ Demonstrates Bitcoin engineering: HD wallets, BIP39/32/84/86, all address types,
 | **Architecture** | Clean Architecture (Presentation → Domain → Data), feature-first modules |
 | **Bitcoin node** | Bitcoin Core 24.0.1, `regtest`, Docker, RPC on `127.0.0.1:18443` |
 | **Key storage** | `flutter_secure_storage` |
-| **Bitcoin libraries** | `coinlib` — HD wallets, BIP39/32/84/86, all address types, Taproot |
+| **Bitcoin libraries** | `crypto 3.0.7` + `pointycastle 4.0.0` — manual BIP39/32/84/86, all address types |
 
 ---
 
@@ -34,12 +34,19 @@ Demonstrates Bitcoin engineering: HD wallets, BIP39/32/84/86, all address types,
 
 ```
 bitcoin_wallet/
-├── lib/                         # Flutter app source
+├── lib/                         # Flutter app (presentation)
+│   ├── core/                    # constants/, routing/
+│   ├── common/                  # widgets/, extensions/, utils/
 │   └── feature/<feature>/       # Feature-first modules
-│       ├── bloc/                # BLoC state management
-│       ├── di/                  # Scoped DI (Scope widget + BlocFactory)
-│       ├── domain/              # Feature-specific business logic
-│       └── view/                # Screens and widgets
+│       ├── bloc/                # BLoC + feature-specific mappers
+│       ├── di/                  # Scoped DI (InheritedWidget + BlocFactory)
+│       └── view/                # screen/, widget/
+├── packages/
+│   ├── domain/                  # Pure Dart — entities + interfaces (zero deps)
+│   ├── data/                    # Repository + service implementations
+│   ├── rpc/                     # Bitcoin Core JSON-RPC HTTP client
+│   ├── storage/                 # flutter_secure_storage adapter
+│   └── ui_kit/                  # Design system — tokens, typography, theme
 ├── docker/
 │   ├── Dockerfile               # Thin project image on pinned upstream
 │   └── bitcoin.conf             # Tracked node config (baked into image)
@@ -166,10 +173,12 @@ IDEA_READY → PRD_READY → RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY
 Full rules in [docs/project/conventions.md](docs/project/conventions.md) and [docs/project/code-style-guide.md](docs/project/code-style-guide.md). Key rules:
 
 ### Architecture
-- Clean Architecture: Presentation → Domain → Data
-- Feature-first: `lib/feature/<feature>/`
+- Clean Architecture + Hexagonal: Presentation → Domain ← Data
+- Workspace monorepo: domain and data in separate packages
+- Feature-first in app: `lib/feature/<feature>/` — BLoC + DI + View only
 - Manual constructor-based DI — no GetIt, no service locator
 - Scope widgets with `InheritedWidget` for feature-scoped DI
+- Two wallet types coexist: Node Wallet (custodial, RPC) + HD Wallet (non-custodial, BIP39)
 
 ### BLoC
 - BLoC only — no Cubits

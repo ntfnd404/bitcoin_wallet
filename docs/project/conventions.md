@@ -82,40 +82,132 @@ Auth: bitcoin:bitcoin (Basic Auth)
 
 ## Architecture
 
-### Layers (Clean Architecture)
+### Layers (Clean Architecture + Hexagonal)
 
 ```
-Presentation → Domain → Data
+Presentation → Domain ← Data
 ```
 
-- **Presentation**: Flutter UI, BLoC (`lib/feature/*/view/`, `lib/view/`)
-- **Domain**: business logic, entities, repository interfaces (`lib/domain/`)
-- **Data**: repository implementations, RPC client, storage (`lib/data/`)
+- **Presentation** — Flutter UI + BLoC. Lives in `lib/`. Depends on `domain` interfaces only.
+- **Domain** — entities + repository/service interfaces. Pure Dart, no Flutter. `packages/domain`.
+- **Data** — repository and service implementations. `packages/data`. Uses `domain`, `rpc`, `storage`.
+- **Infra adapters** — `rpc`, `storage`: each wraps one external system, no domain knowledge.
+- **Design system** — `ui_kit`: Flutter-only, no domain knowledge.
 
-### Module structure
-
-Feature-first organization:
+### Full project structure
 
 ```
-lib/
-├── core/               # Shared: theme, extensions, utils, constants
-├── data/               # Data layer
-│   ├── api/            # Bitcoin Core RPC client
-│   ├── repository/     # Repository implementations
-│   └── storage/        # flutter_secure_storage adapter
-├── domain/             # Domain layer
-│   ├── model/          # Entities (Wallet, Address, Mnemonic, Utxo, Tx)
-│   ├── repository/     # Repository interfaces (abstract interface class)
-│   └── service/        # Domain services (BIP39, key derivation)
-├── feature/            # Feature modules
-│   └── <feature>/
-│       ├── bloc/       # BLoC: events, states
-│       ├── di/         # Scoped DI (Scope widget + BlocFactory)
-│       ├── domain/     # Feature-specific business logic
-│       └── view/       # Screens + widgets/
-├── routing/            # go_router
-└── view/               # Shared UI components
+bitcoin_wallet/                             # Flutter app — workspace root
+│
+├── lib/
+│   │
+│   ├── core/                               # Infrastructure — no UI widgets
+│   │   ├── constants/                      # AppConstants: rpcUrl, rpcUser, derivation paths
+│   │   │   └── app_constants.dart
+│   │   └── routing/                        # AppRouter, route name constants
+│   │       └── app_router.dart
+│   │
+│   ├── common/                             # Shared Flutter code (not design-system)
+│   │   ├── widgets/                        # App-level shared components
+│   │   ├── extensions/                     # BuildContext, String, Iterable extensions
+│   │   └── utils/                          # Pure helpers, no Flutter dependency
+│   │
+│   ├── feature/                            # Feature-first modules
+│   │   └── wallet/                         # ← one folder per feature
+│   │       ├── bloc/
+│   │       │   ├── wallet_bloc.dart
+│   │       │   ├── wallet_event.dart
+│   │       │   └── wallet_state.dart       # + feature-specific mappers here
+│   │       ├── di/
+│   │       │   └── wallet_scope.dart       # InheritedWidget + BlocFactory
+│   │       └── view/
+│   │           ├── screen/
+│   │           │   ├── wallet_list_screen.dart
+│   │           │   ├── wallet_detail_screen.dart
+│   │           │   ├── create_wallet_screen.dart
+│   │           │   ├── seed_phrase_screen.dart
+│   │           │   ├── restore_wallet_screen.dart
+│   │           │   └── address_screen.dart
+│   │           └── widget/
+│   │               └── wallet_card.dart
+│   │
+│   └── main.dart
+│
+├── packages/
+│   │
+│   │   ╔═ CORE ════════════════════════════════════════════════════════╗
+│   │
+│   ├── domain/                             # Pure Dart — zero dependencies
+│   │   └── lib/src/
+│   │       ├── entity/                     # Wallet, Address, Mnemonic, AddressType, WalletType
+│   │       ├── repository/                 # abstract interface WalletRepository, SeedRepository
+│   │       └── service/                    # abstract interface Bip39Service, KeyDerivationService
+│   │
+│   ├── data/                               # Implements domain interfaces
+│   │   └── lib/src/                        # Depends on: domain, rpc, storage
+│   │       ├── repository/                 # NodeWalletRepositoryImpl, HdWalletRepositoryImpl, SeedRepositoryImpl
+│   │       └── service/                    # Bip39ServiceImpl, KeyDerivationServiceImpl
+│   │
+│   │   ╔═ INFRA ════════════════════════════════════════════════════════╗
+│   │
+│   ├── rpc/                                # Bitcoin Core JSON-RPC HTTP client
+│   │   └── lib/src/                        # Pure Dart — no domain knowledge
+│   │       └── bitcoin_rpc_client.dart     # BitcoinRpcClient, RpcException
+│   │
+│   ├── storage/                            # flutter_secure_storage adapter
+│   │   └── lib/src/                        # Thin wrapper — write / read / delete
+│   │       └── secure_storage.dart
+│   │
+│   │   ╔═ UI ═══════════════════════════════════════════════════════════╗
+│   │
+│   └── ui_kit/                             # Design system — Flutter only, no domain
+│       └── lib/src/
+│           ├── tokens/                     # Colors, spacing, sizes (design tokens)
+│           ├── typography/                 # Text styles
+│           └── theme/                      # AppTheme, ThemeData
+│
+└── pubspec.yaml                            # workspace: lists all packages
 ```
+
+### Package dependency graph
+
+```
+lib/ (Flutter app)
+  ├── common/          ──→  ui_kit
+  ├── feature/wallet/  ──→  data, domain, ui_kit
+  │
+  └── [packages]
+        data      ──→  domain, rpc, storage
+        ui_kit    ──→  Flutter SDK
+        rpc       ──→  http
+        storage   ──→  flutter_secure_storage
+        domain    ──→  (nothing — stable core)
+```
+
+### Package type rules
+
+| Type | Packages | Rule | Dependencies |
+|------|----------|------|--------------|
+| **core** | `domain` | Entities + interfaces. Pure Dart. Zero deps. Never knows about Flutter or infra. | — |
+| **core** | `data` | Implements domain interfaces. Orchestrates infra adapters. | `domain`, `rpc`, `storage` |
+| **infra** | `rpc`, `storage` | Each wraps exactly one external system. No domain knowledge. | external lib only |
+| **ui** | `ui_kit` | Design system: tokens, typography, theme. No domain knowledge. | Flutter SDK only |
+| **integration** | *(future)* | External protocol or SDK with its own logic/UI (WalletConnect, MFA, TPM…). | `domain` + `ui_kit` if needed |
+
+### Rule for adding a new package
+
+Ask: what category is it?
+
+- Wraps an external system (TPM, MFA, WalletConnect protocol, window_manager) → **infra** package
+- Adds UI components or design primitives → **ui** package or extend `ui_kit`
+- Brings a full SDK with logic + screens (WalletConnect UI, analytics) → **integration** package
+- Is pure shared business logic → extend `domain`
+
+### Feature rules
+
+- A feature contains **BLoC + DI + View only** — no `domain/` or `data/` subdirs inside a feature.
+- Feature-specific mappers live in `bloc/` alongside the BLoC they serve.
+- Domain and data are shared exclusively via packages.
 
 ---
 
@@ -194,9 +286,10 @@ class WalletRepositoryImpl implements WalletRepository { ... }
 
 ## Dependencies
 
-- Exact versions without caret (`coinlib: 2.2.0`, not `^2.2.0`)
+- Exact versions without caret (`crypto: 3.0.7`, `pointycastle: 4.0.0`, not `^3.0.7`)
 - Sorted alphabetically in pubspec.yaml
 - Before adding a new package: verify platform support and regtest compatibility
+- BIP39/BIP32/address encoding is implemented manually using low-level crypto primitives (`crypto`, `pointycastle`). No high-level Bitcoin wallet library is used — the goal is to demonstrate knowledge of Bitcoin standards.
 
 ---
 

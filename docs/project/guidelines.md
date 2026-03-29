@@ -16,8 +16,11 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 ## Project Structure
 
 - Feature-first: `lib/feature/<name>/` with `bloc/`, `di/`, `view/`
-- Shared domain: `lib/domain/model/`, `lib/domain/repository/`, `lib/domain/service/`
-- Data layer: `lib/data/api/`, `lib/data/repository/`, `lib/data/storage/`
+- Shared domain: `packages/domain/lib/src/entity/`, `repository/`, `service/`
+- Data layer: `packages/data/lib/src/repository/`, `service/`
+- Infra adapters: `packages/rpc/`, `packages/storage/`
+- Design system: `packages/ui_kit/`
+- Shared app code: `lib/common/widgets/`, `extensions/`, `utils/`
 
 ---
 
@@ -64,7 +67,7 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 
 - All Bitcoin-specific logic must have unit tests (BIP39, key derivation, coin selection)
 - Use real SQLite/storage in integration tests — no mocks for persistence
-- Test file mirrors source: `lib/data/api/foo.dart` → `test/data/api/foo_test.dart`
+- Test file mirrors source: `packages/data/lib/src/repository/foo.dart` → `packages/data/test/repository/foo_test.dart`
 
 ---
 
@@ -78,6 +81,6 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 
 ## Packages
 
-- Exact versions — no caret (`coinlib: 2.2.0`, not `^2.2.0`)
+- Exact versions — no caret (`crypto: 3.0.7`, not `^3.0.7`)
 - Sorted alphabetically in pubspec.yaml
 - Verify platform support before adding a dependency

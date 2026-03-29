@@ -101,6 +101,6 @@ if (value == null) return;
 
 ## Dependencies (pubspec.yaml)
 
-- Exact versions: `coinlib: 2.2.0` not `^2.2.0`
+- Exact versions: `crypto: 3.0.7` not `^3.0.7`
 - Alphabetical order within `dependencies` and `dev_dependencies`
 - Confirm transitive version via `dart pub deps` before pinning

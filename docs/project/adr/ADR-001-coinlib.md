@@ -1,6 +1,6 @@
 # ADR-001: Use coinlib for BIP39/32/44/49/84/86 Key Derivation
 
-Status: `ACCEPTED`
+Status: `SUPERSEDED` by manual implementation decision (see research/BW-0001-phase-1.md)
 Date: 2026-03-26
 Deciders: Project owner
 
