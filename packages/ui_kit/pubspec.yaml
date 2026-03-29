@@ -1,0 +1,12 @@
+name: ui_kit
+description: Bitcoin wallet design system — tokens, typography, theme
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter

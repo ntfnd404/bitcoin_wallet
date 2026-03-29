@@ -6,14 +6,32 @@ version: 0.1.0+1
 environment:
   sdk: ^3.11.3
 
+workspace:
+  - packages/domain
+  - packages/data
+  - packages/rpc
+  - packages/storage
+  - packages/ui_kit
+
 dependencies:
+  data:
+    path: packages/data
+  domain:
+    path: packages/domain
   flutter:
     sdk: flutter
+  flutter_bloc: 9.1.1
+  json_annotation: 4.11.0
+  ui_kit:
+    path: packages/ui_kit
+  uuid: 4.5.3
 
 dev_dependencies:
+  build_runner: 2.13.1
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  json_serializable: 6.13.1
 
 flutter:
   uses-material-design: true

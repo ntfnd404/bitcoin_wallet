@@ -1,0 +1,13 @@
+name: storage
+description: Secure storage adapter
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: any

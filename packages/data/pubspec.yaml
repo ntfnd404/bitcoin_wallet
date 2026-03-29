@@ -1,0 +1,20 @@
+name: data
+description: Bitcoin wallet data layer — repository and service implementations
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  crypto: any
+  domain:
+    path: ../domain
+  flutter:
+    sdk: flutter
+  pointycastle: any
+  rpc:
+    path: ../rpc
+  storage:
+    path: ../storage

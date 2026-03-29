@@ -1,0 +1,8 @@
+name: domain
+description: Bitcoin wallet domain entities and repository interfaces
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
