@@ -7,7 +7,7 @@ Ticket: BW-0001
 
 ## Phase Scope
 
-Подготовить проект к архитектурной разработке: добавить зависимости, создать структуру папок `lib/`, написать `BitcoinRpcClient` и `AppConstants`. После этой фазы проект компилируется, `flutter analyze` чист, и можно выполнить первый RPC-вызов к локальной ноде.
+Prepare the project for architectural development: add dependencies, create the `lib/` folder structure, write `BitcoinRpcClient` and `AppConstants`. After this phase the project compiles, `flutter analyze` is clean, and the first RPC call to the local node can be made.
 
 ---
 
@@ -15,44 +15,39 @@ Ticket: BW-0001
 
 ### `pubspec.yaml` (modified)
 
-**Current state:** только `flutter` SDK + `flutter_lints`, `flutter_test`. Строка 9–19.
+**Current state:** only `flutter` SDK + `flutter_lints`, `flutter_test`. Lines 9–19.
 
 **Changes:**
-- Добавить 9 runtime зависимостей (алфавитный порядок, точные версии)
-- Добавить 3 dev зависимости (build_runner, freezed, json_serializable)
+- Add 6 runtime dependencies (alphabetical order, exact versions)
+- Add 1 dev dependency (json_serializable)
 
 **Resulting code:**
 
 ```yaml
 dependencies:
-  coinlib: 2.2.0
+  crypto: 3.0.7
+  pointycastle: 4.0.0
   flutter:
     sdk: flutter
-  flutter_bloc: 8.1.6
-  flutter_secure_storage: 9.2.4
-  freezed_annotation: 2.4.4
-  go_router: 14.8.1
-  json_annotation: 4.9.0
-  qr_flutter: 4.1.0
-  shared_preferences: 2.3.4
-  uuid: 4.5.1
+  flutter_bloc: 9.1.1
+  flutter_secure_storage: 10.0.0
+  json_annotation: 4.11.0
+  uuid: 4.5.3
 
 dev_dependencies:
-  build_runner: 2.4.13
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  freezed: 2.5.7
-  json_serializable: 6.9.4
+  json_serializable: 6.13.1
 ```
 
 ---
 
-### Структура папок `lib/` (created)
+### `lib/` folder structure (created)
 
-**Current state:** только `lib/main.dart`.
+**Current state:** only `lib/main.dart`.
 
-**Changes:** создать пустые директории (`.gitkeep` не нужен — файлы появятся в следующих фазах):
+**Changes:** create empty directories (`.gitkeep` not needed — files will appear in subsequent phases):
 
 ```
 lib/
@@ -76,13 +71,13 @@ lib/
 └── view/
 ```
 
-Dart не поддерживает пустые папки в git — создаём первые файлы в Phase 2+. Структура создаётся вместе с первыми файлами каждой директории.
+Dart does not support empty folders in git — the first files in each directory are created together with them in Phase 2+. The structure is created alongside the first files in each directory.
 
 ---
 
 ### `lib/core/constants/app_constants.dart` (created)
 
-**Current state:** файл не существует.
+**Current state:** file does not exist.
 
 **Resulting code:**
 
@@ -96,9 +91,9 @@ abstract final class AppConstants {
 
 ---
 
-### `lib/data/api/bitcoin_rpc_client.dart` (created)
+### `packages/rpc/lib/src/bitcoin_rpc_client.dart` (created)
 
-**Current state:** файл не существует.
+**Current state:** file does not exist.
 
 **Resulting code:**
 
@@ -160,13 +155,13 @@ class RpcException implements Exception {
 ## API Contract
 
 ```dart
-// Единственный публичный метод клиента
+// The only public method of the client
 Future<Map<String, dynamic>> BitcoinRpcClient.call(
   String method, [
   List<dynamic> params = const [],
 ]);
 
-// Исключение при ошибке RPC
+// Exception thrown on RPC error
 class RpcException implements Exception {
   final String method;
   final Map<String, dynamic> error;
@@ -194,9 +189,9 @@ Flutter code
 | Requirement | Verification |
 |-------------|--------------|
 | Zero analyzer warnings | `flutter analyze --fatal-warnings` |
-| Точные версии зависимостей | grep `^` в pubspec.yaml — не должно быть у новых пакетов |
-| Нет `print` | `flutter analyze` поймает, или grep |
-| Нет `!` оператора | code review |
+| Exact dependency versions | grep `^` in pubspec.yaml — must not appear on new packages |
+| No `print` | `flutter analyze` will catch it, or grep |
+| No `!` operator | code review |
 
 ---
 
@@ -204,21 +199,21 @@ Flutter code
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|-----------|
-| Конфликт версий coinlib с другими пакетами | Low | High | Версии взяты из vision — проверены заранее |
-| `http` пакет не доступен без явного добавления | Low | Medium | `flutter` SDK включает `http` транзитивно; если нет — добавить явно |
-| Bitcoin Core нода не запущена при тесте RPC | Medium | Low | Запустить `make btc-up && make btc-wallet-ready` перед тестом |
+| Version conflict between crypto/pointycastle | Low | Low | Standard packages, well tested |
+| `http` package not available without explicit addition | Low | Medium | `flutter` SDK includes `http` transitively; if not — add explicitly |
+| Bitcoin Core node not running during RPC test | Medium | Low | Run `make btc-up && make btc-wallet-ready` before testing |
 
 ---
 
 ## Implementation Steps
 
-1. Обновить `pubspec.yaml` — добавить зависимости
-2. Выполнить `flutter pub get`
-3. Создать `lib/core/constants/app_constants.dart`
-4. Создать `lib/data/api/bitcoin_rpc_client.dart`
-5. Запустить `flutter analyze` — убедиться в отсутствии предупреждений
-6. Форматировать: `dart format lib/`
-7. Проверить RPC вручную (нода должна быть запущена: `make btc-up`)
+1. Update `pubspec.yaml` — add dependencies
+2. Run `flutter pub get`
+3. Create `lib/core/constants/app_constants.dart`
+4. Create `packages/rpc/lib/src/bitcoin_rpc_client.dart`
+5. Run `flutter analyze` — verify no warnings
+6. Format: `dart format lib/`
+7. Verify RPC manually (node must be running: `make btc-up`)
 
 ---
 

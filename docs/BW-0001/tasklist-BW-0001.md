@@ -9,7 +9,7 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 | Phase | Tasks | Done |
 |-------|-------|------|
-| 1. Foundation | 3 | 0 |
+| 1. Foundation | 3 | 3 |
 | 2. Domain | 4 | 0 |
 | 3. Data: RPC + Node Wallet | 3 | 0 |
 | 4. Data: HD Wallet + Key Derivation | 4 | 0 |
@@ -21,20 +21,18 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 1: Foundation
 
-- [ ] **1.1 Add dependencies to pubspec.yaml**
-  - Add: `coinlib`, `flutter_bloc`, `flutter_secure_storage`, `freezed_annotation`,
-    `go_router`, `json_annotation`, `qr_flutter`, `shared_preferences`, `uuid`
-  - Dev: `build_runner`, `freezed`, `json_serializable`
+- [x] **1.1 Add dependencies to pubspec.yaml**
+  - Add: `crypto`, `flutter_bloc: 9.1.1`, `flutter_secure_storage: 10.0.0`,
+    `json_annotation`, `pointycastle`, `uuid: 4.5.3`
+  - Dev: `json_serializable`
   - Acceptance: `flutter pub get` succeeds; all packages visible on all platforms
 
-- [ ] **1.2 Create folder structure**
-  - `lib/core/constants/`, `lib/data/api/`, `lib/data/repository/`, `lib/data/storage/`,
-    `lib/data/service/`, `lib/domain/model/`, `lib/domain/repository/`, `lib/domain/service/`,
-    `lib/feature/wallet/`, `lib/routing/`
+- [x] **1.2 Create folder structure**
+  - `lib/core/constants/`, `packages/` workspace scaffold
   - Acceptance: structure matches `docs/vision-BW-0001.md`
 
-- [ ] **1.3 BitcoinRpcClient**
-  - File: `lib/data/api/bitcoin_rpc_client.dart`
+- [x] **1.3 BitcoinRpcClient**
+  - File: `packages/rpc/lib/src/bitcoin_rpc_client.dart`
   - HTTP POST to `http://bitcoin:bitcoin@127.0.0.1:18443`
   - Method `call(method, params)` → `Future<Map<String, dynamic>>`
   - Acceptance: `getblockchaininfo` returns `chain: regtest`
@@ -43,20 +41,20 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 2: Domain Models & Interfaces
 
-- [ ] **2.1 Domain models**
+- [ ] **2.1 Domain entities**
   - `WalletType` (enum), `AddressType` (enum)
-  - `Wallet` (freezed), `Address` (freezed), `Mnemonic` (freezed — no `toString`)
-  - Files: `lib/domain/model/*.dart`
-  - Acceptance: `flutter analyze` clean; `build_runner` generates `.freezed.dart`
+  - `Wallet` (immutable class), `Address` (immutable class), `Mnemonic` (immutable class — no `toString`)
+  - Files: `packages/domain/lib/src/entity/*.dart`
+  - Acceptance: `flutter analyze` clean; each model has `const` constructor and `copyWith`
 
 - [ ] **2.2 Repository interfaces**
   - `WalletRepository`, `SeedRepository`
-  - Files: `lib/domain/repository/*.dart`
+  - Files: `packages/domain/lib/src/repository/*.dart`
   - Acceptance: `abstract interface class` with doc comments on all methods
 
 - [ ] **2.3 Domain service interfaces**
   - `Bip39Service`, `KeyDerivationService`
-  - Files: `lib/domain/service/*.dart`
+  - Files: `packages/domain/lib/src/service/*.dart`
   - Acceptance: interfaces define contract without implementation
 
 - [ ] **2.4 AppConstants**
@@ -69,12 +67,12 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 ## Phase 3: Data — RPC & Node Wallet
 
 - [ ] **3.1 SecureStorage adapter**
-  - `lib/data/storage/secure_storage.dart`
+  - `packages/storage/lib/src/secure_storage.dart` — already scaffolded
   - Wrapper around `flutter_secure_storage`
   - Acceptance: write/read/delete work; no plaintext in logs
 
 - [ ] **3.2 NodeWalletRepositoryImpl**
-  - `lib/data/repository/node_wallet_repository_impl.dart`
+  - `packages/data/lib/src/repository/node_wallet_repository_impl.dart`
   - `createNodeWallet` → RPC `createwallet`
   - `generateAddress` → RPC `getnewaddress` with type (`legacy`, `p2sh-segwit`, `bech32`, `bech32m`)
   - Acceptance: Legacy starts `m`, bech32 starts `bcrt1q`, bech32m starts `bcrt1p`
@@ -90,26 +88,26 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 ## Phase 4: Data — HD Wallet & Key Derivation
 
 - [ ] **4.1 Bip39ServiceImpl**
-  - `lib/data/service/bip39_service_impl.dart`
-  - Uses `coinlib`
+  - `packages/data/lib/src/service/bip39_service_impl.dart`
+  - Uses `crypto` + `pointycastle` (manual BIP39 implementation)
   - `generateMnemonic(wordCount: 12|24)` → `Mnemonic`
   - `validateMnemonic(mnemonic)` → `bool`
   - Acceptance: generated mnemonic passes validation; invalid does not
 
 - [ ] **4.2 KeyDerivationServiceImpl**
-  - `lib/data/service/key_derivation_service_impl.dart`
-  - Uses `coinlib` BIP32 + paths from `AppConstants`
+  - `packages/data/lib/src/service/key_derivation_service_impl.dart`
+  - Uses `crypto` + `pointycastle` for BIP32 derivation + paths from `AppConstants`
   - `deriveAddress(mnemonic, AddressType, index)` → `Address`
   - Paths: `m/44'/1'/0'/0/n`, `m/49'/1'/0'/0/n`, `m/84'/1'/0'/0/n`, `m/86'/1'/0'/0/n`
   - Acceptance: regtest prefixes correct; derivation deterministic
 
 - [ ] **4.3 SeedRepositoryImpl**
-  - `lib/data/repository/seed_repository_impl.dart`
+  - `packages/data/lib/src/repository/seed_repository_impl.dart`
   - Stores seed under key `seed_<walletId>`
   - Acceptance: seed survives app restart; missing seed returns null
 
 - [ ] **4.4 HdWalletRepositoryImpl**
-  - `lib/data/repository/hd_wallet_repository_impl.dart`
+  - `packages/data/lib/src/repository/hd_wallet_repository_impl.dart`
   - `createHDWallet(name)` → generate mnemonic → store seed → `(Wallet, Mnemonic)`
   - `restoreHDWallet(name, mnemonic)` → validate → store seed
   - `generateAddress(wallet, type)` → derive at next index
@@ -154,14 +152,15 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 7: Navigation & Integration
 
-- [ ] **7.1 go_router setup**
-  - `lib/routing/app_router.dart`
-  - Routes: `/`, `/wallet/create`, `/wallet/seed`, `/wallet/restore`,
-    `/wallet/:id`, `/wallet/:id/address/:type`
+- [ ] **7.1 Navigator setup**
+  - `lib/core/routing/app_router.dart`
+  - Route constants and helper methods for `Navigator.push` / `Navigator.pop` / `Navigator.pushNamed`
+  - Screens: WalletListScreen, CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen,
+    WalletDetailScreen, AddressScreen
   - Acceptance: navigation works on all platforms
 
 - [ ] **7.2 Update main.dart**
-  - `MaterialApp.router` with go_router
+  - `MaterialApp` with Navigator (no `.router`)
   - Initialize DI (WalletScope at root)
   - Acceptance: app launches and shows WalletListScreen
 

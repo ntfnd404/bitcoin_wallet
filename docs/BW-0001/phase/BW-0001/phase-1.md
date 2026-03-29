@@ -2,7 +2,7 @@
 
 Status: `TASKLIST_READY`
 Ticket: BW-0001
-Goal: Подготовить проект к разработке — зависимости, структура папок, RPC-клиент.
+Goal: Prepare the project for development — dependencies, folder structure, RPC client.
 
 Session brief — read this file only to have full context for this work session.
 
@@ -12,39 +12,37 @@ Session brief — read this file only to have full context for this work session
 
 ### Why this phase exists
 
-Проект начинается с `lib/main.dart` — Hello World без архитектуры.
-Перед тем как писать domain-логику, BLoC и UI, нужно:
-- подключить все зависимости,
-- создать файловую структуру согласно conventions,
-- написать базовый RPC-клиент, который станет основой для Node Wallet.
+The project starts with `lib/main.dart` — Hello World with no architecture.
+Before writing domain logic, BLoC, and UI, we need to:
+- add all dependencies,
+- create the folder structure per conventions,
+- write a basic RPC client that will serve as the foundation for Node Wallet.
 
 ### What this unlocks
 
-После Phase 1 становятся возможными:
-- **Phase 2** — domain models и repository interfaces (нужна структура папок)
-- **Phase 3** — NodeWalletRepositoryImpl (нужен BitcoinRpcClient)
-- **Phase 4** — HD Wallet (нужны coinlib и flutter_secure_storage)
+After Phase 1, the following become possible:
+- **Phase 2** — domain models and repository interfaces (folder structure required)
+- **Phase 3** — NodeWalletRepositoryImpl (BitcoinRpcClient required)
+- **Phase 4** — HD Wallet (crypto, pointycastle, flutter_secure_storage required)
 
 ### Key constraints
 
-- Точные версии без `^` (`coinlib: 2.2.0`, не `^2.2.0`)
-- Зависимости отсортированы алфавитно в pubspec.yaml
+- Exact versions without `^` (`crypto: 3.0.7`, `pointycastle: 4.0.0`, not `^2.2.0`)
+- Dependencies sorted alphabetically in pubspec.yaml
 - RPC endpoint: `http://bitcoin:bitcoin@127.0.0.1:18443`
-- Никогда `!` оператор и `print` в коде
-- Один класс = один файл
-- Функции: до 20 строк, единственная ответственность
+- Never use `!` operator or `print` in code
+- One class = one file
+- Functions: up to 20 lines, single responsibility
 
 ### Technologies
 
 | Technology | Package | Role |
 |------------|---------|------|
-| HTTP client | `dart:io` / `http` (flutter built-in) | JSON-RPC запросы к Bitcoin Core |
-| BIP39 / HD ключи | `coinlib: 2.2.0` | Деривация адресов, все типы, regtest |
-| State management | `flutter_bloc: 8.1.6` | BLoC паттерн |
-| Secure storage | `flutter_secure_storage: 9.2.4` | Хранение seed phrase |
-| Code generation | `freezed: 2.5.7` + `build_runner: 2.4.13` | Freezed models |
-| Navigation | `go_router: 14.8.1` | Маршрутизация |
-| QR коды | `qr_flutter: 4.1.0` | Отображение адресов |
+| HTTP client | `dart:io` / `http` (flutter built-in) | JSON-RPC requests to Bitcoin Core |
+| BIP39 / HD keys | `crypto: 3.0.7` + `pointycastle: 4.0.0` | Address derivation, all types, regtest |
+| State management | `flutter_bloc: 9.1.1` | BLoC pattern |
+| Secure storage | `flutter_secure_storage: 10.0.0` | Seed phrase and wallet metadata storage |
+| Navigation | Flutter built-in Navigator | Screen routing via Navigator.push/pop |
 
 ---
 
@@ -52,70 +50,65 @@ Session brief — read this file only to have full context for this work session
 
 ### `pubspec.yaml`
 
-- [ ] 1.1 Добавить все зависимости
-  Acceptance: `flutter pub get` завершается без ошибок; все пакеты видны на всех платформах
+- [x] 1.1 Add all dependencies
+  Acceptance: `flutter pub get` completes without errors; all packages visible on all platforms
 
-### `lib/` структура папок
+### `lib/` folder structure
 
-- [ ] 1.2 Создать структуру директорий
-  Acceptance: структура совпадает с `docs/BW-0001/vision-BW-0001.md`
+- [x] 1.2 Create directory structure
+  Acceptance: structure matches `docs/BW-0001/vision-BW-0001.md`
 
-### `lib/data/api/bitcoin_rpc_client.dart`
+### `packages/rpc/lib/src/bitcoin_rpc_client.dart`
 
-- [ ] 1.3 Реализовать BitcoinRpcClient
-  Acceptance: вызов `getblockchaininfo` возвращает `chain: regtest`
+- [x] 1.3 Implement BitcoinRpcClient
+  Acceptance: calling `getblockchaininfo` returns `chain: regtest`
 
 ### After changes
 
-- [ ] Run `flutter analyze` — zero warnings/infos
-- [ ] Format changed files: `dart format lib/`
+- [x] Run `flutter analyze` — zero warnings/infos
+- [x] Format changed files: `dart format lib/`
 
 ---
 
 ## Acceptance Criteria
 
-- `flutter pub get` — успех, без конфликтов версий
-- Структура `lib/` соответствует vision-BW-0001.md (только папки, файлы добавляются в следующих фазах)
-- `BitcoinRpcClient.call('getblockchaininfo')` возвращает `{'chain': 'regtest', ...}`
-- `flutter analyze` — ноль предупреждений и ошибок
-- Credentials не захардкожены в коде вне `AppConstants`
+- `flutter pub get` — success, no version conflicts
+- `lib/` structure matches vision-BW-0001.md (folders only; files are added in subsequent phases)
+- `BitcoinRpcClient.call('getblockchaininfo')` returns `{'chain': 'regtest', ...}`
+- `flutter analyze` — zero warnings and errors
+- Credentials are not hardcoded outside `AppConstants`
 
 ---
 
 ## Dependencies
 
-No prior phases required. Phase 1 — первая.
+No prior phases required. Phase 1 is first.
 
 ---
 
 ## Technical Details
 
-### pubspec.yaml — итоговый вид dependencies
+### pubspec.yaml — final dependencies section
 
 ```yaml
 dependencies:
-  coinlib: 2.2.0
+  crypto: 3.0.7
+  pointycastle: 4.0.0
   flutter:
     sdk: flutter
-  flutter_bloc: 8.1.6
-  flutter_secure_storage: 9.2.4
-  freezed_annotation: 2.4.4
-  go_router: 14.8.1
-  json_annotation: 4.9.0
-  qr_flutter: 4.1.0
-  shared_preferences: 2.3.4
-  uuid: 4.5.1
+  flutter_bloc: 9.1.1
+  flutter_secure_storage: 10.0.0
+  json_annotation: 4.11.0
+  uuid: 4.5.3
 
 dev_dependencies:
-  build_runner: 2.4.13
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  freezed: 2.5.7
-  json_serializable: 6.9.4
+  json_serializable: 6.13.1
 ```
 
-### BitcoinRpcClient — скелет
+### BitcoinRpcClient — skeleton
 
 ```dart
 import 'dart:convert';
@@ -166,7 +159,7 @@ class RpcException implements Exception {
 }
 ```
 
-### AppConstants (набросок для Phase 1)
+### AppConstants (sketch for Phase 1)
 
 ```dart
 // lib/core/constants/app_constants.dart
@@ -177,7 +170,7 @@ abstract final class AppConstants {
 }
 ```
 
-### Gotcha: `http` пакет
+### Note: `http` package
 
-`flutter` уже включает `http` через flutter SDK — не добавляем отдельно.
-`BitcoinRpcClient` импортирует `package:http/http.dart`.
+`flutter` already includes `http` transitively through the Flutter SDK — do not add it separately.
+`BitcoinRpcClient` imports `package:http/http.dart`.

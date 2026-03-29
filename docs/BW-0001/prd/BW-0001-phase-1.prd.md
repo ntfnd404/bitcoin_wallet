@@ -8,7 +8,7 @@ Phase: 1 of 7
 
 ## Context / Idea
 
-BW-0001 строит Flutter-кошелёк с двумя типами кошельков: Node Wallet (RPC к Bitcoin Core) и HD Wallet (BIP39/32/84/86, ключи в устройстве). Phase 1 закладывает техническую основу: зависимости, структуру кода и базовый инструмент связи с нодой.
+BW-0001 builds a Flutter wallet with two wallet types: Node Wallet (RPC to Bitcoin Core) and HD Wallet (BIP39/32/84/86, keys on device). Phase 1 lays the technical foundation: dependencies, code structure, and the basic communication tool with the node.
 
 Reference: `docs/BW-0001/idea-BW-0001.md`
 
@@ -16,9 +16,9 @@ Reference: `docs/BW-0001/idea-BW-0001.md`
 
 ## Goals
 
-1. Подключить все пакеты, необходимые для реализации BW-0001 (coinlib, flutter_bloc, freezed, go_router и др.)
-2. Создать файловую структуру проекта согласно Clean Architecture из `docs/project/conventions.md`
-3. Реализовать `BitcoinRpcClient` — единственную точку связи Flutter-приложения с Bitcoin Core
+1. Add all packages required for BW-0001 implementation (crypto, pointycastle, flutter_bloc, flutter_secure_storage, etc.)
+2. Create the project folder structure per Clean Architecture from `docs/project/conventions.md`
+3. Implement `BitcoinRpcClient` — the single point of communication between the Flutter app and Bitcoin Core
 
 ---
 
@@ -32,27 +32,27 @@ Reference: `docs/BW-0001/idea-BW-0001.md`
 
 ## Main Scenarios
 
-### Scenario 1: Добавление зависимостей — успех
+### Scenario 1: Adding dependencies — success
 
-- Разработчик добавляет пакеты в `pubspec.yaml` (точные версии, алфавитный порядок)
-- Выполняет `flutter pub get`
-- Ожидаемый результат: команда завершается успехом, `.dart_tool/package_config.json` обновлён, пакеты доступны для импорта
+- Developer adds packages to `pubspec.yaml` (exact versions, alphabetical order)
+- Runs `flutter pub get`
+- Expected result: command completes successfully, `.dart_tool/package_config.json` is updated, packages are available for import
 
-### Scenario 2: RPC-вызов к запущенной ноде
+### Scenario 2: RPC call to a running node
 
-- Bitcoin Core нода запущена (`make btc-up && make btc-wallet-ready`)
-- Код вызывает `BitcoinRpcClient().call('getblockchaininfo')`
-- Ожидаемый результат: возвращается `Map` с полем `chain == 'regtest'`
+- Bitcoin Core node is running (`make btc-up && make btc-wallet-ready`)
+- Code calls `BitcoinRpcClient().call('getblockchaininfo')`
+- Expected result: returns a `Map` with field `chain == 'regtest'`
 
-### Scenario 3: RPC-вызов с ошибкой ноды
+### Scenario 3: RPC call with node error
 
-- Bitcoin Core возвращает `{"error": {"code": -32601, "message": "Method not found"}}`
-- Ожидаемый результат: выбрасывается `RpcException` с полем `method` и `error`; исключение не содержит credentials в сообщении
+- Bitcoin Core returns `{"error": {"code": -32601, "message": "Method not found"}}`
+- Expected result: `RpcException` is thrown with fields `method` and `error`; the exception message does not contain credentials
 
-### Scenario 4: Нода недоступна
+### Scenario 4: Node unavailable
 
-- `http.Client` не может подключиться (нода не запущена)
-- Ожидаемый результат: `SocketException` или `ClientException` пробрасывается вызывающему коду (не заглушается внутри клиента)
+- `http.Client` cannot connect (node is not running)
+- Expected result: `SocketException` or `ClientException` is propagated to the caller (not suppressed inside the client)
 
 ---
 
@@ -60,26 +60,26 @@ Reference: `docs/BW-0001/idea-BW-0001.md`
 
 | Criterion | Verification |
 |-----------|--------------|
-| `flutter pub get` завершается без ошибок | Вывод команды в терминале |
-| Все 9 runtime пакетов присутствуют в pubspec.yaml | Ручная проверка файла |
-| Точные версии (без `^`) у новых пакетов | grep `^` по новым строкам |
-| Алфавитный порядок зависимостей | Ручная проверка |
-| `lib/` структура соответствует vision-BW-0001.md | Сравнение с `docs/BW-0001/vision-BW-0001.md` |
-| `BitcoinRpcClient.call('getblockchaininfo')` → `chain: regtest` | Запуск ноды + вызов |
-| `flutter analyze` — ноль предупреждений | `flutter analyze --fatal-warnings` |
-| Нет `print` в новых файлах | `flutter analyze` / grep |
-| Нет `!` оператора в новых файлах | Code review |
-| Credentials не захардкожены вне AppConstants | Code review |
+| `flutter pub get` completes without errors | Command output in terminal |
+| All 6 runtime packages present in pubspec.yaml | Manual file inspection |
+| Exact versions (no `^`) on new packages | grep `^` on new lines |
+| Alphabetical order of dependencies | Manual inspection |
+| `lib/` structure matches vision-BW-0001.md | Compare with `docs/BW-0001/vision-BW-0001.md` |
+| `BitcoinRpcClient.call('getblockchaininfo')` → `chain: regtest` | Start node + call |
+| `flutter analyze` — zero warnings | `flutter analyze --fatal-warnings` |
+| No `print` in new files | `flutter analyze` / grep |
+| No `!` operator in new files | Code review |
+| Credentials not hardcoded outside AppConstants | Code review |
 
 ---
 
 ## Constraints and Assumptions
 
-- Версии пакетов взяты из `docs/BW-0001/vision-BW-0001.md` — не менять без обновления ADR
-- `flutter_lints` остаётся с `^6.0.0` (dev tool, строгая версия не нужна)
-- `flutter_test` остаётся привязан к Flutter SDK
-- RPC endpoint — только regtest (`127.0.0.1:18443`), mainnet/testnet запрещены
-- Нет `http` пакета в явных зависимостях — используется транзитивно через Flutter SDK
+- Package versions are taken from `docs/BW-0001/vision-BW-0001.md` — do not change without updating the ADR
+- `flutter_lints` stays at `^6.0.0` (dev tool, strict version not needed)
+- `flutter_test` stays bound to Flutter SDK
+- RPC endpoint — regtest only (`127.0.0.1:18443`), mainnet/testnet prohibited
+- No `http` package in explicit dependencies — used transitively through Flutter SDK
 
 ---
 
@@ -87,14 +87,14 @@ Reference: `docs/BW-0001/idea-BW-0001.md`
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|-----------|
-| coinlib требует нативной компиляции (ffi) и ломается на некоторых платформах | Low | High | Проверить на macOS + iOS simulator после `pub get` |
-| Версия coinlib 2.2.0 несовместима с Dart SDK ^3.11.3 | Low | High | Версия подтверждена в vision; если ломается — проверить pub.dev |
+| pointycastle 4.0.0 — new major version, API may differ from examples | Low | Medium | Check documentation before Phase 4 |
+| crypto/pointycastle version conflict with Dart SDK ^3.11.3 | Low | High | Versions confirmed in vision; if broken — check pub.dev |
 
 ---
 
 ## Resolved Questions
 
-- **Какую библиотеку использовать для HD деривации?** → `coinlib 2.2.0`. Единственная активная библиотека с поддержкой BIP32 + всех типов адресов + regtest + всех платформ. Решение зафиксировано в `docs/adr/ADR-001-coinlib.md`.
+- **Which library to use for HD derivation?** → `crypto: 3.0.7` + `pointycastle: 4.0.0`. BIP39/BIP32/address encoding is implemented manually using low-level crypto primitives — the goal is to demonstrate knowledge of Bitcoin standards. No high-level Bitcoin wallet library is used.
 
 ---
 

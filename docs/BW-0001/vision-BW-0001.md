@@ -29,43 +29,73 @@ Flutter SDK: Dart ^3.11.3. All layers created from scratch.
 
 ## Architecture
 
-Clean Architecture: **Data → Domain → Presentation**
-State management: **BLoC** (flutter_bloc + freezed)
-Navigation: **go_router**
+Clean Architecture + Hexagonal: **Data → Domain ← Presentation**
+State management: **BLoC** (flutter_bloc)
+Navigation: **Flutter built-in Navigator**
 DI: manual constructor-based via Scope widgets (InheritedWidget)
+Workspace: Dart pub workspace monorepo — domain and data live in separate packages.
 
 ### File structure to create
 
 ```
-lib/
-├── core/constants/app_constants.dart
-├── data/
-│   ├── api/bitcoin_rpc_client.dart
-│   ├── repository/
-│   │   ├── node_wallet_repository_impl.dart
-│   │   ├── hd_wallet_repository_impl.dart
-│   │   └── seed_repository_impl.dart
-│   ├── service/
-│   │   ├── bip39_service_impl.dart
-│   │   └── key_derivation_service_impl.dart
-│   └── storage/secure_storage.dart
-├── domain/
-│   ├── model/
-│   │   ├── wallet.dart
-│   │   ├── wallet_type.dart
-│   │   ├── address.dart
-│   │   ├── address_type.dart
-│   │   └── mnemonic.dart
-│   ├── repository/
-│   │   ├── wallet_repository.dart
-│   │   └── seed_repository.dart
-│   └── service/
-│       ├── bip39_service.dart
-│       └── key_derivation_service.dart
-└── feature/wallet/
-    ├── bloc/
-    ├── di/
-    └── view/
+bitcoin_wallet/                             # workspace root
+│
+├── lib/
+│   ├── core/
+│   │   ├── constants/app_constants.dart   # rpcUrl, rpcUser, derivation paths
+│   │   └── routing/app_router.dart        # route constants + Navigator helpers
+│   ├── common/
+│   │   ├── widgets/                       # shared app-level components
+│   │   ├── extensions/                    # BuildContext, String extensions
+│   │   └── utils/                         # pure helpers
+│   └── feature/wallet/
+│       ├── bloc/
+│       │   ├── wallet_bloc.dart
+│       │   ├── wallet_event.dart
+│       │   └── wallet_state.dart
+│       ├── di/
+│       │   └── wallet_scope.dart
+│       └── view/
+│           ├── screen/
+│           │   ├── wallet_list_screen.dart
+│           │   ├── wallet_detail_screen.dart
+│           │   ├── create_wallet_screen.dart
+│           │   ├── seed_phrase_screen.dart
+│           │   ├── restore_wallet_screen.dart
+│           │   └── address_screen.dart
+│           └── widget/
+│               └── wallet_card.dart
+│
+└── packages/
+    ├── domain/lib/src/
+    │   ├── entity/
+    │   │   ├── wallet.dart
+    │   │   ├── wallet_type.dart
+    │   │   ├── address.dart
+    │   │   ├── address_type.dart
+    │   │   └── mnemonic.dart
+    │   ├── repository/
+    │   │   ├── wallet_repository.dart
+    │   │   └── seed_repository.dart
+    │   └── service/
+    │       ├── bip39_service.dart
+    │       └── key_derivation_service.dart
+    ├── data/lib/src/
+    │   ├── repository/
+    │   │   ├── node_wallet_repository_impl.dart
+    │   │   ├── hd_wallet_repository_impl.dart
+    │   │   └── seed_repository_impl.dart
+    │   └── service/
+    │       ├── bip39_service_impl.dart
+    │       └── key_derivation_service_impl.dart
+    ├── rpc/lib/src/
+    │   └── bitcoin_rpc_client.dart
+    ├── storage/lib/src/
+    │   └── secure_storage.dart
+    └── ui_kit/lib/src/
+        ├── tokens/
+        ├── typography/
+        └── theme/
 ```
 
 ---
@@ -74,35 +104,36 @@ lib/
 
 ### BIP39 / HD Key Derivation
 
-| Package | Version | Platforms | Notes |
-|---------|---------|-----------|-------|
-| `bip39` | 1.0.6 | all | BIP39 only, pure Dart |
-| `bitcoin_flutter` | 0.0.6 | all | BIP32 only, outdated |
-| `hdwallet` | 1.5.0 | all | BIP44/49/84, no Taproot |
-| **`coinlib`** | **2.2.0** | **all (incl. Web, Linux)** | **Full: BIP32, all addr types, Taproot, active** |
+**Decision: implement BIP39/BIP32/address encoding manually** — the goal of the project is to demonstrate knowledge of Bitcoin standards, not to use ready-made Bitcoin abstractions.
 
-**Decision: `coinlib`** — only active library with BIP32 + P2PKH + P2SH-P2WPKH + P2WPKH + P2TR + configurable network params (regtest) + all platforms.
+Only low-level crypto primitives are used:
 
-See `docs/adr/ADR-001-coinlib.md` for full decision record.
+| Package | Version | Role |
+|---------|---------|------|
+| `crypto` | 3.0.7 | SHA-256, HMAC-SHA512, RIPEMD-160 |
+| `pointycastle` | 4.0.0 | secp256k1 EC operations (BIP32 derivation, signing) |
+
+Implemented manually:
+- BIP39: wordlist lookup, entropy → mnemonic → seed (PBKDF2-HMAC-SHA512)
+- BIP32: HMAC-SHA512 child key derivation, hardened/normal paths
+- Address encoding: P2PKH, P2SH-P2WPKH, P2WPKH (bech32), P2TR (bech32m)
+- Base58Check, Bech32/Bech32m encoding
+
+ADR-001 (coinlib) — superseded by this decision.
 
 ### Required packages
 
 ```yaml
 dependencies:
-  coinlib: 2.2.0
-  flutter_bloc: 8.1.6
-  flutter_secure_storage: 9.2.4
-  freezed_annotation: 2.4.4
-  go_router: 14.8.1
-  json_annotation: 4.9.0
-  qr_flutter: 4.1.0
-  shared_preferences: 2.3.4
-  uuid: 4.5.1
+  crypto: 3.0.7
+  flutter_bloc: 9.1.1
+  flutter_secure_storage: 10.0.0
+  json_annotation: 4.11.0
+  pointycastle: 4.0.0
+  uuid: 4.5.3
 
 dev_dependencies:
-  build_runner: 2.4.13
-  freezed: 2.5.7
-  json_serializable: 6.9.4
+  json_serializable: 6.13.1
 ```
 
 ⚠️ `flutter_secure_storage` uses unencrypted `localStorage` on Web — show warning in UI.
@@ -114,38 +145,72 @@ dev_dependencies:
 ### Models
 
 ```dart
-// lib/domain/model/wallet_type.dart
+// packages/domain/lib/src/entity/wallet_type.dart
 enum WalletType { node, hd }
 
-// lib/domain/model/address_type.dart
+// packages/domain/lib/src/entity/address_type.dart
 enum AddressType { legacy, wrappedSegwit, nativeSegwit, taproot }
 
-// lib/domain/model/wallet.dart
-@freezed
-abstract class Wallet with _$Wallet {
-  const factory Wallet({
-    required String id,
-    required String name,
-    required WalletType type,
-    required DateTime createdAt,
-  }) = _Wallet;
+// packages/domain/lib/src/entity/wallet.dart
+final class Wallet {
+  const Wallet({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final WalletType type;
+  final DateTime createdAt;
+
+  Wallet copyWith({
+    String? id,
+    String? name,
+    WalletType? type,
+    DateTime? createdAt,
+  }) => Wallet(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+  );
 }
 
-// lib/domain/model/address.dart
-@freezed
-abstract class Address with _$Address {
-  const factory Address({
-    required String value,
-    required AddressType type,
-    required String? derivationPath, // null for Node Wallet
-    required int index,
-  }) = _Address;
+// packages/domain/lib/src/entity/address.dart
+final class Address {
+  const Address({
+    required this.value,
+    required this.type,
+    required this.derivationPath, // null for Node Wallet
+    required this.index,
+  });
+
+  final String value;
+  final AddressType type;
+  final String? derivationPath;
+  final int index;
+
+  Address copyWith({
+    String? value,
+    AddressType? type,
+    String? derivationPath,
+    int? index,
+  }) => Address(
+    value: value ?? this.value,
+    type: type ?? this.type,
+    derivationPath: derivationPath ?? this.derivationPath,
+    index: index ?? this.index,
+  );
 }
 
-// lib/domain/model/mnemonic.dart
-@freezed
-abstract class Mnemonic with _$Mnemonic {
-  const factory Mnemonic({required List<String> words}) = _Mnemonic;
+// packages/domain/lib/src/entity/mnemonic.dart
+final class Mnemonic {
+  const Mnemonic({required this.words});
+
+  final List<String> words;
+
   // No toString() — prevents accidental logging of sensitive data
 }
 ```
@@ -153,7 +218,7 @@ abstract class Mnemonic with _$Mnemonic {
 ### Repository interfaces
 
 ```dart
-// lib/domain/repository/wallet_repository.dart
+// packages/domain/lib/src/repository/wallet_repository.dart
 abstract interface class WalletRepository {
   Future<List<Wallet>> getWallets();
   Future<Wallet> createNodeWallet(String name);
@@ -163,7 +228,7 @@ abstract interface class WalletRepository {
   Future<List<Address>> getAddresses(Wallet wallet);
 }
 
-// lib/domain/repository/seed_repository.dart
+// packages/domain/lib/src/repository/seed_repository.dart
 abstract interface class SeedRepository {
   Future<void> storeSeed(String walletId, Mnemonic mnemonic);
   Future<Mnemonic?> getSeed(String walletId);
@@ -174,13 +239,13 @@ abstract interface class SeedRepository {
 ### Service interfaces
 
 ```dart
-// lib/domain/service/bip39_service.dart
+// packages/domain/lib/src/service/bip39_service.dart
 abstract interface class Bip39Service {
   Mnemonic generateMnemonic({int wordCount = 12});
   bool validateMnemonic(Mnemonic mnemonic);
 }
 
-// lib/domain/service/key_derivation_service.dart
+// packages/domain/lib/src/service/key_derivation_service.dart
 abstract interface class KeyDerivationService {
   Address deriveAddress(Mnemonic mnemonic, AddressType type, int index);
 }
@@ -193,7 +258,7 @@ abstract interface class KeyDerivationService {
 ### RPC Client
 
 ```dart
-// lib/data/api/bitcoin_rpc_client.dart
+// packages/rpc/lib/src/bitcoin_rpc_client.dart
 class BitcoinRpcClient {
   // POST http://bitcoin:bitcoin@127.0.0.1:18443
   Future<Map<String, dynamic>> call(String method, [List<dynamic> params = const []]);
@@ -254,13 +319,15 @@ class BitcoinRpcClient {
 
 ### Navigation
 
+Navigation uses Flutter's built-in Navigator with `Navigator.push` / `Navigator.pop` / `Navigator.pushNamed`.
+
 ```
-/                         → WalletListScreen
-/wallet/create            → CreateWalletScreen
-/wallet/seed              → SeedPhraseScreen
-/wallet/restore           → RestoreWalletScreen
-/wallet/:id               → WalletDetailScreen
-/wallet/:id/address/:type → AddressScreen
+WalletListScreen  →  Navigator.push → CreateWalletScreen
+CreateWalletScreen (Node)  →  Navigator.pushReplacement → WalletDetailScreen
+CreateWalletScreen (HD)    →  Navigator.push → SeedPhraseScreen
+SeedPhraseScreen           →  Navigator.pushReplacement → WalletDetailScreen
+WalletDetailScreen         →  Navigator.push → AddressScreen
+                           →  Navigator.push → RestoreWalletScreen
 ```
 
 ---
@@ -308,7 +375,7 @@ CreateWalletScreen
   → HdWalletRepositoryImpl.createHDWallet(name)
     → Bip39ServiceImpl.generateMnemonic()
     → SeedRepositoryImpl.storeSeed(walletId, mnemonic)
-    → store wallet metadata in SharedPreferences
+    → store wallet metadata in flutter_secure_storage
   ← (Wallet, Mnemonic)
   → emit(state.copyWith(status: awaitingSeedConfirmation, pendingMnemonic: mnemonic))
 SeedPhraseScreen shows mnemonic, user confirms → navigate to WalletDetailScreen
@@ -321,8 +388,8 @@ WalletDetailScreen, user selects address type
   → AddressBloc.add(AddressGenerateRequested(wallet, type))
   → HdWalletRepositoryImpl.generateAddress(wallet, type)
     → KeyDerivationServiceImpl.deriveAddress(mnemonic, type, nextIndex)
-      → coinlib: derive key at m/84'/1'/0'/0/n
-      → coinlib: encode as P2WPKH bech32 with HRP='bcrt'
+      → derive key at m/84'/1'/0'/0/n using crypto + pointycastle
+      → encode as P2WPKH bech32 with HRP='bcrt'
     ← Address(value: 'bcrt1q...', derivationPath: "m/84'/1'/0'/0/0")
   → emit(state.copyWith(lastGenerated: address))
 AddressScreen shows address + QR
@@ -351,5 +418,5 @@ WalletDetailScreen
 
 ## Open Questions
 
-- [ ] Verify `coinlib` regtest address correctness (phase 3 task 3.3)
+- [ ] Verify regtest address correctness for manual derivation (phase 3 task 3.3)
 - [ ] Default mnemonic length: 12 for demo, option for 24

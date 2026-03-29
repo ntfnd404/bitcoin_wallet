@@ -7,32 +7,32 @@ Ticket: BW-0001
 
 ## Investigation
 
-### Текущее состояние кодовой базы
+### Current codebase state
 
-- `lib/main.dart` — 20 строк, Hello World (`MaterialApp` + `Text('Hello World!')`)
-- `pubspec.yaml` — только `flutter` SDK, `flutter_lints`, `flutter_test`
+- `lib/main.dart` — 20 lines, Hello World (`MaterialApp` + `Text('Hello World!')`)
+- `pubspec.yaml` — only `flutter` SDK, `flutter_lints`, `flutter_test`
 - Dart SDK: `^3.11.3`
-- Нет структуры папок, нет зависимостей
+- No folder structure, no dependencies
 
-### Зависимости — исследование
+### Dependencies — research
 
-Полное исследование проведено в `docs/BW-0001/vision-BW-0001.md`, раздел "Dependencies".
+Full investigation was conducted in `docs/BW-0001/vision-BW-0001.md`, section "Dependencies".
 
-Ключевые находки:
-- **coinlib 2.2.0** — единственная активная Dart-библиотека с полной поддержкой BIP32 + P2PKH + P2SH-P2WPKH + P2WPKH + P2TR + regtest network params + все платформы
-- **flutter_secure_storage 9.2.4** — Web использует незашифрованный `localStorage` (требует предупреждение в UI)
-- `http` пакет доступен транзитивно через Flutter SDK — не добавляем явно
+Key findings:
+- **crypto 3.0.7** + **pointycastle 4.0.0** — low-level crypto primitives; BIP39/BIP32/addresses implemented manually (the goal is to demonstrate knowledge of Bitcoin standards)
+- **flutter_secure_storage 10.0.0** — Web uses unencrypted `localStorage` (requires a warning in the UI); used for both seed phrases and wallet metadata
+- `http` package is available transitively through the Flutter SDK — do not add explicitly
 
-### RPC-клиент — исследование
+### RPC client — research
 
 Bitcoin Core RPC:
-- Протокол: JSON-RPC 1.0
+- Protocol: JSON-RPC 1.0
 - Auth: HTTP Basic (`bitcoin:bitcoin`)
 - Endpoint: `http://127.0.0.1:18443` (regtest)
-- Успешный ответ: `{"result": {...}, "error": null, "id": "..."}`
-- Ошибка: `{"result": null, "error": {"code": -N, "message": "..."}, "id": "..."}`
+- Success response: `{"result": {...}, "error": null, "id": "..."}`
+- Error response: `{"result": null, "error": {"code": -N, "message": "..."}, "id": "..."}`
 
-Параметры из `docker/bitcoin.conf` (подтверждены):
+Parameters from `docker/bitcoin.conf` (confirmed):
 ```
 rpcuser=bitcoin
 rpcpassword=bitcoin
@@ -46,46 +46,44 @@ rpcport=18443
 
 | Decision | Rationale | Alternatives |
 |----------|-----------|--------------|
-| `coinlib: 2.2.0` для HD деривации | Единственная активная библиотека с полной поддержкой BIP32 + всех addr типов + regtest + все платформы | `bip39` (только мнемоника), `hdwallet` (нет Taproot), `bitcoin_flutter` (не поддерживается) |
-| Точные версии без `^` | Воспроизводимые сборки; изменение версии — явное действие | Caret ranges — создают неожиданные обновления |
-| `AppConstants` для credentials | Нет magic strings в коде; единственное место для изменения при переключении окружений | Env variables — излишне для regtest demo |
-| `http.Client` как зависимость через конструктор | Тестируемость (можно подменить mock-клиент) | Статический метод — нельзя тестировать |
+| `crypto: 3.0.7` + `pointycastle: 4.0.0` for HD derivation | Implement BIP39/BIP32 manually to demonstrate knowledge of standards; no high-level Bitcoin library used | coinlib — superseded; abstracts away the internals |
+| Exact versions without `^` | Reproducible builds; version change is an explicit action | Caret ranges — cause unexpected updates |
+| `AppConstants` for credentials | No magic strings in code; single place to change when switching environments | Env variables — overkill for regtest demo |
+| `http.Client` as constructor dependency | Testability (can inject a mock client) | Static method — cannot be tested |
+| Plain immutable Dart classes instead of freezed | Demonstrates OOP knowledge, no code generation magic | freezed (code generation) |
+| Flutter built-in Navigator instead of go_router | Simpler, no extra dependency for demo app | go_router, auto_route |
+| `flutter_secure_storage` for all storage instead of `shared_preferences` | Single storage layer for both sensitive data and wallet metadata | shared_preferences + flutter_secure_storage |
 
 ---
 
 ## Technical Details
 
-### Итоговые версии пакетов (из vision-BW-0001.md)
+### Final package versions (from vision-BW-0001.md)
 
 ```yaml
 # runtime
-coinlib: 2.2.0
-flutter_bloc: 8.1.6
-flutter_secure_storage: 9.2.4
-freezed_annotation: 2.4.4
-go_router: 14.8.1
-json_annotation: 4.9.0
-qr_flutter: 4.1.0
-shared_preferences: 2.3.4
-uuid: 4.5.1
+crypto: 3.0.7
+pointycastle: 4.0.0
+flutter_bloc: 9.1.1
+flutter_secure_storage: 10.0.0
+json_annotation: 4.11.0
+uuid: 4.5.3
 
 # dev
-build_runner: 2.4.13
-freezed: 2.5.7
-json_serializable: 6.9.4
+json_serializable: 6.13.1
 ```
 
-### JSON-RPC ответ — структура
+### JSON-RPC response — structure
 
 ```dart
-// Успех
+// Success
 {
   "result": {"chain": "regtest", "blocks": 101, ...},
   "error": null,
   "id": "getblockchaininfo"
 }
 
-// Ошибка
+// Error
 {
   "result": null,
   "error": {"code": -32601, "message": "Method not found"},
@@ -93,23 +91,24 @@ json_serializable: 6.9.4
 }
 ```
 
-### Структура lib/ согласно vision
+### Project structure per vision
 
 ```
 lib/
-├── core/constants/app_constants.dart        ← создаётся в Phase 1
-├── data/api/bitcoin_rpc_client.dart         ← создаётся в Phase 1
-├── data/repository/                         ← Phase 3, 4
-├── data/service/                            ← Phase 4
-├── data/storage/                            ← Phase 3
-├── domain/model/                            ← Phase 2
-├── domain/repository/                       ← Phase 2
-├── domain/service/                          ← Phase 2
+├── core/constants/app_constants.dart        ← Phase 1 (exists)
+├── core/routing/app_router.dart             ← Phase 7
+├── common/widgets/                          ← Phase 6
+├── common/extensions/                       ← as needed
 ├── feature/wallet/bloc/                     ← Phase 5
 ├── feature/wallet/di/                       ← Phase 5
-├── feature/wallet/view/                     ← Phase 6
-├── routing/                                 ← Phase 7
-└── view/                                    ← Phase 6
+└── feature/wallet/view/screen/             ← Phase 6
+
+packages/
+├── rpc/    bitcoin_rpc_client.dart          ← Phase 1 (exists)
+├── storage/ secure_storage.dart            ← Phase 3
+├── domain/  entity/, repository/, service/ ← Phase 2
+├── data/    repository/, service/          ← Phase 3, 4
+└── ui_kit/  tokens/, typography/, theme/   ← Phase 6
 ```
 
 ---
@@ -118,14 +117,14 @@ lib/
 
 | Risk | Impact | Recommendation |
 |------|--------|----------------|
-| coinlib использует FFI — может потребовать дополнительных настроек на некоторых платформах | High | Проверить `flutter pub get` + `flutter build` на macOS сразу после добавления |
-| flutter_secure_storage на Web — незашифрованный localStorage | Medium | Добавить UI-предупреждение в Phase 6 (AddressScreen или WalletDetailScreen) |
+| pointycastle 4.0.0 — new major version, API may differ from examples | Medium | Check documentation before Phase 4 |
+| flutter_secure_storage on Web — unencrypted localStorage | Medium | Add UI warning in Phase 6 (AddressScreen or WalletDetailScreen) |
 
 ---
 
 ## References
 
-- `docs/BW-0001/vision-BW-0001.md` — полное техническое описание BW-0001
-- `docs/adr/ADR-001-coinlib.md` — решение по выбору библиотеки деривации
-- `docker/bitcoin.conf` — RPC credentials и настройки ноды
-- `docs/project/conventions.md` — архитектурные правила проекта
+- `docs/BW-0001/vision-BW-0001.md` — full technical description of BW-0001
+- ADR-001-coinlib.md superseded: using crypto + pointycastle, implementing BIP39/BIP32 manually
+- `docker/bitcoin.conf` — RPC credentials and node settings
+- `docs/project/conventions.md` — project architecture rules
