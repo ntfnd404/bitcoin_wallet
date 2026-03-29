@@ -24,12 +24,41 @@ These are broad, project-agnostic rules. Project-specific rules are in `conventi
 
 ---
 
-## SOLID & Architecture
+## Design Principles
 
-- Single Responsibility: one class, one reason to change
-- Dependency Inversion: depend on interfaces, not implementations
-- No business logic in widgets or BLoC — put it in domain services
-- No UI imports in domain or data layers
+### SOLID
+
+| Principle | Application in this project |
+|-----------|----------------------------|
+| **S** — Single Responsibility | One class, one reason to change. BLoC handles state only, repository handles data only. |
+| **O** — Open/Closed | Extend via new implementations, not by modifying interfaces in `domain/`. |
+| **L** — Liskov Substitution | All `RepositoryImpl` must be fully substitutable for their interface. |
+| **I** — Interface Segregation | Small focused interfaces — `WalletRepository` and `SeedRepository` are separate. |
+| **D** — Dependency Inversion | Always depend on interfaces (`domain/`), never on concrete implementations (`data/`). |
+
+### KISS & YAGNI
+
+- **KISS** — prefer the simplest solution that works. No layers of abstraction without clear benefit.
+- **YAGNI** — do not implement for hypothetical future requirements. Three similar lines are better than a premature abstraction.
+- No business logic in widgets or BLoC event handlers — delegate to domain services.
+- No UI imports in `domain/` or `data/` packages.
+
+### GRASP (key principles)
+
+- **Information Expert** — assign responsibility to the class that has the data. Derivation logic lives in `KeyDerivationService`, not in BLoC.
+- **Low Coupling** — packages depend only on what they need. `rpc_client` knows nothing about `domain`.
+- **High Cohesion** — each package/class has a focused, related set of responsibilities.
+- **Protected Variations** — hide unstable implementations behind stable interfaces (`domain/` interfaces shield the app from `data/` changes).
+
+### Design Patterns in use
+
+| Pattern | Where |
+|---------|-------|
+| **Repository** | `domain/repository/` interfaces + `data/repository/` implementations |
+| **Adapter** | `packages/rpc_client/` (Bitcoin Core), `packages/storage/` (secure storage) |
+| **Factory** | `WalletScope` + `BlocFactory` — DI without service locator |
+| **Observer** | BLoC streams — UI reacts to state changes |
+| **Strategy** | Coin selection algorithms (Phase 5) — interchangeable strategies behind one interface |
 
 ---
 

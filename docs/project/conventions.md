@@ -211,6 +211,14 @@ Ask: what category is it?
 
 ---
 
+## Design Principles
+
+We follow **SOLID**, **KISS**, **YAGNI**, and key **GRASP** principles (High Cohesion, Low Coupling, Information Expert, Protected Variations).
+Design patterns in use: Repository, Adapter, Factory, Observer, Strategy.
+See [docs/project/guidelines.md](./guidelines.md) for detailed guidance and examples.
+
+---
+
 ## State Management
 
 - **BLoC only** — no Cubits
