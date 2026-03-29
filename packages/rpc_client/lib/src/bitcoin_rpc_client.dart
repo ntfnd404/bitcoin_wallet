@@ -13,9 +13,9 @@ class BitcoinRpcClient {
     required String user,
     required String password,
     http.Client? client,
-  })  : _url = url,
-        _credentials = base64Encode(utf8.encode('$user:$password')),
-        _client = client ?? http.Client();
+  }) : _url = url,
+       _credentials = base64Encode(utf8.encode('$user:$password')),
+       _client = client ?? http.Client();
 
   Future<Map<String, Object?>> call(
     String method, [
