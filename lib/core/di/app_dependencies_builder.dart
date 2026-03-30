@@ -30,7 +30,7 @@ final class AppDependenciesBuilder {
       ),
       hdWalletRepository: _StubHdWalletRepository(),
       seedRepository: _StubSeedRepository(),
-      bip39Service: _StubBip39Service(),
+      bip39Service: const Bip39ServiceImpl(),
       keyDerivationService: _StubKeyDerivationService(),
     );
   }
@@ -70,14 +70,6 @@ final class _StubSeedRepository implements SeedRepository {
 
   @override
   Future<void> deleteSeed(String walletId) => throw UnimplementedError();
-}
-
-final class _StubBip39Service implements Bip39Service {
-  @override
-  Mnemonic generateMnemonic({int wordCount = 12}) => throw UnimplementedError();
-
-  @override
-  bool validateMnemonic(Mnemonic mnemonic) => throw UnimplementedError();
 }
 
 final class _StubKeyDerivationService implements KeyDerivationService {
