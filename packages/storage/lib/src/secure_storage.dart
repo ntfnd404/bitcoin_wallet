@@ -1,17 +1,14 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+/// Encrypted key-value storage.
+///
+/// All operations are asynchronous. Keys are plain strings;
+/// implementations handle encryption transparently.
+abstract interface class SecureStorage {
+  /// Returns the string value for [key], or `null` if not present.
+  Future<String?> getString(String key);
 
-class SecureStorage {
-  const SecureStorage() : _storage = const FlutterSecureStorage();
+  /// Stores a string [value] under [key].
+  Future<void> setString(String key, String value);
 
-  const SecureStorage.withStorage(FlutterSecureStorage storage)
-      : _storage = storage;
-
-  final FlutterSecureStorage _storage;
-
-  Future<void> write(String key, String value) =>
-      _storage.write(key: key, value: value);
-
-  Future<String?> read(String key) => _storage.read(key: key);
-
-  Future<void> delete(String key) => _storage.delete(key: key);
+  /// Removes the entry for [key]. No-op if absent.
+  Future<void> remove(String key);
 }
