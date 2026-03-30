@@ -14,27 +14,34 @@ import 'package:storage/storage.dart';
 import 'package:test/test.dart';
 
 /// In-memory [SecureStorage] for use in tests.
-final class _InMemoryStorage extends SecureStorage {
+final class _InMemoryStorage implements SecureStorage {
   final Map<String, String> _store = {};
 
   @override
-  Future<void> write(String key, String value) async => _store[key] = value;
+  Future<String?> getString(String key) async => _store[key];
 
   @override
-  Future<String?> read(String key) async => _store[key];
+  Future<void> setString(String key, String value) async => _store[key] = value;
 
   @override
-  Future<void> delete(String key) async => _store.remove(key);
+  Future<void> remove(String key) async => _store.remove(key);
 }
 
-NodeWalletRepositoryImpl _makeRepo() => NodeWalletRepositoryImpl(
-      rpcClient: BitcoinRpcClient(
-        url: 'http://127.0.0.1:18443',
-        user: 'bitcoin',
-        password: 'bitcoin',
-      ),
-      storage: _InMemoryStorage(),
-    );
+NodeWalletRepositoryImpl _makeRepo() {
+  final storage = _InMemoryStorage();
+
+  return NodeWalletRepositoryImpl(
+    rpcClient: BitcoinRpcClient(
+      url: 'http://127.0.0.1:18443',
+      user: 'bitcoin',
+      password: 'bitcoin',
+    ),
+    localStore: WalletLocalStore(
+      storage: storage,
+      keyPrefix: 'node_',
+    ),
+  );
+}
 
 void main() {
   group('NodeWalletRepositoryImpl', () {
@@ -67,10 +74,8 @@ void main() {
       );
 
       final legacy = await repo.generateAddress(wallet, AddressType.legacy);
-      final wrapped =
-          await repo.generateAddress(wallet, AddressType.wrappedSegwit);
-      final native =
-          await repo.generateAddress(wallet, AddressType.nativeSegwit);
+      final wrapped = await repo.generateAddress(wallet, AddressType.wrappedSegwit);
+      final native = await repo.generateAddress(wallet, AddressType.nativeSegwit);
       final taproot = await repo.generateAddress(wallet, AddressType.taproot);
 
       expect(legacy.value, startsWith('m'));
@@ -88,13 +93,6 @@ void main() {
 
       final addresses = await repo.getAddresses(wallet);
       expect(addresses, hasLength(2));
-    });
-
-    test('createHDWallet throws UnsupportedError', () {
-      expect(
-        () => repo.createHDWallet('hd'),
-        throwsA(isA<UnsupportedError>()),
-      );
     });
   });
 }

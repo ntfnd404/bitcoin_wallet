@@ -24,6 +24,5 @@ class AppScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(AppScope oldWidget) =>
-      dependencies != oldWidget.dependencies;
+  bool updateShouldNotify(AppScope oldWidget) => dependencies != oldWidget.dependencies;
 }
