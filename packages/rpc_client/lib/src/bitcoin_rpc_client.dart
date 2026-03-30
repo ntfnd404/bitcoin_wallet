@@ -4,7 +4,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class BitcoinRpcClient {
-  final String _url;
+  final String _baseUrl;
   final String _credentials;
   final http.Client _client;
 
@@ -13,16 +13,31 @@ class BitcoinRpcClient {
     required String user,
     required String password,
     http.Client? client,
-  }) : _url = url,
-       _credentials = base64Encode(utf8.encode('$user:$password')),
-       _client = client ?? http.Client();
+  })  : _baseUrl = url,
+        _credentials = base64Encode(utf8.encode('$user:$password')),
+        _client = client ?? http.Client();
 
-  Future<Map<String, Object?>> call(
+  /// Calls a Bitcoin Core JSON-RPC method.
+  ///
+  /// Returns the raw `result` value — may be a [Map], [List], [String],
+  /// [int], [double], [bool], or `null` depending on the method.
+  ///
+  /// Specify [walletName] to route the request to a wallet-specific endpoint
+  /// (`/wallet/<walletName>`), required for wallet methods such as
+  /// `getnewaddress`, `getbalance`, etc.
+  ///
+  /// Throws [RpcException] if the node returns an error.
+  Future<Object?> call(
     String method, [
-    List<Object> params = const [],
+    List<Object?> params = const [],
+    String? walletName,
   ]) async {
+    final url = walletName != null
+        ? Uri.parse('$_baseUrl/wallet/$walletName')
+        : Uri.parse(_baseUrl);
+
     final response = await _client.post(
-      Uri.parse(_url),
+      url,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Basic $_credentials',
@@ -40,9 +55,7 @@ class BitcoinRpcClient {
     if (error != null) {
       throw RpcException(method, error as Map<String, Object?>);
     }
-    final result = body['result'] as Map<String, Object?>;
-
-    return result;
+    return body['result'];
   }
 }
 

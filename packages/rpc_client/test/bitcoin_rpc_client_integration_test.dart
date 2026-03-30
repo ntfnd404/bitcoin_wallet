@@ -23,7 +23,7 @@ void main() {
 
   group('BitcoinRpcClient', () {
     test('getblockchaininfo returns chain: regtest', () async {
-      final result = await client.call('getblockchaininfo');
+      final result = await client.call('getblockchaininfo') as Map<String, Object?>;
 
       expect(result['chain'], equals('regtest'));
     });
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('getnetworkinfo returns version', () async {
-      final result = await client.call('getnetworkinfo');
+      final result = await client.call('getnetworkinfo') as Map<String, Object?>;
 
       expect(result['version'], isA<int>());
     });
