@@ -1,8 +1,19 @@
+import 'package:domain/domain.dart';
+
 /// Immutable container that holds all application-level dependencies.
 ///
 /// Fields correspond to domain interfaces from the `domain` package.
-/// Populated progressively as repository and service implementations are added
-/// in Phases 3–4. Passed down the widget tree via [AppScope].
+/// Passed down the widget tree via [AppScope].
 final class AppDependencies {
-  const AppDependencies();
+  const AppDependencies({
+    required this.walletRepository,
+    required this.seedRepository,
+    required this.bip39Service,
+    required this.keyDerivationService,
+  });
+
+  final WalletRepository walletRepository;
+  final SeedRepository seedRepository;
+  final Bip39Service bip39Service;
+  final KeyDerivationService keyDerivationService;
 }
