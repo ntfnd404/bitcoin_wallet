@@ -4,6 +4,8 @@ export 'src/entity/bitcoin_network.dart';
 export 'src/entity/mnemonic.dart';
 export 'src/entity/wallet.dart';
 export 'src/entity/wallet_type.dart';
+export 'src/repository/hd_wallet_repository.dart';
+export 'src/repository/node_wallet_repository.dart';
 export 'src/repository/seed_repository.dart';
 export 'src/repository/wallet_repository.dart';
 export 'src/service/bip39_service.dart';

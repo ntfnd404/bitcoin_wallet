@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
+import 'package:rpc_client/src/exceptions/rpc_exception.dart';
 
-class BitcoinRpcClient {
+final class BitcoinRpcClient {
   final String _baseUrl;
   final String _credentials;
   final http.Client _client;
@@ -13,9 +14,9 @@ class BitcoinRpcClient {
     required String user,
     required String password,
     http.Client? client,
-  })  : _baseUrl = url,
-        _credentials = base64Encode(utf8.encode('$user:$password')),
-        _client = client ?? http.Client();
+  }) : _baseUrl = url,
+       _credentials = base64Encode(utf8.encode('$user:$password')),
+       _client = client ?? http.Client();
 
   /// Calls a Bitcoin Core JSON-RPC method.
   ///
@@ -32,9 +33,7 @@ class BitcoinRpcClient {
     List<Object?> params = const [],
     String? walletName,
   ]) async {
-    final url = walletName != null
-        ? Uri.parse('$_baseUrl/wallet/$walletName')
-        : Uri.parse(_baseUrl);
+    final url = walletName != null ? Uri.parse('$_baseUrl/wallet/$walletName') : Uri.parse(_baseUrl);
 
     final response = await _client.post(
       url,
@@ -49,22 +48,15 @@ class BitcoinRpcClient {
         'params': params,
       }),
     );
+
     log('RPC $method → ${response.statusCode}', name: 'bitcoin_rpc');
+
     final body = jsonDecode(response.body) as Map<String, Object?>;
     final error = body['error'];
     if (error != null) {
       throw RpcException(method, error as Map<String, Object?>);
     }
+
     return body['result'];
   }
-}
-
-class RpcException implements Exception {
-  final String method;
-  final Map<String, Object?> error;
-
-  const RpcException(this.method, this.error);
-
-  @override
-  String toString() => 'RpcException[$method]: ${error['message']}';
 }
