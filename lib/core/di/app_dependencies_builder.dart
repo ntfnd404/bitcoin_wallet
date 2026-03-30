@@ -1,5 +1,9 @@
+import 'package:data/data.dart';
 import 'package:domain/domain.dart';
+import 'package:rpc_client/rpc_client.dart';
+import 'package:storage/storage.dart';
 
+import '../constants/app_constants.dart';
 import 'app_dependencies.dart';
 
 /// Composition root — creates and wires all concrete implementations.
@@ -8,12 +12,23 @@ import 'app_dependencies.dart';
 /// with real ones as Phases 3–4 are completed.
 final class AppDependenciesBuilder {
   /// Builds and returns the fully wired [AppDependencies].
-  AppDependencies build() => AppDependencies(
-    walletRepository: _StubWalletRepository(),
-    seedRepository: _StubSeedRepository(),
-    bip39Service: _StubBip39Service(),
-    keyDerivationService: _StubKeyDerivationService(),
-  );
+  AppDependencies build() {
+    final rpcClient = BitcoinRpcClient(
+      url: AppConstants.rpcUrl,
+      user: AppConstants.rpcUser,
+      password: AppConstants.rpcPassword,
+    );
+    final storage = const SecureStorage();
+    return AppDependencies(
+      walletRepository: NodeWalletRepositoryImpl(
+        rpcClient: rpcClient,
+        storage: storage,
+      ),
+      seedRepository: _StubSeedRepository(),
+      bip39Service: _StubBip39Service(),
+      keyDerivationService: _StubKeyDerivationService(),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -21,29 +36,10 @@ final class AppDependenciesBuilder {
 // All methods throw [UnimplementedError] to fail loudly if called early.
 // ---------------------------------------------------------------------------
 
-final class _StubWalletRepository implements WalletRepository {
-  @override
-  Future<List<Wallet>> getWallets() => throw UnimplementedError();
-
-  @override
-  Future<Wallet> createNodeWallet(String name) => throw UnimplementedError();
-
-  @override
-  Future<(Wallet, Mnemonic)> createHDWallet(String name, {int wordCount = 12}) => throw UnimplementedError();
-
-  @override
-  Future<Wallet> restoreHDWallet(String name, Mnemonic mnemonic) => throw UnimplementedError();
-
-  @override
-  Future<Address> generateAddress(Wallet wallet, AddressType type) => throw UnimplementedError();
-
-  @override
-  Future<List<Address>> getAddresses(Wallet wallet) => throw UnimplementedError();
-}
-
 final class _StubSeedRepository implements SeedRepository {
   @override
-  Future<void> storeSeed(String walletId, Mnemonic mnemonic) => throw UnimplementedError();
+  Future<void> storeSeed(String walletId, Mnemonic mnemonic) =>
+      throw UnimplementedError();
 
   @override
   Future<Mnemonic?> getSeed(String walletId) => throw UnimplementedError();
@@ -54,7 +50,8 @@ final class _StubSeedRepository implements SeedRepository {
 
 final class _StubBip39Service implements Bip39Service {
   @override
-  Mnemonic generateMnemonic({int wordCount = 12}) => throw UnimplementedError();
+  Mnemonic generateMnemonic({int wordCount = 12}) =>
+      throw UnimplementedError();
 
   @override
   bool validateMnemonic(Mnemonic mnemonic) => throw UnimplementedError();
@@ -62,5 +59,6 @@ final class _StubBip39Service implements Bip39Service {
 
 final class _StubKeyDerivationService implements KeyDerivationService {
   @override
-  Address deriveAddress(Mnemonic mnemonic, AddressType type, int index) => throw UnimplementedError();
+  Address deriveAddress(Mnemonic mnemonic, AddressType type, int index) =>
+      throw UnimplementedError();
 }

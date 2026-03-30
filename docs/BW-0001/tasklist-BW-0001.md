@@ -10,8 +10,8 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 | Phase | Tasks | Done |
 |-------|-------|------|
 | 1. Foundation | 3 | 3 |
-| 2. Domain | 6 | 0 |
-| 3. Data: RPC + Node Wallet | 3 | 0 |
+| 2. Domain | 6 | 6 |
+| 3. Data: RPC + Node Wallet | 3 | 3 |
 | 4. Data: HD Wallet + Key Derivation | 4 | 0 |
 | 5. BLoC | 3 | 0 |
 | 6. UI: Screens | 6 | 0 |
@@ -41,23 +41,23 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 2: Domain Models & Interfaces
 
-- [ ] **2.1 Domain entities**
+- [x] **2.1 Domain entities**
   - `WalletType` (enum), `AddressType` (enum)
   - `Wallet` (immutable class), `Address` (immutable class), `Mnemonic` (immutable class — no `toString`)
   - Files: `packages/domain/lib/src/entity/*.dart`
   - Acceptance: `flutter analyze` clean; each model has `const` constructor and `copyWith`
 
-- [ ] **2.2 Repository interfaces**
+- [x] **2.2 Repository interfaces**
   - `WalletRepository`, `SeedRepository`
   - Files: `packages/domain/lib/src/repository/*.dart`
   - Acceptance: `abstract interface class` with doc comments on all methods
 
-- [ ] **2.3 Domain service interfaces**
+- [x] **2.3 Domain service interfaces**
   - `Bip39Service`, `KeyDerivationService`
   - Files: `packages/domain/lib/src/service/*.dart`
   - Acceptance: interfaces define contract without implementation
 
-- [ ] **2.4 AppConstants**
+- [x] **2.4 AppConstants**
   - `lib/core/constants/app_constants.dart`
   - `network` (active `BitcoinNetwork`), `rpcUrl`, `rpcUser`, `rpcPassword`, derivation paths via `network.coinType`
   - Acceptance: switching network = one line change; no magic numbers
@@ -69,7 +69,7 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
   - `lib/main.dart` — `runZonedGuarded` + `AppDependenciesBuilder().build()` + `AppScope`
   - Acceptance: app compiles and launches; `AppScope.of(context)` is accessible in widget tree
 
-- [ ] **2.6 BitcoinNetwork**
+- [x] **2.6 BitcoinNetwork**
   - `packages/domain/lib/src/entity/bitcoin_network.dart`
   - Enhanced enum: `mainnet`, `testnet`, `regtest` with fields `p2pkhPrefix`, `p2shPrefix`, `bech32Hrp`, `coinType`, `rpcPort`
   - Acceptance: switching to mainnet = one constant in `AppConstants`; no magic numbers in derivation
@@ -78,19 +78,19 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 3: Data — RPC & Node Wallet
 
-- [ ] **3.1 SecureStorage adapter**
+- [x] **3.1 SecureStorage adapter**
   - `packages/storage/lib/src/secure_storage.dart` — already scaffolded
   - Wrapper around `flutter_secure_storage`
   - Acceptance: write/read/delete work; no plaintext in logs
 
-- [ ] **3.2 NodeWalletRepositoryImpl**
+- [x] **3.2 NodeWalletRepositoryImpl**
   - `packages/data/lib/src/repository/node_wallet_repository_impl.dart`
   - `createNodeWallet` → RPC `createwallet`
   - `generateAddress` → RPC `getnewaddress` with type (`legacy`, `p2sh-segwit`, `bech32`, `bech32m`)
   - Acceptance: Legacy starts `m`, bech32 starts `bcrt1q`, bech32m starts `bcrt1p`
   - HD methods throw `UnsupportedError`
 
-- [ ] **3.3 Address verification via Bitcoin Core**
+- [x] **3.3 Address verification via Bitcoin Core**
   - Unit test or manual check: addresses from `NodeWalletRepositoryImpl`
     match expected regtest format per type
   - Acceptance: `getaddressinfo` returns correct `scriptPubKey.type`
