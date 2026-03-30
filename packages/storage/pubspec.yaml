@@ -10,4 +10,4 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  flutter_secure_storage: any
+  flutter_secure_storage: 10.0.0
