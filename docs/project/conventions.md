@@ -104,6 +104,10 @@ bitcoin_wallet/                             # Flutter app — workspace root
 │   ├── core/                               # Infrastructure — no UI widgets
 │   │   ├── constants/                      # AppConstants: rpcUrl, rpcUser, derivation paths
 │   │   │   └── app_constants.dart
+│   │   ├── di/                             # App-level DI (not feature-level)
+│   │   │   ├── app_dependencies.dart       # Immutable container (domain interfaces)
+│   │   │   ├── app_dependencies_builder.dart # Composition root
+│   │   │   └── app_scope.dart              # InheritedWidget — distributes AppDependencies
 │   │   └── routing/                        # AppRouter, route name constants
 │   │       └── app_router.dart
 │   │

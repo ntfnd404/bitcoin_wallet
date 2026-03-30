@@ -100,7 +100,8 @@ RPC is exposed on `127.0.0.1:18443` (RPC) and `127.0.0.1:18444` (P2P).
 - Clean Architecture + Hexagonal: Presentation → Domain ← Data
 - Workspace monorepo: `packages/domain`, `packages/data`, `packages/rpc_client`, `packages/storage`, `packages/ui_kit`
 - Feature-first in app: `lib/feature/<feature>/` — BLoC + DI + View only (no domain/ or data/ inside feature)
-- Shared app code: `lib/core/` (routing, constants), `lib/common/` (widgets, extensions, utils)
+- App-level DI: `lib/core/di/` — `AppScope` (InheritedWidget), `AppDependencies` (container), `AppDependenciesBuilder` (composition root)
+- Shared app code: `lib/core/` (routing, constants, di), `lib/common/` (widgets, extensions, utils)
 - BLoC state management — no Cubits
 - Two wallet types: Node Wallet (custodial, RPC) + HD Wallet (non-custodial, BIP39/BIP32)
 - See [docs/project/conventions.md](./docs/project/conventions.md) for full architecture rules
