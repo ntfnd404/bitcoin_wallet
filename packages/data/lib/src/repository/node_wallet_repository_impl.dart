@@ -30,6 +30,7 @@ final class NodeWalletRepositoryImpl implements NodeWalletRepository {
       createdAt: DateTime.now().toUtc(),
     );
     await _localStore.saveWallet(wallet);
+
     return wallet;
   }
 
@@ -51,6 +52,7 @@ final class NodeWalletRepositoryImpl implements NodeWalletRepository {
       index: index,
     );
     await _localStore.saveAddress(address);
+
     return address;
   }
 
