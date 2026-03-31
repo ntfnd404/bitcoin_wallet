@@ -31,7 +31,7 @@ final class AppDependenciesBuilder {
       hdWalletRepository: _StubHdWalletRepository(),
       seedRepository: _StubSeedRepository(),
       bip39Service: const Bip39ServiceImpl(),
-      keyDerivationService: _StubKeyDerivationService(),
+      keyDerivationService: const KeyDerivationServiceImpl(),
     );
   }
 }
@@ -72,7 +72,3 @@ final class _StubSeedRepository implements SeedRepository {
   Future<void> deleteSeed(String walletId) => throw UnimplementedError();
 }
 
-final class _StubKeyDerivationService implements KeyDerivationService {
-  @override
-  Address deriveAddress(Mnemonic mnemonic, AddressType type, int index) => throw UnimplementedError();
-}
