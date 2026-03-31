@@ -29,7 +29,7 @@ After Phase 4:
 ## Tasks
 
 - [x] **4.1** `Bip39ServiceImpl` — generate + validate BIP39 mnemonics (12/24 words)
-- [ ] **4.2** `KeyDerivationServiceImpl` — BIP32 derivation + 4 address types
+- [x] **4.2** `KeyDerivationServiceImpl` — BIP32 derivation + 4 address types
 - [ ] **4.3** `SeedRepositoryImpl` — store/retrieve/delete mnemonic via SecureStorage
 - [ ] **4.4** `HdWalletRepositoryImpl` — orchestrate BIP39 + derivation + persistence
 
