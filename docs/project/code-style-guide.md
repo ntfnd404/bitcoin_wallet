@@ -1,21 +1,22 @@
 # Code Style Guide
 
-Dart formatting and naming rules. Enforced by `flutter analyze`.
+Dart formatting and naming rules. Enforced by `flutter analyze --fatal-infos --fatal-warnings`.
 
 ---
 
 ## Formatting
 
 - Page width: 120 characters
-- Trailing commas in all multi-line constructs
-- Curly braces in all `if`/`for`/`while`
-- Single quotes
+- **Always** use trailing commas in multi-line constructs
+- **Always** use curly braces in `if`/`for`/`while` — never omit them
+- **Always** use single quotes
+- **Never** exceed 120 character line width
 
 ---
 
 ## Imports
 
-Always `package:` imports. Relative imports are forbidden.
+**Always** use `package:` imports. **Never** use relative imports.
 
 ```dart
 // ❌  import '../constants/app_constants.dart';
@@ -48,11 +49,13 @@ Always `package:` imports. Relative imports are forbidden.
 6. Public methods
 7. Private methods
 
+**Never** mix the order. Static before instance, public before private within each group.
+
 ---
 
 ## Empty line before `return`
 
-Add a blank line before `return` when there is preceding code in the block.
+**Always** add a blank line before `return` when there is preceding code in the block.
 
 ```dart
 // ❌
@@ -71,6 +74,8 @@ Exception: arrow functions or `return` as the only statement.
 
 ## Null Safety
 
+**Never** use `!` (null assertion). Always null-check with a local variable.
+
 ```dart
 // ❌  final value = map['key']!;
 // ✅
@@ -80,14 +85,24 @@ if (value == null) return;
 
 ---
 
-## Type Safety — no `dynamic`
+## Type Safety
 
-Use `Object` (non-nullable) or `Object?` (nullable). JSON maps = `Map<String, Object?>`.
+**Never** use `dynamic`. Use `Object` (non-nullable) or `Object?` (nullable).
 
 ```dart
 // ❌  Map<String, dynamic> result;
 // ✅  Map<String, Object?> result;
 ```
+
+**Always** declare return types. **Never** omit them.
+
+---
+
+## Variables
+
+- **Always** use `final` for local variables that are not reassigned
+- **Always** use `const` for compile-time constants
+- **Never** use `var` when the type is not obvious from the right-hand side
 
 ---
 
@@ -98,11 +113,21 @@ Use `Object` (non-nullable) or `Object?` (nullable). JSON maps = `Map<String, Ob
 3. Private fields (subscriptions)
 4. Event handlers (private, `_onEventName`)
 
+**Never** expose public fields or public methods on BLoC classes — all logic via events only.
+
 ---
 
 ## Widgets
 
-`StatefulWidget` lifecycle order: `initState` → `didUpdateWidget/didChangeDependencies` → `build` → `dispose`.
+- `StatefulWidget` lifecycle order: `initState` → `didUpdateWidget/didChangeDependencies` → `build` → `dispose`
+- **Never** create private `_buildXxx` methods — extract reusable widgets as separate classes
+- Arrow functions only for single-expression bodies
+- **Always** use `const` constructors where possible
 
-- Arrow functions only for single-expression bodies.
-- Extract reusable widgets as separate classes — never `_buildXxx` methods.
+---
+
+## Async
+
+- **Always** check `isClosed` before `emit()` after async gaps in BLoC
+- **Never** ignore Futures — use `unawaited()` if intentionally fire-and-forget
+- **Always** cancel subscriptions in `dispose` / `close`

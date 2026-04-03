@@ -2,68 +2,45 @@
 
 Status: `TASKLIST_READY`
 Ticket: <TICKET-ID>
-Goal: <!-- One line: what this phase delivers -->
+Phase: N
+Lane: Professional
+Workflow Version: 3
+Owner: Implementer
+Goal: <!-- One-line execution goal -->
 
-Session brief — read this file only to have full context for this work session.
-
----
-
-## Context
-
-### Why this phase exists
-
-<!-- What problem does this phase solve? What was blocking us before? -->
-
-### What this unlocks
-
-<!-- What becomes possible after this phase completes? Which phases depend on it? -->
-
-### Key constraints
-
-<!-- Architecture constraints, conventions to follow, things to avoid. -->
-
-### Technologies
-
-| Technology | Package | Role |
-|------------|---------|------|
-| | | |
+Session brief — execution packet only. Do not repeat full architecture rationale here.
 
 ---
 
-## Tasks
+## Current Batch
 
-### `<file or component>`
+<!-- What the implementer should change next. -->
+
+---
+
+## Constraints
+
+- <!-- Rules from conventions, plan, or lane -->
+
+---
+
+## Execution Checklist
 
 - [ ] N.1 <Task name>
-  Acceptance: <!-- Verifiable, testable condition -->
-
 - [ ] N.2 <Task name>
-  Acceptance:
-
-### After changes
-
-- [ ] N.X Run `flutter analyze` — zero warnings/infos
-- [ ] N.X Format changed files
+- [ ] N.X Run required checks
 
 ---
 
-## Acceptance Criteria
+## Stop Conditions
 
-<!-- Summary of what "done" means for this phase. -->
-
----
-
-## Dependencies
-
-<!-- Which prior phases must be complete. "No prior phases required" if first. -->
+- architecture deviation
+- blocker
+- risk discovery
+- batch complete
 
 ---
 
-## Technical Details
+## Acceptance
 
-<!-- Code snippets, implementation notes, edge cases, gotchas.
-     This is where you put the "how" details the Implementer needs. -->
-
-```dart
-// Example code
-```
+- <!-- Concrete outcomes that make the batch complete -->

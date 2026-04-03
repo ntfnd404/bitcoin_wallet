@@ -1,40 +1,48 @@
 # Idea: <Feature Name> (<TICKET-ID>)
 
 Status: `IDEA_READY`
+Ticket: <TICKET-ID>
+Phase: feature
+Lane: Professional
+Workflow Version: 3
+Owner: Product / Architect
 Date: YYYY-MM-DD
+Depends On: []
+Blocked Until: none
 
 ---
 
 ## Problem
 
-<!-- What is broken, missing, or needed? What is the user stuck on?
-     1-3 paragraphs. No solution yet — just the problem. -->
+<!-- What is broken, missing, or required? Why does it matter now? -->
 
 ---
 
-## Goal
+## Business Goal
 
-<!-- One paragraph: what success looks like after this feature. -->
+<!-- What outcome should the feature produce if successful? -->
+
+---
+
+## Scope
+
+- <!-- In-scope capability -->
+
+### Non-goals
+
+- <!-- Explicitly out of scope -->
 
 ---
 
 ## User Stories
 
-### <Story group 1>
-
-- As a <role>, I want <action> so that <value>.
 - As a <role>, I want <action> so that <value>.
 
 ---
 
-## Requirements
+## Dependencies
 
-### R1. <Area>
-
-| # | Requirement |
-|---|-------------|
-| R1.1 | |
-| R1.2 | |
+- <!-- Other features, external systems, platform constraints -->
 
 ---
 
@@ -43,12 +51,6 @@ Date: YYYY-MM-DD
 | Criterion | Verification |
 |-----------|--------------|
 | | |
-
----
-
-## Constraints
-
-- <!-- Out of scope items -->
 
 ---
 
@@ -62,4 +64,4 @@ Date: YYYY-MM-DD
 
 ## Open Questions
 
-- [ ] <!-- Question to resolve before research -->
+- [ ] <!-- Question that must be resolved before implementation -->

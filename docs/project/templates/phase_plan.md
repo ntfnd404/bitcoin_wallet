@@ -2,79 +2,55 @@
 
 Status: `PLAN_APPROVED`
 Ticket: <TICKET-ID>
+Phase: N
+Lane: Professional
+Workflow Version: 3
+Owner: Planner / Architect
 
 ---
 
 ## Phase Scope
 
-<!-- What this phase delivers. 2-3 sentences. -->
+<!-- Exact outcome of this phase. -->
 
 ---
 
-## Components
+## File Changes
 
-### `<file path>` (created | modified)
+| File | Change | Why |
+|------|--------|-----|
+| | | |
 
-**Current state:** <!-- What exists now, relevant line numbers. -->
+---
 
-**Changes:**
-- <!-- Specific change 1 -->
-- <!-- Specific change 2 -->
-
-**Resulting code:**
+## Interfaces And Contracts
 
 ```dart
-// Exact code after changes
+// Key method signatures, state shapes, or contracts introduced/changed
 ```
 
 ---
 
-## API Contract
+## Sequencing
 
-<!-- Public interfaces, method signatures, type contracts introduced by this phase. -->
-
-```dart
-// Key signatures
-```
+1. <!-- Ordered implementation step -->
+2. <!-- Ordered implementation step -->
 
 ---
 
-## Data Flows
+## Error Handling And Edge Cases
 
-<!-- Step-by-step: how data moves through the system in this phase. -->
-
-```
-Input → Step 1 → Step 2 → Output
-```
+- <!-- Important failure modes and how code should behave -->
 
 ---
 
-## NFR
+## Checks
 
-| Requirement | Verification |
-|-------------|--------------|
-| Zero analyzer warnings | `flutter analyze --fatal-warnings` |
-| | |
+- `flutter analyze`
+- <!-- Tests or manual checks required by the lane -->
 
 ---
 
 ## Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|-----------|
-| | | | |
-
----
-
-## Implementation Steps
-
-1. <!-- Step 1 -->
-2. <!-- Step 2 -->
-3. Run `flutter analyze`
-4. Format changed files
-
----
-
-## Open Questions
-
-<!-- None. or list unresolved questions. -->
+- <!-- Remaining implementation risks -->

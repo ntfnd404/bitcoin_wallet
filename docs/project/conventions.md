@@ -174,9 +174,19 @@ See [code-style-guide.md](./code-style-guide.md).
 
 ## Prohibited
 
-- Mainnet/testnet keys or real funds
-- `!` operator — null-check with a local variable instead
-- `dynamic` — use `Object` or `Object?`
-- `print` — use `dart:developer` log
-- Cubit, GetIt / service locator
-- Private keys outside the data/domain layer
+These are hard rules. Never violate them.
+
+- **Never** use mainnet/testnet keys or real funds
+- **Never** use `!` (null assertion) operator — null-check with a local variable instead
+- **Never** use `dynamic` — use `Object` or `Object?`; JSON maps = `Map<String, Object?>`
+- **Never** use `print` — use `dart:developer` log
+- **Never** use Cubit — BLoC only, always
+- **Never** use GetIt or any service locator — constructor DI + InheritedWidget only
+- **Never** expose private keys outside the data/domain layer
+- **Never** use relative imports — always `package:` imports
+- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
+- **Never** commit with analyzer warnings or infos — `flutter analyze --fatal-infos --fatal-warnings` must pass
+- **Never** use `^` in dependency versions — exact versions only (e.g. `crypto: 3.0.7`)
+- **Never** create private `_buildXxx` methods in widgets — extract as separate widget classes
+- **Never** put domain or data code inside a feature directory — use packages only
+- **Never** log or expose mnemonic/seed/private key material in UI, logs, or error messages

@@ -1,94 +1,65 @@
 # Vision: <Feature Name> (<TICKET-ID>)
 
-Status: `RESEARCH_DONE`
+Status: `VISION_APPROVED`
+Ticket: <TICKET-ID>
+Phase: feature
+Lane: Professional
+Workflow Version: 3
+Owner: Researcher / Architect
 Date: YYYY-MM-DD
 
 ---
 
-## Overview
+## Problem Summary
 
-<!-- 2-3 paragraphs. What are we building, why, key architectural choices. -->
-
----
-
-## Current Codebase State
-
-```
-lib/
-└── <!-- relevant files and their current state -->
-```
-
-<!-- What exists, what needs to be created, what needs to be modified. -->
+<!-- Short recap of the feature problem and the architectural intent. -->
 
 ---
 
-## Architecture
+## Current System State
 
-<!-- High-level architecture decisions for this feature. -->
-
-### File structure to create/modify
-
-```
-lib/
-└── <!-- expected structure after this feature -->
-```
+<!-- Relevant modules, existing patterns, dependencies, platform constraints. -->
 
 ---
 
-## Dependencies
+## Architecture Decisions
 
-### New packages required
-
-| Package | Version | Platforms | Decision |
-|---------|---------|-----------|----------|
-| | | | |
-
-<!-- Reference ADR if a significant dependency decision was made. -->
+| Decision | Rationale | ADR / Reference |
+|----------|-----------|-----------------|
+| | | |
 
 ---
 
-## Domain Layer
+## Boundaries
 
-<!-- Key models, interfaces, service contracts. Include code snippets. -->
+### In scope
+
+- <!-- Architectural responsibilities introduced or changed -->
+
+### Out of scope
+
+- <!-- Explicit exclusions -->
+
+---
+
+## Key Interfaces And Data Flows
 
 ```dart
-// Key types
+// Key public interfaces or contracts
+```
+
+```
+Input → Decision → State change → Output
 ```
 
 ---
 
-## Data Layer
+## Risks And Follow-ups
 
-<!-- Repository implementations, external clients, storage. -->
-
-```dart
-// Key implementations
-```
-
----
-
-## Presentation Layer
-
-<!-- BLoC events/states, screens list, navigation routes. -->
-
----
-
-## Data Flows
-
-```
-<!-- Sequence diagrams or step-by-step flow descriptions -->
-```
-
----
-
-## Non-Functional Requirements
-
-- <!-- Security constraints -->
-- <!-- Performance constraints -->
-- <!-- Platform-specific notes -->
+- <!-- Technical or organisational risks -->
 
 ---
 
 ## Open Questions
 
-- [ ] <!-- Unresolved technical question -->
+- [ ] None

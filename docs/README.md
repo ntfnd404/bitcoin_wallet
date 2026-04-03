@@ -1,68 +1,81 @@
 # Documentation
 
-This folder is structured into two layers: persistent project-level docs and a per-branch feature workspace.
+This repository uses two documentation layers:
+
+- `docs/project/` — persistent process and architecture knowledge
+- `docs/BW-000N/` — branch-local feature workspace
+
+Workflow version: `3`
 
 ---
 
-## docs/project/ — persistent (stays in master)
+## Claude-Native Runtime
+
+Runtime source of truth for the workflow:
+
+- `.claude/settings.json` — Claude hooks and runtime guardrails
+- `.claude/agents/` — project subagents
+- `.claude/skills/` — project slash commands and domain skills
+- `CLAUDE.md` — project memory and default rules
+
+---
+
+## `docs/project/` — persistent
 
 | Path | Purpose |
 |------|---------|
-| `conventions.md` | Architecture, wallet types, code rules — the constitution |
-| `workflow.md` | AIDD process: phase lifecycle, agent roles, skill commands, quality gates |
-| `guidelines.md` | Flutter/Dart AI interaction guidelines |
-| `code-style-guide.md` | Dart formatting and naming conventions |
-| `adr/` | Architecture Decision Records (cross-feature decisions) |
-| `templates/` | Abstract templates for all AIDD document types |
-| `phases/` | Project-level roadmap: 8 phases + product requirements |
-| `app-rpc-contract.md` | Planned contract between Flutter app and Bitcoin Core RPC |
-| `learning-goals.md` | Learning objectives for this project |
-| `rpc-learning-path.md` | Structured Bitcoin RPC learning path |
+| `conventions.md` | Architecture and non-negotiable code rules |
+| `workflow.md` | Claude-Native Enterprise AIDD v3 operating model |
+| `guidelines.md` | Flutter/Dart interaction guidance |
+| `code-style-guide.md` | Formatting, naming, imports |
+| `adr/` | Durable architecture decisions |
+| `templates/` | Canonical feature and phase document templates |
+| `phases/` | Project roadmap and product-level progress |
 
 ### Templates
 
 | Template | Used for |
-|----------|---------|
-| `idea.md` | Feature idea stub (analyst input) |
-| `vision.md` | Technical design (researcher output) |
-| `tasklist.md` | Master phase checklist |
-| `phase_brief.md` | Session brief for implementer (`phase/TICKET/phase-N.md`) |
-| `phase_plan.md` | Implementation plan (`plan/TICKET-phase-N.md`) |
-| `phase_prd.md` | Formal requirements (`prd/TICKET-phase-N.prd.md`) |
-| `phase_research.md` | Research notes (`research/TICKET-phase-N.md`) |
-| `phase_qa.md` | QA record (`qa/TICKET-phase-N.md`) |
-| `phase_summary.md` | Completion summary (`TICKET-phase-N-summary.md`) |
+|----------|----------|
+| `idea.md` | Feature problem statement, scope, dependencies, lane |
+| `vision.md` | Feature-level architecture and durable decisions |
+| `tasklist.md` | Phase progress index and release checklist |
+| `phase_prd.md` | Phase deliverables, scenarios, metrics |
+| `phase_research.md` | Existing codebase truth, constraints, risks |
+| `phase_plan.md` | Exact implementation design |
+| `phase_brief.md` | Current execution packet for the implementer |
+| `phase_summary.md` | Reviewer output and review verdict |
+| `phase_qa.md` | QA evidence and verdict |
+| `phase_security_review.md` | Security review evidence for `Critical` work |
+| `adr.md` | Durable architecture decision record |
 
 ---
 
-## docs/feature/ — branch workspace (cleaned before merge)
+## `docs/BW-000N/` — branch-local feature workspace
 
-One active ticket per branch. Ticket ID is in `docs/feature/.active_ticket`.
+One ticket per branch. The workspace is not merged back to `master`.
 
+```text
+docs/BW-000N/
+├── .active_ticket
+├── idea-TICKET.md
+├── vision-TICKET.md
+├── tasklist-TICKET.md
+├── TICKET-phase-N-summary.md
+├── metrics.log
+├── phase/TICKET/phase-N.md
+├── plan/TICKET-phase-N.md
+├── prd/TICKET-phase-N.prd.md
+├── research/TICKET-phase-N.md
+├── qa/TICKET-phase-N.md
+└── security/TICKET-phase-N.md          # Critical lane only
 ```
-docs/feature/
-├── .active_ticket                    ← current ticket ID
-├── idea-TICKET.md                    ← IDEA_READY
-├── vision-TICKET.md                  ← RESEARCH_DONE
-├── tasklist-TICKET.md                ← master progress checklist
-├── TICKET-phase-N-summary.md         ← COMPLETE (one per finished phase, root level)
-│
-├── phase/TICKET/phase-N.md           ← TASKLIST_READY (session brief, implementer reads)
-├── plan/TICKET-phase-N.md            ← PLAN_APPROVED (exact files, code, steps)
-├── prd/TICKET-phase-N.prd.md         ← PRD_READY (acceptance criteria)
-├── research/TICKET-phase-N.md        ← RESEARCH_DONE (per-phase research)
-└── qa/TICKET-phase-N.md              ← QA_PASS / QA_FAIL
-```
 
 ---
 
-## Workflow reference
+## Rules Of Thumb
 
-See [docs/project/workflow.md](./project/workflow.md) for:
-- Full quality gate chain
-- Agent roles and I/O contracts
-- Skill commands (`/new-ticket`, `/new-phase`, `/start-phase`, etc.)
-- Team agents parallelism pattern
-
----
-
+- `Professional` is the default lane
+- `Critical` is mandatory for wallet, seed, keys, auth, crypto, signing, storage migration, and API contract changes
+- use templates as the only source for document shape and metadata
+- move durable learnings into `docs/project/`; keep feature-local detail in `docs/BW-000N/`
+- prefer Claude hooks and validator as the workflow guardrail stack

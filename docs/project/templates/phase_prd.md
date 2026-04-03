@@ -1,47 +1,40 @@
-# <TICKET-ID>-N: <Name>
+# <TICKET-ID> Phase N PRD — <Name>
 
 Status: `PRD_READY`
 Ticket: <TICKET-ID>
-Phase: N of M
+Phase: N
+Lane: Professional
+Workflow Version: 3
+Owner: Analyst
 
 ---
 
-## Context / Idea
+## Phase Intent
 
-<!-- Why does this phase exist? What is the background?
-     Reference: docs/feature/idea-<TICKET>.md -->
-
----
-
-## Goals
-
-1. <!-- Goal 1 -->
-2. <!-- Goal 2 -->
+<!-- What this phase must deliver and why it exists now. -->
 
 ---
 
-## User Stories
+## Deliverables
 
-**As a <role>**, I need <capability> so that <value>.
-
----
-
-## Main Scenarios
-
-### Scenario 1: <Happy path>
-
-- <!-- Step 1 -->
-- <!-- Step 2 -->
-- <!-- Expected result -->
-
-### Scenario 2: <Error case>
-
-- <!-- Steps -->
-- <!-- Expected error handling -->
+1. <!-- Deliverable 1 -->
+2. <!-- Deliverable 2 -->
 
 ---
 
-## Success / Metrics
+## Scenarios
+
+### Positive
+
+- <!-- Happy-path scenario and expected outcome -->
+
+### Negative / Edge
+
+- <!-- Failure mode or boundary condition -->
+
+---
+
+## Success Metrics
 
 | Criterion | Verification |
 |-----------|--------------|
@@ -49,27 +42,18 @@ Phase: N of M
 
 ---
 
-## Constraints and Assumptions
+## Constraints
 
-- <!-- Constraint 1 -->
-- <!-- Assumption 1 -->
-
----
-
-## Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|-----------|
-| | | | |
+- <!-- Rules or assumptions the phase must obey -->
 
 ---
 
-## Resolved Questions
+## Out Of Scope
 
-<!-- None. or list resolved questions with decisions. -->
+- <!-- Explicit exclusions -->
 
 ---
 
 ## Open Questions
 
-<!-- None. or list unresolved questions. -->
+- [ ] None

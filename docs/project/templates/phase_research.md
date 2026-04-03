@@ -2,39 +2,26 @@
 
 Status: `RESEARCH_DONE`
 Ticket: <TICKET-ID>
+Phase: N
+Lane: Professional
+Workflow Version: 3
+Owner: Researcher
 
 ---
 
-## Investigation
+## Codebase Facts
 
-<!-- What was investigated? What did we look at?
-     Code paths, existing files, external docs, pub.dev packages. -->
-
----
-
-## Key Decisions
-
-<!-- What decisions were made based on research?
-     Format: Decision → Rationale → Alternatives considered -->
-
-| Decision | Rationale | Alternatives |
-|----------|-----------|--------------|
-| | | |
+- <!-- What exists today, with file references and relevant behavior -->
 
 ---
 
-## Technical Details
+## External Facts
 
-<!-- Findings that inform the plan and implementation.
-     File locations, API signatures, edge cases discovered. -->
-
-```dart
-// Relevant existing code
-```
+- <!-- Platform, dependency, protocol, or operational constraints -->
 
 ---
 
-## Risks Identified
+## Risks
 
 | Risk | Impact | Recommendation |
 |------|--------|----------------|
@@ -42,6 +29,12 @@ Ticket: <TICKET-ID>
 
 ---
 
+## Design Pressure
+
+- <!-- Facts that materially shape the plan -->
+
+---
+
 ## References
 
-- <!-- Link or file reference 1 -->
+- <!-- Relevant code paths, docs, ADRs, external specifications -->

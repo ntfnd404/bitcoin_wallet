@@ -1,44 +1,41 @@
 # Tasklist: <TICKET-ID> — <Feature Name>
 
 Status: `TASKLIST_READY`
-Context: Idea `docs/feature/idea-<TICKET>.md` · Vision `docs/feature/vision-<TICKET>.md`
+Ticket: <TICKET-ID>
+Phase: feature
+Lane: Professional
+Workflow Version: 3
+Owner: Planner
+Context: Idea `docs/<TICKET>/idea-<TICKET>.md` · Vision `docs/<TICKET>/vision-<TICKET>.md`
 
 ---
 
 ## Progress
 
-| Phase | Tasks | Done |
-|-------|-------|------|
-| 1. <name> | N | 0 |
-| 2. <name> | N | 0 |
+| Phase | Goal | Status | Review | Security | QA |
+|-------|------|--------|--------|----------|----|
+| 1 | <goal> | ⬜ Pending | - | n/a | - |
 
 ---
 
-## Phase 1: <Name>
+## Phase Breakdown
 
-- [ ] **1.1 <Task name>**
-  - <!-- What needs to be done -->
-  - Acceptance: <!-- Verifiable condition -->
+### Phase 1: <Name>
 
-- [ ] **1.2 <Task name>**
-  - Acceptance:
+- [ ] 1.1 <Task name>
+- [ ] 1.2 <Task name>
+- [ ] 1.X Analyze / format / tests required by lane
 
----
-
-## Phase 2: <Name>
-
-- [ ] **2.1 <Task name>**
-  - Acceptance:
+Exit criteria:
+- <!-- What must be true before the phase can move to review -->
 
 ---
 
-<!-- Add phases as needed -->
+## Release Readiness
 
----
-
-## Definition of Done
-
-- [ ] All tasks above marked `[x]`
-- [ ] `flutter analyze` — no errors or warnings
-- [ ] App launches on macOS
-- [ ] <!-- Feature-specific acceptance criteria -->
+- [ ] All phases complete
+- [ ] All review summaries present
+- [ ] All `Critical` phases have security review artifacts
+- [ ] All QA records passed
+- [ ] Validator clean
+- [ ] Persistent docs updated

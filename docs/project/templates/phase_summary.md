@@ -1,56 +1,45 @@
-# <TICKET-ID> Phase N Summary — <Name>
+# Review Summary: <TICKET-ID> Phase N — <Name>
 
-Status: `COMPLETE`
+Status: `REVIEW_OK` | `BLOCKING`
 Ticket: <TICKET-ID>
+Phase: N
+Lane: Professional
+Workflow Version: 3
+Owner: Reviewer
 Date: YYYY-MM-DD
 
 ---
 
-## What Was Done
+## Verdict
 
-<!-- Narrative description of what was implemented.
-     Be specific: what files changed, what behavior was added. -->
-
----
-
-## Files Changed
-
-| File | Change |
-|------|--------|
-| `path/to/file.dart` | Created / Modified — what changed |
+`REVIEW_OK` | `BLOCKING`
 
 ---
 
-## Decisions Made
+## Blocking Findings
 
-<!-- Deviations from plan + why. What was different from what was planned? -->
-
-| Decision | Reason |
-|----------|--------|
-| <!-- e.g. Used X instead of Y --> | <!-- Why the deviation was needed --> |
+- None
 
 ---
 
-## QA Outcome
+## Important Findings
 
-<!-- Summary of QA results. Reference qa/ file. -->
-
-All N positive scenarios passed. N edge cases verified.
-**Final verdict: QA_PASS**
+- None
 
 ---
 
-## What This Enables
+## Deviations From Plan
 
-<!-- What downstream phases or work this phase unlocks. -->
-
-- Phase N+1 can now <!-- ... -->
+- None
 
 ---
 
-## References
+## Regression Checks
 
-- `docs/feature/phase/<TICKET>/phase-N.md` — phase brief
-- `docs/feature/plan/<TICKET>-phase-N.md` — implementation plan
-- `docs/feature/prd/<TICKET>-phase-N.prd.md` — requirements
-- `docs/feature/qa/<TICKET>-phase-N.md` — QA record
+- <!-- What was checked for regressions -->
+
+---
+
+## Next Action
+
+- Proceed to QA
