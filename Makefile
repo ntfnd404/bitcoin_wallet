@@ -311,3 +311,11 @@ btc-utxos: btc-wallet-ready
 btc-utxo:
 	@if [ -z "$(TXID)" ]; then echo "TXID is required"; exit 1; fi
 	@$(BITCOIN_NODE_CLI) gettxout "$(TXID)" "$(VOUT)"
+
+# --- Development Tooling ---
+
+# Install git hooks from .claude/hooks/ into .git/hooks/.
+install-hooks:
+	@cp .claude/hooks/git-pre-commit.sh .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "Git pre-commit hook installed."

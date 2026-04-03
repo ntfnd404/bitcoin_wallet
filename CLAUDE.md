@@ -81,3 +81,4 @@ Core commands:
 - `/aidd-complete-phase`
 - `/aidd-validate`
 - `/aidd-ship-feature`
+- `/aidd-init`

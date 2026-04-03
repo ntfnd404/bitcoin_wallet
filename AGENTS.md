@@ -62,7 +62,7 @@ bitcoin_wallet/
 │   │   ├── app-rpc-contract.md  # Planned contract between app and Bitcoin Core RPC
 │   │   ├── learning-goals.md    # Learning objectives for this project
 │   │   └── rpc-learning-path.md # Structured Bitcoin RPC learning path
-│   └── feature/                 # Branch workspace (cleaned before merge into master)
+│   ├── BW-000N/                 # Branch workspace (cleaned before merge into master)
 │       ├── .active_ticket       # Current ticket ID
 │       ├── idea-TICKET.md       # Problem + user stories + acceptance criteria
 │       ├── vision-TICKET.md     # Full technical design
@@ -72,7 +72,14 @@ bitcoin_wallet/
 │       ├── plan/                # Implementation plans (exact files, code, steps)
 │       ├── prd/                 # Formal requirements (QA + Reviewer baseline)
 │       ├── research/            # Per-phase research notes
-│       └── qa/                  # QA records (PS/NE/MC/IV scenarios + verdict)
+│       ├── qa/                  # QA records (PS/NE/MC/IV scenarios + verdict)
+│       └── security/            # Critical-lane security reviews
+├── .claude/
+│   ├── settings.json            # Claude-native runtime hooks and guardrails
+│   ├── agents/                  # Project subagents
+│   ├── skills/                  # Project slash commands and domain skills
+│   ├── hooks/                   # Command hook entrypoints
+│   └── bin/                     # Validator backend
 ├── Makefile                     # Single source of truth for all infra commands
 ├── CLAUDE.md                    # Claude Code project instructions (concise)
 └── AGENTS.md                    # This file — full reference for agents
@@ -139,10 +146,21 @@ flutter test             # Run all tests
 See [docs/project/workflow.md](docs/project/workflow.md) for the full process. Summary:
 
 ```
-IDEA_READY → PRD_READY → RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY
-→ (per phase) IMPLEMENT_STEP_OK → REVIEW_OK → QA_PASS
+IDEA_READY → PRD_READY → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
+→ TASKLIST_READY → IMPLEMENT_STEP_OK → REVIEW_OK
+→ SECURITY_REVIEW_OK (Critical only) → QA_PASS
 → RELEASE_READY → DOCS_UPDATED
 ```
+
+Default lane: `Professional`
+Mandatory `Critical` lane: wallet, seed, keys, auth, crypto, signing, storage migration, API contracts
+
+**Claude-native runtime**:
+
+- `.claude/settings.json` — committed hook layer
+- `.claude/agents/` — project subagents
+- `.claude/skills/` — slash commands and domain skills
+- `CLAUDE.md` — project memory and default rules
 
 **Agents** (`.claude/agents/`):
 
@@ -153,18 +171,34 @@ IDEA_READY → PRD_READY → RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY
 | `planner` | `vision.md` + `prd/` + `research/` | `plan/TICKET-phase-N.md` + `phase/TICKET/phase-N.md` |
 | `implementer` | `phase/TICKET/phase-N.md` + `plan/` | code + tasklist `[x]` |
 | `reviewer` | diff + plan + prd | `TICKET-phase-N-summary.md` |
+| `security-reviewer` | diff + plan + prd + review summary | `security/TICKET-phase-N.md` |
 | `qa` | prd + phase/ + plan/ | `qa/TICKET-phase-N.md` |
 
 **Skills** (`.claude/skills/`):
 
 | Skill | Usage |
 |-------|-------|
-| `/new-ticket FEAT-002` | Scaffold idea stub + set `.active_ticket` |
-| `/new-phase 3` | Scaffold stubs in phase/, plan/, prd/, research/ |
-| `/start-phase 3` | Load context, propose first task |
-| `/complete-phase 3` | Verify checklist + run checks |
-| `/run-checks` | `dart format` + `flutter analyze` + `flutter test` |
-| `/ship-feature` | CHANGELOG entry + cleanup checklist |
+| `/aidd-new-ticket BW-0002` | Scaffold idea/tasklist stubs + set `.active_ticket` |
+| `/aidd-new-phase 3` | Scaffold stubs in phase/, plan/, prd/, research/ |
+| `/aidd-start-phase 3` | Load context, propose first batch |
+| `/aidd-complete-phase 3` | Verify checklist + run checks + route to review flow |
+| `/aidd-run-checks` | MCP-first format + analyze + test |
+| `/aidd-validate` | Validate workflow assets, metadata headers, stale references |
+| `/aidd-ship-feature` | Release readiness + docs sync + cleanup checklist |
+| `/aidd-init` | Bootstrap AIDD v3 structure for new project or upgrade |
+
+**Hooks and guards**:
+
+- Claude hooks in `.claude/settings.json` are the primary guardrail layer
+- `PostToolUse` auto-formats `.dart` files after Write/Edit
+- validator is required
+
+**Team mode** (off by default):
+
+- Enable: `export AIDD_TEAM_MODE=1`
+- Use for 3+ phases or cleanly separable workstreams
+- Orchestrator stays in main context; teammates get disjoint workstreams
+- See [docs/project/workflow.md](docs/project/workflow.md) for details
 
 ---
 
@@ -219,15 +253,16 @@ Full rules in [docs/project/conventions.md](docs/project/conventions.md) and [do
 
 ## Before Making Changes
 
-1. Read `docs/feature/.active_ticket` — identify current ticket
-2. Read `docs/feature/phase/<TICKET>/phase-N.md` — session brief
-3. Read `docs/project/conventions.md` — architecture rules
-4. Propose the change, wait for explicit OK
+1. Read `docs/<TICKET>/.active_ticket` — identify current ticket
+2. Read `docs/<TICKET>/phase/<TICKET>/phase-N.md` — session brief
+3. Read `docs/<TICKET>/plan/<TICKET>-phase-N.md` and `docs/<TICKET>/prd/<TICKET>-phase-N.prd.md`
+4. Read `docs/project/conventions.md` — architecture rules
+5. Check the lane and required gates for the current phase
+6. Propose the next batch, wait for explicit OK
 
 ## After Making Changes
 
-1. Run `flutter analyze` — zero warnings required
-2. Run `dart format lib/` — format changed files
-3. Mark completed tasks `[x]` in phase brief and `tasklist-<TICKET>.md`
-4. Show diff, explain what changed and why
-5. Stop and wait for confirmation before the next task
+1. Run `/aidd-run-checks`
+2. Mark completed tasks `[x]` in phase brief and `tasklist-<TICKET>.md`
+3. Show diff, explain what changed and why
+4. Stop on a meaningful boundary before the next batch
