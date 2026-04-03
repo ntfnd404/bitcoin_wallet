@@ -1,5 +1,182 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    - build/**
+    - "**.freezed.dart"
+    - "**.g.dart"
+
+  language:
+    strict-raw-types: true
+    strict-casts: true
+
+  errors:
+    dead_code: error
+    invalid_assignment: error
+    todo: info
+    directives_ordering: info
+
 formatter:
   page_width: 120
   trailing_commas: preserve
+
+linter:
+  rules:
+    # Type safety
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+
+    # Style
+    annotate_overrides: true
+    avoid_empty_else: true
+    avoid_function_literals_in_foreach_calls: true
+    avoid_init_to_null: true
+    avoid_print: true
+    avoid_redundant_argument_values: true
+    avoid_relative_lib_imports: true
+    avoid_renaming_method_parameters: true
+    avoid_return_types_on_setters: true
+    avoid_returning_null_for_void: true
+    avoid_single_cascade_in_expression_statements: true
+    avoid_unnecessary_containers: true
+    avoid_web_libraries_in_flutter: true
+    constant_identifier_names: true
+    curly_braces_in_flow_control_structures: true
+    directives_ordering: true
+    empty_constructor_bodies: true
+    empty_statements: true
+    implementation_imports: true
+    library_names: true
+    library_prefixes: true
+    prefer_adjacent_string_concatenation: true
+    prefer_collection_literals: true
+    prefer_conditional_assignment: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_contains: true
+    prefer_expression_function_bodies: true
+    prefer_final_in_for_each: true
+    prefer_final_locals: true
+    prefer_for_elements_to_map_fromIterable: true
+    prefer_function_declarations_over_variables: true
+    prefer_if_null_operators: true
+    prefer_initializing_formals: true
+    prefer_inlined_adds: true
+    prefer_is_not_operator: true
+    prefer_null_aware_operators: true
+    prefer_single_quotes: true
+    prefer_spread_collections: true
+    prefer_void_to_null: true
+    recursive_getters: true
+    require_trailing_commas: true
+    slash_for_doc_comments: true
+    sort_child_properties_last: true
+    sort_unnamed_constructors_first: true
+    type_init_formals: true
+    use_full_hex_values_for_flutter_colors: true
+    use_function_type_syntax_for_parameters: true
+    use_rethrow_when_possible: true
+    use_super_parameters: true
+    use_colored_box: true
+    use_decorated_box: true
+
+    # Async safety
+    await_only_futures: true
+    cancel_subscriptions: true
+    close_sinks: true
+    unawaited_futures: true
+    unnecessary_await_in_return: true
+
+    # Flutter
+    no_logic_in_create_state: true
+    flutter_style_todos: true
+
+    # Cleanup
+    control_flow_in_finally: true
+    null_closures: true
+    overridden_fields: true
+    package_names: true
+    unnecessary_brace_in_string_interps: true
+    unnecessary_const: true
+    unnecessary_getters_setters: true
+    unnecessary_new: true
+    unnecessary_null_in_if_null_operators: true
+    unnecessary_string_escapes: true
+    unnecessary_string_interpolations: true
+    unnecessary_this: true
+    literal_only_boolean_expressions: true
+    no_adjacent_strings_in_list: true
+    unnecessary_statements: true
+
+dcm:
+  formatter:
+    line-length: 120
+  rules:
+    - member-ordering:
+        alphabetize: false
+        order:
+          # static fields, getters, methods
+          - public-static-const-fields
+          - private-static-const-fields
+          - public-static-final-fields
+          - private-static-final-fields
+          - public-static-fields
+          - private-static-fields
+          - public-static-getters
+          - private-static-getters
+          - public-static-methods
+          - private-static-methods
+          # constructors (Effective Dart: constructors before fields)
+          - constructors
+          - named-constructors
+          - factory-constructors
+          # instance fields
+          - final-public-fields
+          - final-private-fields
+          - late-final-public-fields
+          - late-final-private-fields
+          - late-public-fields
+          - late-private-fields
+          - final-public-initialized-fields
+          - final-private-initialized-fields
+          - public-initialized-fields
+          - private-initialized-fields
+          - public-nullable-fields
+          - private-nullable-fields
+          # getters and setters
+          - getters-setters
+          # methods
+          - init-method
+          - initialize-method
+          - overridden-methods
+          - public-methods
+          - dispose-method
+          - close-method
+          - private-methods
+        widgets-order:
+          - const-fields
+          - final-fields
+          - constructors
+          - named-constructors
+          - var-fields
+          # lifecycle
+          - init-state-method
+          - did-change-dependencies-method
+          - did-update-widget-method
+          - build-method
+          - dispose-method
+          # other methods
+          - public-methods
+          - private-methods
+
+    - prefer-match-file-name:
+        exclude:
+          - "**/extensions/**"
+          - "test/**"
+
+    # Code quality (free tier)
+    - avoid-redundant-async
+    - newline-before-return
+    - no-boolean-literal-compare
+    - prefer-trailing-comma
+    - avoid-unused-parameters
