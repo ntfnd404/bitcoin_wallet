@@ -13,12 +13,10 @@ class App extends StatelessWidget {
   final AppDependencies dependencies;
 
   @override
-  Widget build(BuildContext context) {
-    return AppScope(
-      dependencies: dependencies,
-      child: const MaterialApp(
-        home: Scaffold(body: Center(child: Text('Hello World!'))),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppScope(
+    dependencies: dependencies,
+    child: const MaterialApp(
+      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    ),
+  );
 }
