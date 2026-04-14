@@ -7,9 +7,11 @@ import 'app_dependencies.dart';
 /// Wrap the root [MaterialApp] with [AppScope] so that any widget can call
 /// [AppScope.of] to obtain the resolved dependency container.
 class AppScope extends InheritedWidget {
-  const AppScope({super.key, required this.dependencies, required super.child});
-
-  final AppDependencies dependencies;
+  const AppScope({
+    super.key,
+    required this.dependencies,
+    required super.child,
+  });
 
   /// Returns [AppDependencies] from the nearest [AppScope] ancestor.
   ///
@@ -22,6 +24,8 @@ class AppScope extends InheritedWidget {
 
     return scope.dependencies;
   }
+
+  final AppDependencies dependencies;
 
   @override
   bool updateShouldNotify(AppScope oldWidget) => dependencies != oldWidget.dependencies;

@@ -33,7 +33,7 @@ void main() {
 
         for (final word in mnemonic.words) {
           expect(
-            bip39EnglishWordlist.contains(word),
+            kBip39EnglishWordlist.contains(word),
             isTrue,
             reason: 'Word "$word" not in BIP39 wordlist',
           );
@@ -87,7 +87,7 @@ void main() {
 
       test('rejects wrong word count', () {
         expect(
-          service.validateMnemonic(const Mnemonic(words: ['abandon'])),
+          service.validateMnemonic(Mnemonic(words: ['abandon'])),
           isFalse,
         );
       });
@@ -97,7 +97,7 @@ void main() {
         // Entropy: 00000000000000000000000000000000
         // Expected: abandon abandon abandon abandon abandon abandon
         //           abandon abandon abandon abandon abandon about
-        const knownMnemonic = Mnemonic(words: [
+        final knownMnemonic = Mnemonic(words: [
           'abandon', 'abandon', 'abandon', 'abandon',
           'abandon', 'abandon', 'abandon', 'abandon',
           'abandon', 'abandon', 'abandon', 'about',

@@ -2,18 +2,17 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:data/src/service/bip39_wordlist.dart';
 import 'package:domain/domain.dart';
-
-import 'bip39_wordlist.dart';
 
 /// BIP39 mnemonic generation and validation.
 ///
 /// Uses `dart:math` [Random.secure] for entropy (OS CSPRNG)
 /// and `package:crypto` SHA256 for checksum.
 final class Bip39ServiceImpl implements Bip39Service {
-  const Bip39ServiceImpl();
-
   static const _supportedWordCounts = {12, 24};
+
+  const Bip39ServiceImpl();
 
   @override
   Mnemonic generateMnemonic({int wordCount = 12}) {
@@ -39,7 +38,7 @@ final class Bip39ServiceImpl implements Bip39Service {
     // Look up each word → 11-bit index
     final bits = StringBuffer();
     for (final word in words) {
-      final index = bip39EnglishWordlist.indexOf(word);
+      final index = kBip39EnglishWordlist.indexOf(word);
       if (index < 0) return false;
       bits.write(index.toRadixString(2).padLeft(11, '0'));
     }
@@ -60,6 +59,9 @@ final class Bip39ServiceImpl implements Bip39Service {
 
     return expectedChecksum == actualChecksum;
   }
+
+  @override
+  bool isValidWord(String word) => kBip39EnglishWordlist.contains(word);
 
   // ---------------------------------------------------------------------------
   // Private helpers
@@ -96,7 +98,7 @@ final class Bip39ServiceImpl implements Bip39Service {
     for (var i = 0; i < wordCount; i++) {
       final segment = combined.substring(i * 11, (i + 1) * 11);
       final index = int.parse(segment, radix: 2);
-      words.add(bip39EnglishWordlist[index]);
+      words.add(kBip39EnglishWordlist[index]);
     }
 
     return words;

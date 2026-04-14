@@ -1,26 +1,27 @@
 import 'dart:typed_data';
 
+import 'package:data/src/crypto/base58.dart';
+import 'package:data/src/crypto/bech32.dart';
+import 'package:data/src/crypto/bip32.dart';
+import 'package:data/src/crypto/hash_utils.dart';
 import 'package:domain/domain.dart';
 import 'package:pointycastle/export.dart';
 
-import '../crypto/base58.dart';
-import '../crypto/bech32.dart';
-import '../crypto/bip32.dart';
-import '../crypto/hash_utils.dart';
-
 /// BIP32 key derivation and Bitcoin address encoding for all 4 address types.
 ///
-/// Derivation paths use `coin_type = 1` (regtest/testnet).
-/// Address prefixes: legacy = `m`/`n`, wrapped = `2`,
-/// native = `bcrt1q`, taproot = `bcrt1p`.
+/// Derivation paths use `coin_type` from [network]. Address prefixes depend on network.
 final class KeyDerivationServiceImpl implements KeyDerivationService {
-  const KeyDerivationServiceImpl();
+  final BitcoinNetwork network;
 
-  static const _hrp = 'bcrt';
-  static const _coinType = 1;
+  const KeyDerivationServiceImpl({required this.network});
 
   @override
-  Address deriveAddress(Mnemonic mnemonic, AddressType type, int index) {
+  Address deriveAddress(
+    Mnemonic mnemonic,
+    AddressType type,
+    int index,
+    String walletId,
+  ) {
     if (index < 0) {
       throw ArgumentError.value(index, 'index', 'must be >= 0');
     }
@@ -35,7 +36,7 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
     return Address(
       value: addressValue,
       type: type,
-      walletId: '',
+      walletId: walletId,
       index: index,
       derivationPath: _pathString(type, index),
     );
@@ -50,7 +51,7 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
 
     return [
       purpose | 0x80000000,
-      _coinType | 0x80000000,
+      network.coinType | 0x80000000,
       0x80000000, // account 0'
       0, // external chain
       index,
@@ -65,7 +66,7 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
   };
 
   String _pathString(AddressType type, int index) =>
-      "m/${_purpose(type)}'/1'/0'/0/$index";
+      "m/${_purpose(type)}'/${network.coinType}'/0'/0/$index";
 
   // ---------------------------------------------------------------------------
   // Address encoding
@@ -97,14 +98,14 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
     return base58CheckEncode(Uint8List.fromList([0xc4, ...scriptHash]));
   }
 
-  /// P2WPKH: Bech32("bcrt", 0, HASH160(pubkey))
+  /// P2WPKH: Bech32(HRP, 0, HASH160(pubkey)) — where HRP is from [network]
   String _encodeP2wpkh(Uint8List pubKey) {
     final h = hash160(pubKey);
 
-    return segwitEncode(_hrp, 0, h);
+    return segwitEncode(network.bech32Hrp, 0, h);
   }
 
-  /// P2TR: Bech32m("bcrt", 1, tweaked_x_only_pubkey)
+  /// P2TR: Bech32m(HRP, 1, tweaked_x_only_pubkey) — where HRP is from [network]
   ///
   /// Key-path-only spend (no script tree).
   String _encodeP2tr(Uint8List compressedPubKey) {
@@ -142,6 +143,6 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
       throw StateError('Invalid taproot output x coordinate');
     }
 
-    return segwitEncode(_hrp, 1, bigIntToBytes(qx, 32));
+    return segwitEncode(network.bech32Hrp, 1, bigIntToBytes(qx, 32));
   }
 }

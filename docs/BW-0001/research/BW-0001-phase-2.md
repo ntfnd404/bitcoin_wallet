@@ -21,7 +21,7 @@ Phase 1 delivered a working foundation. The following files are relevant to Phas
 **Domain package (`packages/domain/`):**
 - `packages/domain/pubspec.yaml` — `sdk: ^3.11.3`, `resolution: workspace`, **zero dependencies**. Correct.
 - `packages/domain/lib/domain.dart` — barrel file with all exports commented out. Must be uncommented as files are created.
-- `packages/domain/lib/src/entity/` — empty (`.gitkeep` only). Must be populated in task 2.1.
+- `packages/domain/lib/src/entity/` — empty. Must be populated in task 2.1.
 - `packages/domain/lib/src/repository/` — empty. Must be populated in task 2.2.
 - `packages/domain/lib/src/service/` — empty. Must be populated in task 2.3.
 

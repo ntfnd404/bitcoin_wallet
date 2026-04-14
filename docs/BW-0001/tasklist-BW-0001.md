@@ -12,10 +12,10 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 | 1. Foundation | 3 | 3 |
 | 2. Domain | 6 | 6 |
 | 3. Data: RPC + Node Wallet | 3 | 3 |
-| 4. Data: HD Wallet + Key Derivation | 4 | 0 |
-| 5. BLoC | 3 | 0 |
-| 6. UI: Screens | 6 | 0 |
-| 7. Navigation & Integration | 2 | 0 |
+| 4. Data: HD Wallet + Key Derivation | 4 | 4 |
+| 5. BLoC | 3 | 3 |
+| 6. UI: Screens | 6 | 6 |
+| 7. Navigation & Integration | 2 | 2 |
 
 ---
 
@@ -48,7 +48,7 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
   - Acceptance: `flutter analyze` clean; each model has `const` constructor and `copyWith`
 
 - [x] **2.2 Repository interfaces**
-  - `WalletRepository`, `SeedRepository`
+  - `WalletQueryRepository` (read-only composite interface), `NodeWalletRepository`, `HdWalletRepository`, `SeedRepository`
   - Files: `packages/domain/lib/src/repository/*.dart`
   - Acceptance: `abstract interface class` with doc comments on all methods
 
@@ -99,79 +99,82 @@ Context: Idea `docs/idea-BW-0001.md` · Vision `docs/vision-BW-0001.md`
 
 ## Phase 4: Data — HD Wallet & Key Derivation
 
-- [ ] **4.1 Bip39ServiceImpl**
+- [x] **4.1 Bip39ServiceImpl**
   - `packages/data/lib/src/service/bip39_service_impl.dart`
   - Uses `crypto` + `pointycastle` (manual BIP39 implementation)
   - `generateMnemonic(wordCount: 12|24)` → `Mnemonic`
   - `validateMnemonic(mnemonic)` → `bool`
   - Acceptance: generated mnemonic passes validation; invalid does not
 
-- [ ] **4.2 KeyDerivationServiceImpl**
+- [x] **4.2 KeyDerivationServiceImpl**
   - `packages/data/lib/src/service/key_derivation_service_impl.dart`
   - Uses `crypto` + `pointycastle` for BIP32 derivation + paths from `AppConstants`
   - `deriveAddress(mnemonic, AddressType, index)` → `Address`
   - Paths: `m/44'/1'/0'/0/n`, `m/49'/1'/0'/0/n`, `m/84'/1'/0'/0/n`, `m/86'/1'/0'/0/n`
   - Acceptance: regtest prefixes correct; derivation deterministic
 
-- [ ] **4.3 SeedRepositoryImpl**
+- [x] **4.3 SeedRepositoryImpl**
   - `packages/data/lib/src/repository/seed_repository_impl.dart`
   - Stores seed under key `seed_<walletId>`
   - Acceptance: seed survives app restart; missing seed returns null
 
-- [ ] **4.4 HdWalletRepositoryImpl**
-  - `packages/data/lib/src/repository/hd_wallet_repository_impl.dart`
-  - `createHDWallet(name)` → generate mnemonic → store seed → `(Wallet, Mnemonic)`
-  - `restoreHDWallet(name, mnemonic)` → validate → store seed
-  - `generateAddress(wallet, type)` → derive at next index
+- [x] **4.4 HdWalletRepositoryImpl + data-layer gateway**
+  - `packages/data/lib/src/repository/hd_wallet_repository_impl.dart` — pure CRUD: `saveWallet`, `getWallets`, `saveAddress`, `getAddresses`, `nextAddressIndex`
+  - `packages/data/lib/src/gateway/bitcoin_core_gateway_impl.dart` — data-internal RPC gateway (`createWallet`, `generateAddress`)
+  - `packages/data/lib/src/repository/node_wallet_repository_impl.dart` — delegates to gateway + WalletLocalStore
+  - `packages/data/lib/src/repository/composite_wallet_query_repository.dart` — merges node + HD repos for `GetWalletsUseCase`
+  - Business logic (BIP39 + derivation + UUID) lives in use cases under `lib/feature/wallet/domain/usecase/`
   - Acceptance: restored wallet generates identical addresses as original
 
 ---
 
 ## Phase 5: BLoC
 
-- [ ] **5.1 WalletBloc**
+- [x] **5.1 WalletBloc** (`lib/feature/wallet/bloc/wallet/`)
   - Events: `WalletListRequested`, `NodeWalletCreateRequested(name)`,
     `HdWalletCreateRequested(name, wordCount)`, `WalletRestoreRequested(name, mnemonic)`,
     `SeedConfirmed(walletId)`, `SeedViewRequested(walletId)`
   - State: `WalletState { wallets, status, pendingWallet, pendingMnemonic }`
   - `WalletStatus`: `initial, loading, loaded, creating, awaitingSeedConfirmation, error`
+  - Constructor receives use cases, not repositories
   - Acceptance: after `HdWalletCreateRequested` → status `awaitingSeedConfirmation`
 
-- [ ] **5.2 AddressBloc**
-  - Events: `AddressListRequested(walletId)`, `AddressGenerateRequested(wallet, type)`
+- [x] **5.2 AddressBloc** (`lib/feature/wallet/bloc/address/`)
+  - Events: `AddressListRequested(wallet)`, `AddressGenerateRequested(wallet, type)`
   - State: `AddressState { addresses, status, lastGenerated }`
   - `AddressStatus`: `initial, loading, loaded, generating, error`
+  - Constructor receives `GetAddressesUseCase` + `GenerateAddressUseCase`
   - Acceptance: `lastGenerated` has correct `derivationPath`
 
-- [ ] **5.3 WalletScope (DI)**
+- [x] **5.3 WalletScope (DI)**
   - `lib/feature/wallet/di/wallet_scope.dart`
-  - `InheritedWidget` + `WalletScopeBlocFactory`
-  - Provides `WalletBloc` and `AddressBloc`
-  - Acceptance: accessible via `context.walletScopeBlocFactory`
+  - `StatefulWidget` wrapping `_InheritedWalletScope` + `WalletScopeBlocFactory`
+  - Factory creates all use cases from injected repos/services; factory creates BLoCs
+  - Acceptance: accessible via `WalletScope.of(context)`
 
 ---
 
 ## Phase 6: UI Screens
 
-- [ ] **6.1 WalletListScreen** — list + FAB; empty state; navigate to CreateWalletScreen
-- [ ] **6.2 CreateWalletScreen** — type selector + name input; Node→Detail, HD→Seed
-- [ ] **6.3 SeedPhraseScreen** — 12/24-word grid; warning; mandatory confirmation
-- [ ] **6.4 RestoreWalletScreen** — seed input; real-time BIP39 validation
-- [ ] **6.5 WalletDetailScreen** — addresses by type; generate button; show seed (HD only)
-- [ ] **6.6 AddressScreen** — address text + copy; QR code; derivation path or "Managed by Bitcoin Core"
+- [x] **6.1 WalletListScreen** (`view/screen/list/`) — list + FAB; empty state; navigate to CreateWalletScreen
+- [x] **6.2 CreateWalletScreen** (`view/screen/setup/`) — type selector + name input; Node→Detail, HD→Seed
+- [x] **6.3 SeedPhraseScreen** (`view/screen/setup/`) — 12/24-word grid; warning; mandatory confirmation
+- [x] **6.4 RestoreWalletScreen** (`view/screen/setup/`) — seed input; real-time BIP39 validation
+- [x] **6.5 WalletDetailScreen** (`view/screen/detail/`) — addresses by type; generate button; show seed (HD only)
+- [x] **6.6 AddressScreen** (`view/screen/detail/`) — address text + copy; QR code; derivation path or "Managed by Bitcoin Core"
 
 ---
 
 ## Phase 7: Navigation & Integration
 
-- [ ] **7.1 Navigator setup**
+- [x] **7.1 Navigator setup**
   - `lib/core/routing/app_router.dart`
   - Route constants and helper methods for `Navigator.push` / `Navigator.pop` / `Navigator.pushNamed`
   - Screens: WalletListScreen, CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen,
     WalletDetailScreen, AddressScreen
   - Acceptance: navigation works on all platforms
 
-- [ ] **7.2 Wire navigation and WalletScope**
+- [x] **7.2 Wire navigation and WalletScope**
   - Add `AppRouter` and named routes to `MaterialApp` in `lib/app.dart`
   - Wrap `MaterialApp` with `WalletScope` (feature DI) inside `App`
   - Fill `AppDependenciesBuilder` with all remaining implementations

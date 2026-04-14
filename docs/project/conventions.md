@@ -72,14 +72,39 @@ bitcoin_wallet/
 │   │   └── routing/app_router.dart
 │   ├── common/                          # widgets/, extensions/, utils/
 │   ├── feature/
+│   │   ├── address/                                ← independent bounded context
+│   │   │   ├── domain/
+│   │   │   │   └── usecase/
+│   │   │   │       ├── generate_address_use_case.dart
+│   │   │   │       ├── get_addresses_use_case.dart
+│   │   │   │       └── strategy/
+│   │   │   ├── bloc/
+│   │   │   │   ├── address_bloc.dart
+│   │   │   │   ├── address_event.dart
+│   │   │   │   └── address_state.dart
+│   │   │   ├── di/address_scope.dart
+│   │   │   └── view/
+│   │   │       ├── screen/address_screen.dart
+│   │   │       └── widget/address_type_section.dart
+│   │   │
 │   │   └── wallet/
-│   │       ├── bloc/                    # WalletBloc, WalletEvent, WalletState
+│   │       ├── domain/
+│   │       │   └── usecase/             # Application-layer use cases
+│   │       ├── bloc/wallet/
+│   │       │   ├── wallet_bloc.dart
+│   │       │   ├── wallet_event.dart
+│   │       │   └── wallet_state.dart
 │   │       ├── di/wallet_scope.dart
-│   │       └── view/screen/ + widget/
+│   │       └── view/
+│   │           ├── screen/
+│   │           │   ├── list/            # WalletListScreen
+│   │           │   ├── setup/           # CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen
+│   │           │   └── detail/          # WalletDetailScreen
+│   │           └── widget/
 │   └── main.dart
 └── packages/
-    ├── domain/     # entities, repository interfaces, service interfaces
-    ├── data/       # repository + service impls, local store, crypto
+    ├── domain/     # entities, repository interfaces, service interfaces (shared across features)
+    ├── data/       # repository + service impls, local store, gateway, crypto
     ├── rpc_client/ # BitcoinRpcClient, RpcException
     ├── storage/    # SecureStorage interface + SecureStorageImpl
     └── ui_kit/     # tokens, typography, theme
@@ -106,8 +131,23 @@ domain    → (nothing)
 
 ### Feature rules
 
-- Feature = **BLoC + DI + View only** — no `domain/` or `data/` inside a feature.
-- Domain and data shared exclusively via packages.
+- Feature = **BLoC + DI + View + Application use cases**.
+- A feature **may** contain `domain/usecase/` — these are Application-layer use cases
+  that orchestrate infrastructure for this specific Bounded Context.
+- A feature **must not** contain `data/` — repository/service implementations live in packages.
+- Shared domain primitives (entities, repository interfaces, service interfaces) live in
+  `packages/domain` and are consumed by both use cases and implementations.
+- Each new Bounded Context gets its own `feature/<name>/` with its own `domain/usecase/`, BLoC, and view.
+  Shared infra is added to packages.
+- **Feature independence:** Features are independent Bounded Contexts. They do NOT import code from
+  other features' domain/bloc layers. Cross-feature dependencies only allowed in:
+  - Router (composition point)
+  - UI (view importing another feature's view/widget is acceptable)
+  - DI (scopes wired in app.dart)
+- **Address feature:** Independent from Wallet. Owned by Wallet (walletId exists), but:
+  - Can be queried independently (future: TransactionHistory will query addresses)
+  - Has own AddressScope, BLoCs, views
+  - Wallet feature does NOT import address/{domain,bloc}; uses address/{view,widget}
 
 ---
 
@@ -122,32 +162,62 @@ See [guidelines.md](./guidelines.md) for detailed examples.
 ## State Management
 
 BLoC only — no Cubits. Events = past-tense user actions (`WalletListRequested`).
+Hand-written immutable state classes — no `freezed` or code generation.
 
 ```dart
-@freezed
-abstract class WalletState with _$WalletState {
-  const factory WalletState({
-    @Default([]) List<Wallet> wallets,
-    @Default(WalletStatus.initial) WalletStatus status,
-  }) = _WalletState;
+final class WalletState {
+  const WalletState({
+    this.wallets = const [],
+    this.status = WalletStatus.initial,
+    this.pendingWallet,
+    this.pendingMnemonic,
+    this.errorMessage,
+  });
+
+  final List<Wallet> wallets;
+  final WalletStatus status;
+  final Wallet? pendingWallet;
+  final Mnemonic? pendingMnemonic;
+  final String? errorMessage;
+
+  WalletState copyWith({...});
 }
 
-enum WalletStatus { initial, loading, loaded, error }
+enum WalletStatus { initial, loading, loaded, creating, awaitingSeedConfirmation, error }
 ```
+
+BLoC constructors receive **use cases**, not repositories.
 
 ---
 
 ## Dependency Injection
 
-- Constructor-based DI. `InheritedWidget` at feature scope.
-- No service locator (no GetIt).
+- Constructor-based DI only. No service locator (no GetIt).
+- **App-level**: `AppDependenciesBuilder` → `AppDependencies` (infra). `AppScope` (InheritedWidget) exposes it to tree.
+- **Feature-level**: `WalletScope` is a `StatefulWidget` composition root:
+  - Reads `AppDependencies` via `AppScope.of(context)` in `initState` 
+  - Creates all feature use cases from dependencies
+  - Session-level BLoC (`WalletBloc`) is created via static factory `WalletBlocFactory.create(...)` inside `BlocProvider(create: ...)` in `build()`
+  - Session BLoC available to all descendants via `context.read<WalletBloc>()`
+  - Screen-level BLoCs created on-demand via `WalletScope.newXxxBloc(context)` (static helper)
+  - Screen-level BLoCs wrapped in `BlocProvider(create: ...)` inside route builders in `AppRouter`
+- **Factory pattern**: Static factories (`abstract final class WalletBlocFactory`, `AddressBlocFactory`) with static `create(...)` methods — no instantiation, encapsulates assembly logic
 
 ---
 
-## Repositories
+## Repositories and Gateways
 
 - `abstract interface class` for interfaces; `Impl` suffix for implementations.
 - Doc comments on all interface methods.
+- **Repository** = storage contract (CRUD). No business logic.
+  - `WalletQueryRepository` — read-only composite interface (ISP).
+  - `NodeWalletRepository implements WalletQueryRepository` — commands go via RPC gateway; queries served from local cache.
+  - `HdWalletRepository implements WalletQueryRepository` — pure local CRUD.
+  - `SeedRepository` — secure storage of mnemonics.
+- **Gateway** = data-internal adapter for an external system. Not exported to domain.
+  - `BitcoinCoreGateway` / `BitcoinCoreGatewayImpl` — wraps Bitcoin Core JSON-RPC. Lives in `packages/data/src/gateway/`.
+- **CompositeWalletQueryRepository** — merges node + HD repositories for `GetWalletsUseCase`.
+- **Use Cases** — Application layer, live in `lib/feature/<name>/domain/usecase/`. Orchestrate repositories and services; produce and return domain entities.
 
 ---
 
@@ -185,8 +255,11 @@ These are hard rules. Never violate them.
 - **Never** expose private keys outside the data/domain layer
 - **Never** use relative imports — always `package:` imports
 - **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
+- **Never** pass BLoC as constructor parameter to Widget — use `context.read<T>()` instead
+- **Never** do `BlocProvider(create: (_) => widget.bloc)` — this hands lifecycle to provider while BLoC was created externally; let provider own the BLoC
 - **Never** commit with analyzer warnings or infos — `flutter analyze --fatal-infos --fatal-warnings` must pass
 - **Never** use `^` in dependency versions — exact versions only (e.g. `crypto: 3.0.7`)
 - **Never** create private `_buildXxx` methods in widgets — extract as separate widget classes
-- **Never** put domain or data code inside a feature directory — use packages only
+- **Never** put repository/service implementations inside a feature directory — use `packages/data`
+- **Never** put shared entities or interfaces inside a feature directory — use `packages/domain`
 - **Never** log or expose mnemonic/seed/private key material in UI, logs, or error messages

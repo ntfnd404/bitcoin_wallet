@@ -115,6 +115,11 @@ dcm:
     - member-ordering:
         alphabetize: false
         order:
+          # constructors (Effective Dart: constructors before fields)
+          - constructors
+          - named-constructors
+          - factory-constructors
+
           # static fields, getters, methods
           - public-static-const-fields
           - private-static-const-fields
@@ -126,13 +131,10 @@ dcm:
           - private-static-getters
           - public-static-methods
           - private-static-methods
-          # constructors (Effective Dart: constructors before fields)
-          - constructors
-          - named-constructors
-          - factory-constructors
+
           # instance fields
           - final-public-fields
-          - final-private-fields
+          # - final-private-fields
           - late-final-public-fields
           - late-final-private-fields
           - late-public-fields
@@ -143,8 +145,10 @@ dcm:
           - private-initialized-fields
           - public-nullable-fields
           - private-nullable-fields
+
           # getters and setters
           - getters-setters
+
           # methods
           - init-method
           - initialize-method
@@ -153,18 +157,21 @@ dcm:
           - dispose-method
           - close-method
           - private-methods
+
         widgets-order:
           - const-fields
           - final-fields
           - constructors
           - named-constructors
           - var-fields
+
           # lifecycle
           - init-state-method
           - did-change-dependencies-method
           - did-update-widget-method
           - build-method
           - dispose-method
+          
           # other methods
           - public-methods
           - private-methods
@@ -178,5 +185,5 @@ dcm:
     - avoid-redundant-async
     - newline-before-return
     - no-boolean-literal-compare
-    - prefer-trailing-comma
+    # - prefer-trailing-comma
     - avoid-unused-parameters

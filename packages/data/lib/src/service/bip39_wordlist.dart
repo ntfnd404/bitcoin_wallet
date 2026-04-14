@@ -1,7 +1,7 @@
 /// Official BIP39 English wordlist (2048 words).
 ///
 /// Source: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
-const List<String> bip39EnglishWordlist = [
+const List<String> kBip39EnglishWordlist = [
   'abandon',
   'ability',
   'able',

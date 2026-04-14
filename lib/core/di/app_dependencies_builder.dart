@@ -1,74 +1,62 @@
+import 'package:bitcoin_wallet/core/constants/app_constants.dart';
+import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
 import 'package:data/data.dart';
-import 'package:domain/domain.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:storage/storage.dart';
 
-import '../constants/app_constants.dart';
-import 'app_dependencies.dart';
-
-/// Composition root — creates and wires all concrete implementations.
+/// Composition root — wires all concrete infrastructure implementations.
 ///
-/// Called once at startup in [main]. Stub implementations are replaced
-/// with real ones as Phases 3–4 are completed.
+/// Called once at startup via [create()]. Use cases are NOT created here;
+/// they live in feature scope (WalletScope, AddressScope).
+///
+/// A single [WalletLocalStore] is shared by [WalletRepositoryImpl] and
+/// [AddressRepositoryImpl] — both read/write to the same secure storage
+/// partition, distinguished by their own key prefixes internally.
 final class AppDependenciesBuilder {
-  /// Builds and returns the fully wired [AppDependencies].
-  AppDependencies build() {
-    final rpcClient = BitcoinRpcClient(
-      url: AppConstants.rpcUrl,
-      user: AppConstants.rpcUser,
-      password: AppConstants.rpcPassword,
-    );
-    final storage = SecureStorageImpl();
-    final nodeLocalStore = WalletLocalStore(
-      storage: storage,
-      keyPrefix: 'node_',
-    );
-    return AppDependencies(
-      nodeWalletRepository: NodeWalletRepositoryImpl(
-        rpcClient: rpcClient,
-        localStore: nodeLocalStore,
-      ),
-      hdWalletRepository: _StubHdWalletRepository(),
-      seedRepository: _StubSeedRepository(),
-      bip39Service: const Bip39ServiceImpl(),
-      keyDerivationService: const KeyDerivationServiceImpl(),
-    );
+  final void Function(AppDependencies dependencies) _builder;
+  final void Function(Object error, StackTrace stack) _onError;
+
+  AppDependenciesBuilder._({
+    required void Function(AppDependencies dependencies) builder,
+    required void Function(Object error, StackTrace stack) onError,
+  }) : _builder = builder,
+       _onError = onError;
+
+  /// Initializes the composition root and builds the app.
+  ///
+  /// Call this once at startup, typically in main().
+  static void create({
+    required void Function(AppDependencies dependencies) builder,
+    required void Function(Object error, StackTrace stack) onError,
+  }) {
+    final instance = AppDependenciesBuilder._(builder: builder, onError: onError);
+    instance._build();
+  }
+
+  void _build() {
+    try {
+      final rpcClient = BitcoinRpcClient(
+        url: AppConstants.rpcUrl,
+        user: AppConstants.rpcUser,
+        password: AppConstants.rpcPassword,
+      );
+      final storage = SecureStorageImpl();
+      final walletLocalStore = WalletLocalStore(storage: storage, keyPrefix: 'wallet_');
+      final addressLocalStore = AddressLocalStore(storage: storage, keyPrefix: 'wallet_');
+      final gateway = BitcoinCoreGatewayImpl(rpcClient: rpcClient);
+
+      final dependencies = AppDependencies(
+        walletRepository: WalletRepositoryImpl(localStore: walletLocalStore),
+        addressRepository: AddressRepositoryImpl(localStore: addressLocalStore),
+        bitcoinCoreGateway: gateway,
+        seedRepository: SeedRepositoryImpl(storage: storage),
+        bip39Service: const Bip39ServiceImpl(),
+        keyDerivationService: const KeyDerivationServiceImpl(network: AppConstants.network),
+      );
+
+      _builder(dependencies);
+    } catch (e, s) {
+      _onError(e, s);
+    }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Stub implementations — replaced in Phase 4.
-// All methods throw [UnimplementedError] to fail loudly if called early.
-// ---------------------------------------------------------------------------
-
-final class _StubHdWalletRepository implements HdWalletRepository {
-  @override
-  Future<(Wallet, Mnemonic)> createHDWallet(
-    String name, {
-    int wordCount = 12,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<Wallet> restoreHDWallet(String name, Mnemonic mnemonic) => throw UnimplementedError();
-
-  @override
-  Future<List<Wallet>> getWallets() => throw UnimplementedError();
-
-  @override
-  Future<Address> generateAddress(Wallet wallet, AddressType type) => throw UnimplementedError();
-
-  @override
-  Future<List<Address>> getAddresses(Wallet wallet) => throw UnimplementedError();
-}
-
-final class _StubSeedRepository implements SeedRepository {
-  @override
-  Future<void> storeSeed(String walletId, Mnemonic mnemonic) => throw UnimplementedError();
-
-  @override
-  Future<Mnemonic?> getSeed(String walletId) => throw UnimplementedError();
-
-  @override
-  Future<void> deleteSeed(String walletId) => throw UnimplementedError();
-}
-

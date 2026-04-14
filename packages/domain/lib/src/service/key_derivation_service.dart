@@ -1,6 +1,6 @@
-import '../entity/address.dart';
-import '../entity/address_type.dart';
-import '../entity/mnemonic.dart';
+import 'package:domain/src/entity/address.dart';
+import 'package:domain/src/entity/address_type.dart';
+import 'package:domain/src/entity/mnemonic.dart';
 
 abstract interface class KeyDerivationService {
   /// Derives a Bitcoin address from [mnemonic] at [type] and [index].
@@ -12,5 +12,11 @@ abstract interface class KeyDerivationService {
   /// - taproot        → m/86'/[coinType]'/0'/0/[index]
   ///
   /// [index] must be >= 0.
-  Address deriveAddress(Mnemonic mnemonic, AddressType type, int index);
+  /// [walletId] associates the derived address with a wallet.
+  Address deriveAddress(
+    Mnemonic mnemonic,
+    AddressType type,
+    int index,
+    String walletId,
+  );
 }

@@ -1,4 +1,4 @@
-import '../entity/mnemonic.dart';
+import 'package:domain/src/entity/mnemonic.dart';
 
 abstract interface class SeedRepository {
   /// Persists [mnemonic] for [walletId] in secure storage.

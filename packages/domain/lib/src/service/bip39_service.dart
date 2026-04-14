@@ -1,4 +1,4 @@
-import '../entity/mnemonic.dart';
+import 'package:domain/src/entity/mnemonic.dart';
 
 abstract interface class Bip39Service {
   /// Generates a BIP39 mnemonic with [wordCount] words (12 or 24).
@@ -9,4 +9,7 @@ abstract interface class Bip39Service {
 
   /// Returns `true` if [mnemonic] passes BIP39 checksum validation.
   bool validateMnemonic(Mnemonic mnemonic);
+
+  /// Returns `true` if [word] is a valid BIP39 English word.
+  bool isValidWord(String word);
 }

@@ -4,9 +4,9 @@ import 'secure_storage.dart';
 
 /// [SecureStorage] backed by [FlutterSecureStorage].
 final class SecureStorageImpl implements SecureStorage {
-  SecureStorageImpl() : _storage = const FlutterSecureStorage();
-
   final FlutterSecureStorage _storage;
+
+  SecureStorageImpl() : _storage = const FlutterSecureStorage();
 
   @override
   Future<String?> getString(String key) => _storage.read(key: key);

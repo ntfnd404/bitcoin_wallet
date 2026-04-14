@@ -1,15 +1,13 @@
-import '../entity/address.dart';
-import '../entity/address_type.dart';
-import '../entity/wallet.dart';
+import 'package:domain/src/entity/wallet.dart';
 
-/// Base wallet operations shared by both Node and HD wallet implementations.
+/// Unified storage contract for all wallet types.
+///
+/// Pure CRUD — no business logic. Both Node and HD wallets use the same
+/// repository; the [Wallet.type] field distinguishes them at query time.
 abstract interface class WalletRepository {
-  /// Returns all wallets managed by this repository.
+  /// Persists [wallet] metadata. Overwrites if the same [Wallet.id] exists.
+  Future<void> saveWallet(Wallet wallet);
+
+  /// Returns all stored wallets regardless of type.
   Future<List<Wallet>> getWallets();
-
-  /// Generates the next address of [type] for [wallet].
-  Future<Address> generateAddress(Wallet wallet, AddressType type);
-
-  /// Returns all addresses previously generated for [wallet].
-  Future<List<Address>> getAddresses(Wallet wallet);
 }

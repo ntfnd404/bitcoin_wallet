@@ -3,10 +3,10 @@ import 'package:domain/domain.dart';
 abstract final class AppConstants {
   /// Active Bitcoin network. Change this one constant to switch networks.
   static const BitcoinNetwork network = BitcoinNetwork.regtest;
-
-  static String get rpcUrl => 'http://127.0.0.1:${network.rpcPort}';
   static const String rpcUser = 'bitcoin';
   static const String rpcPassword = 'bitcoin';
+
+  static String get rpcUrl => 'http://127.0.0.1:${network.rpcPort}';
 
   /// BIP44/49/84/86 account-level paths. Append `/index` at derivation time.
   static String get derivationPathLegacy => "m/44'/${network.coinType}'/0'/0";

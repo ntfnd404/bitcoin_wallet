@@ -2,17 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:data/src/crypto/extended_key.dart';
+import 'package:data/src/crypto/hash_utils.dart';
 import 'package:pointycastle/export.dart';
-
-import 'hash_utils.dart';
-
-/// BIP32 extended key — private key + chain code pair.
-final class ExtendedKey {
-  const ExtendedKey({required this.privateKey, required this.chainCode});
-
-  final Uint8List privateKey;
-  final Uint8List chainCode;
-}
 
 /// BIP39: converts mnemonic words to a 512-bit seed via PBKDF2-HMAC-SHA512.
 ///
@@ -22,8 +14,7 @@ Uint8List mnemonicToSeed(List<String> words) {
   final salt = Uint8List.fromList(utf8.encode('mnemonic'));
 
   final hmac = HMac(SHA512Digest(), 128);
-  final derivator = PBKDF2KeyDerivator(hmac)
-    ..init(Pbkdf2Parameters(salt, 2048, 64));
+  final derivator = PBKDF2KeyDerivator(hmac)..init(Pbkdf2Parameters(salt, 2048, 64));
 
   return derivator.process(password);
 }
@@ -103,9 +94,19 @@ ExtendedKey _deriveChild(ExtendedKey parent, int index) {
   final ir = Uint8List.fromList(digest.bytes.sublist(32, 64));
 
   final params = ECDomainParameters('secp256k1');
-  final parentInt = bytesToBigInt(parent.privateKey);
   final ilInt = bytesToBigInt(il);
+
+  // BIP32: if IL >= n the key is invalid; caller must skip to the next index.
+  if (ilInt >= params.n) {
+    throw StateError('Derived IL >= curve order; skip this index');
+  }
+
+  final parentInt = bytesToBigInt(parent.privateKey);
   final childInt = (parentInt + ilInt) % params.n;
+
+  if (childInt == BigInt.zero) {
+    throw StateError('Derived child key is zero; skip this index');
+  }
 
   return ExtendedKey(
     privateKey: bigIntToBytes(childInt, 32),

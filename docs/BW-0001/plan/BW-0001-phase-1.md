@@ -47,7 +47,7 @@ dev_dependencies:
 
 **Current state:** only `lib/main.dart`.
 
-**Changes:** create empty directories (`.gitkeep` not needed — files will appear in subsequent phases):
+**Changes:** create empty directories (files will appear in subsequent phases):
 
 ```
 lib/
