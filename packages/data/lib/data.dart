@@ -1,9 +1,11 @@
-// Gateway implementations
-export 'src/gateway/bitcoin_core_gateway_impl.dart';
+// Data sources
+export 'src/datasources/local/address_local_data_source_impl.dart';
+export 'src/datasources/local/wallet_local_data_source_impl.dart';
+export 'src/datasources/remote/bitcoin_core_remote_data_source_impl.dart';
 
-// Local store
-export 'src/local/address_local_store.dart';
-export 'src/local/wallet_local_store.dart';
+// Mappers
+export 'src/mappers/address_mapper_impl.dart';
+export 'src/mappers/wallet_mapper_impl.dart';
 
 // Repository implementations
 export 'src/repository/address_repository_impl.dart';

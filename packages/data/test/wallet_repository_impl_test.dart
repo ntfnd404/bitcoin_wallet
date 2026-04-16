@@ -5,8 +5,9 @@ import 'package:test/test.dart';
 import 'fake_secure_storage.dart';
 
 WalletRepositoryImpl _makeRepo() => WalletRepositoryImpl(
-      localStore: WalletLocalStore(
+      localDataSource: WalletLocalDataSourceImpl(
         storage: FakeSecureStorage(),
+        mapper: const WalletMapperImpl(),
         keyPrefix: 'wallet_',
       ),
     );

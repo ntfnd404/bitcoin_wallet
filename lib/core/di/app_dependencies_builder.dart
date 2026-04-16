@@ -8,10 +8,6 @@ import 'package:storage/storage.dart';
 ///
 /// Called once at startup via [create()]. Use cases are NOT created here;
 /// they live in feature scope (WalletScope, AddressScope).
-///
-/// A single [WalletLocalStore] is shared by [WalletRepositoryImpl] and
-/// [AddressRepositoryImpl] — both read/write to the same secure storage
-/// partition, distinguished by their own key prefixes internally.
 final class AppDependenciesBuilder {
   final void Function(AppDependencies dependencies) _builder;
   final void Function(Object error, StackTrace stack) _onError;
@@ -41,14 +37,28 @@ final class AppDependenciesBuilder {
         password: AppConstants.rpcPassword,
       );
       final storage = SecureStorageImpl();
-      final walletLocalStore = WalletLocalStore(storage: storage, keyPrefix: 'wallet_');
-      final addressLocalStore = AddressLocalStore(storage: storage, keyPrefix: 'wallet_');
-      final gateway = BitcoinCoreGatewayImpl(rpcClient: rpcClient);
+
+      const walletMapper = WalletMapperImpl();
+      final walletLocalDataSource = WalletLocalDataSourceImpl(
+        storage: storage,
+        mapper: walletMapper,
+        keyPrefix: 'wallet_',
+      );
+
+      const addressMapper = AddressMapperImpl();
+      final addressLocalDataSource = AddressLocalDataSourceImpl(
+        storage: storage,
+        mapper: addressMapper,
+      );
+
+      final bitcoinCoreRemoteDataSource = BitcoinCoreRemoteDatasourceImpl(
+        rpcClient: rpcClient,
+      );
 
       final dependencies = AppDependencies(
-        walletRepository: WalletRepositoryImpl(localStore: walletLocalStore),
-        addressRepository: AddressRepositoryImpl(localStore: addressLocalStore),
-        bitcoinCoreGateway: gateway,
+        walletRepository: WalletRepositoryImpl(localDataSource: walletLocalDataSource),
+        addressRepository: AddressRepositoryImpl(localStore: addressLocalDataSource),
+        bitcoinCoreRemoteDataSource: bitcoinCoreRemoteDataSource,
         seedRepository: SeedRepositoryImpl(storage: storage),
         bip39Service: const Bip39ServiceImpl(),
         keyDerivationService: const KeyDerivationServiceImpl(network: AppConstants.network),
