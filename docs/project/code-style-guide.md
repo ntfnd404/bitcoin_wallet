@@ -132,34 +132,36 @@ if (value == null) return;
 **Never** expose public fields or public methods on BLoC classes — all logic via events only.
 
 **BLoC lifecycle and providers:**
-- `BlocProvider(create: ...)` — BLoC is created inside the provider, lifecycle is managed by it
-- `BlocProvider.value(value: ...)` — only for pre-created BLoCs with external lifecycle management (rare)
+- **Always** use `BlocProvider(create: ...)` — BLoC is created inside the provider, lifecycle is auto-managed (auto-dispose)
+- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
 - **Never** pass BLoC as constructor parameter to a Widget — use `context.read<T>()` or `context.watch<T>()` instead
-- **Never** do `BlocProvider(create: (_) => widget.bloc)` — this anti-pattern causes incorrect lifecycle management
+- **Never** do `BlocProvider(create: (_) => widget.bloc)` — this hands lifecycle to provider while BLoC was created externally
+- BLoC instances are created via Scope factory: `SomeScope.newBloc(context)`
 
 ```dart
-// ❌ Anti-pattern: widget owns bloc, then provider tries to close it again
+// ❌ Anti-pattern: BlocProvider.value with external lifecycle
+class MyScope extends StatefulWidget {
+  @override
+  Widget build(BuildContext context) => BlocProvider.value(
+    value: _bloc,   // scope holds the instance — wrong
+    child: ...,
+  );
+}
+
+// ❌ Anti-pattern: widget owns bloc
 class MyScreen extends StatefulWidget {
   final MyBloc bloc;
   @override
   Widget build(BuildContext context) => BlocProvider(create: (_) => widget.bloc, ...);
 }
 
-// ✅ Correct: provider creates and owns the bloc
+// ✅ Correct: BlocProvider(create:) via Scope factory, low in tree
 class MyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => MyBlocFactory.create(...),
-    child: ...,
+    create: (_) => MyScope.newBloc(context),
+    child: const _MyView(),
   );
-}
-
-// ✅ Correct: screen reads from provider above
-class MyScreen extends StatefulWidget {
-  @override
-  void initState() {
-    context.read<MyBloc>().add(MyEvent());
-  }
 }
 ```
 
@@ -171,6 +173,30 @@ class MyScreen extends StatefulWidget {
 - **Never** create private `_buildXxx` methods — extract reusable widgets as separate classes
 - Arrow functions only for single-expression bodies
 - **Always** use `const` constructors where possible
+
+### Accessing InheritedWidget in State
+
+**Never** call `context.read<T>()`, `context.watch<T>()`, or any `InheritedWidget`-based lookup inside `initState` — the widget is not yet in the tree and the lookup will throw.
+
+**Always** use `didChangeDependencies` with an `_initialized` guard for `late final` fields that depend on `InheritedWidget`:
+
+```dart
+class _MyState extends State<MyWidget> {
+  late final MyDependency _dep;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+
+    _dep = context.read<MyDependency>();
+  }
+}
+```
+
+The guard is mandatory when the field is `late final` — assigning it twice throws `LateInitializationError`. `didChangeDependencies` can be called multiple times (e.g., when an ancestor `InheritedWidget` updates).
 
 ---
 
@@ -198,64 +224,132 @@ This convention improves readability for simple, single-purpose use cases.
 
 ## Feature Scopes
 
-Feature-scoped DI (e.g., `WalletScope`, `AddressScope`) is the composition root for each Bounded Context.
+Scope = composition root that **assembles dependencies** and **exposes a factory** for creating BLoC instances. Scope does NOT hold or own BLoC instances.
 
-**Pattern — Single BLoC per feature (session-level):**
-
-All screens in a feature share the same session-level BLoC instance. This ensures consistent state across navigation and eliminates callback hell.
+**Pattern — Scope provides factory, BlocProvider placed low in tree:**
 
 ```dart
-/// Feature-scoped DI entry point.
-class WalletScope extends StatefulWidget {
-  const WalletScope({required this.child});
-
+/// Scope: assembles dependencies, exposes factory via InheritedWidget.
+/// Placed HIGH in tree (e.g., in AppRouterDelegate).
+class WalletListScope extends StatefulWidget {
+  const WalletListScope({required this.child});
   final Widget child;
 
-  @override
-  State<WalletScope> createState() => _WalletScopeState();
-}
+  /// Creates a new WalletListBloc with all dependencies wired.
+  static WalletListBloc newBloc(BuildContext context) {
+    final scope = context
+        .getInheritedWidgetOfExactType<_InheritedWalletListScope>();
+    if (scope == null) {
+      throw StateError('WalletListScope not found in widget tree');
+    }
 
-class _WalletScopeState extends State<WalletScope> {
-  // Create all use cases in initState from AppDependencies
-  late final GetWalletsUseCase _getWallets;
-  late final CreateNodeWalletUseCase _createNodeWallet;
-  late final CreateHdWalletUseCase _createHdWallet;
-  late final RestoreHdWalletUseCase _restoreHdWallet;
-  late final GetSeedUseCase _getSeed;
-
-  @override
-  void initState() {
-    super.initState();
-    final dependencies = AppScope.of(context);
-    _getWallets = GetWalletsUseCase(walletRepository: dependencies.walletRepository);
-    _createNodeWallet = CreateNodeWalletUseCase(...);
-    _createHdWallet = CreateHdWalletUseCase(...);
-    // ... initialize all use cases
+    return scope.newBloc();
   }
 
   @override
-  Widget build(BuildContext context) => BlocProvider<WalletBloc>(
-    create: (_) => WalletBloc(
-      getWallets: _getWallets,
-      createNodeWallet: _createNodeWallet,
-      createHdWallet: _createHdWallet,
-      restoreHdWallet: _restoreHdWallet,
-      getSeed: _getSeed,
-    ),
+  State<WalletListScope> createState() => _WalletListScopeState();
+}
+
+class _WalletListScopeState extends State<WalletListScope> {
+  late final WalletRepository _walletRepository;
+  bool _initialized = false;
+
+  WalletListBloc _newBloc() => WalletListBloc(
+    walletRepository: _walletRepository,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+
+    final deps = AppScope.of(context);
+    _walletRepository = deps.walletRepository;
+  }
+
+  @override
+  Widget build(BuildContext context) => _InheritedWalletListScope(
+    newBloc: _newBloc,
     child: widget.child,
+  );
+}
+
+class _InheritedWalletListScope extends InheritedWidget {
+  const _InheritedWalletListScope({
+    required this.newBloc,
+    required super.child,
+  });
+
+  final WalletListBloc Function() newBloc;
+
+  @override
+  bool updateShouldNotify(_InheritedWalletListScope old) => false;
+}
+```
+
+```dart
+/// Screen: BlocProvider placed LOW in tree, near BlocBuilder.
+/// BlocProvider(create:) auto-manages lifecycle (auto-dispose).
+class WalletListScreen extends StatelessWidget {
+  const WalletListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<WalletListBloc>(
+    create: (_) => WalletListScope.newBloc(context),
+    child: const _WalletListView(),
   );
 }
 ```
 
 **Guidelines:**
-- Scopes are wired in `app.dart` as nested StatefulWidgets
-- **One session-level BLoC per feature** (e.g., `WalletBloc`, `AddressBloc`) created in `build()`
-- BLoC is managed and closed automatically by `BlocProvider`
-- Use cases are created once in `initState()` — reused by all screens in the feature
-- All screens read from the same session BLoC using `context.read<WalletBloc>()`
-- Never pass BLoCs as constructor params — always use `context.read<T>()` or `context.watch<T>()`
-- Screens handle their own navigation via `BlocConsumer` / `BlocListener` on state changes
-- No callbacks between Router and Screens — navigation is declarative (react to state)
+- **Scope** = high in tree, assembles dependencies, exposes factory via static method + InheritedWidget
+- **BlocProvider(create: ...)** = low in tree, near the screen/BlocBuilder. Auto-disposes BLoC
+- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
+- **Never** hold BLoC instances in Scope — Scope provides a way to CREATE them
+- **One BLoC per flow** — no god-object BLoCs handling multiple flows
+- All screens access BLoC via `context.read<T>()` or `context.watch<T>()`
+- **Never** pass BLoCs as constructor params to widgets
+- Screens navigate directly via `AppRouter` static methods — no callbacks up the tree
+- **Never** read `AppScope.of(context)` in `initState` — use `didChangeDependencies` with `_initialized` guard
+- Cross-flow communication via `AppEventBus`, not BLoC-to-BLoC subscription
+
+---
+
+## Navigation
+
+The app uses **Navigator 2.0** via a custom `RouterDelegate` — no third-party routing packages.
+
+**`AppRouterDelegate`** is the single routing entry point:
+- Registered with `MaterialApp.router(routerDelegate: _delegate)`
+- `build()` wraps `Navigator` with feature scopes (`WalletScope`, `AddressScope`) — this is the only way to place scopes **below `MaterialApp`** (so `MediaQuery`, `Theme`, `Localizations` are available) but **above `Navigator`** (so all pushed routes share the same BLoC instances)
+- Imperative pushes use `AppRouter` static methods (`AppRouter.toWalletDetail(context, wallet)`)
+
+```dart
+final class AppRouterDelegate extends RouterDelegate<Object>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
+  @override
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) => WalletScope(
+    child: AddressScope(
+      child: Navigator(key: navigatorKey, ...),
+    ),
+  );
+
+  @override
+  Future<void> setNewRoutePath(Object configuration) async {}
+}
+```
+
+**`AppRouterDelegate` is created once** in `_AppState.initState()` — `RouterDelegate` must not be recreated on rebuild.
+
+**Guidelines:**
+- **Never** use `go_router` or other routing packages — use built-in Navigator 2.0
+- Feature scopes belong in `AppRouterDelegate.build()`, not in `app.dart`
+- `AppRouter` methods are the only navigation API visible to screens
+- Screens **never** call `Navigator.push` directly — always go through `AppRouter`
 
 ---
 

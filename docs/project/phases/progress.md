@@ -8,11 +8,11 @@ Checklist items are closed when the Flutter app implements the feature, not when
 ## Current status
 
 - Phase 01: `completed`
-- Phase 02: `in progress`
-- Phase 03: `planned`
+- Phase 02: `completed`
+- Phase 03: `completed`
 - Phase 04: `planned`
 - Phase 05: `planned`
-- Phase 06: `planned`
+- Phase 06: `in progress`
 - Phase 07: `planned`
 - Phase 08: `planned`
 
@@ -34,21 +34,22 @@ Checklist items are closed when the Flutter app implements the feature, not when
 
 Flutter app reads basic node and wallet state via RPC.
 
-- [ ] RPC client layer implemented in Flutter (HTTP JSON-RPC calls to Bitcoin Core).
-- [ ] App displays node connectivity status (reachable / unreachable).
-- [ ] App displays current block height and chain name.
-- [ ] App displays wallet loaded state (`getwalletinfo`).
-- [ ] App displays confirmed, unconfirmed, and immature balances separately (`getbalances`).
+- [x] RPC client layer implemented in Flutter (HTTP JSON-RPC calls to Bitcoin Core).
+- [x] App displays node connectivity status (reachable / unreachable).
+- [x] App displays current block height and chain name.
+- [x] App displays wallet loaded state (`getwalletinfo`).
+- [x] App displays confirmed, unconfirmed, and immature balances separately (`getbalances`).
 
 ### Phase 03: Address management
 
 Flutter app generates and displays Bitcoin addresses.
 
-- [ ] App generates a legacy (P2PKH) address via RPC.
-- [ ] App generates a P2SH-SegWit address via RPC.
-- [ ] App generates a native SegWit bech32 (P2WPKH) address via RPC.
-- [ ] App generates a Taproot (P2TR) address via RPC.
-- [ ] Address displayed as copyable text and QR code.
+- [x] App generates a legacy (P2PKH) address via RPC.
+- [x] App generates a P2SH-SegWit address via RPC.
+- [x] App generates a native SegWit bech32 (P2WPKH) address via RPC.
+- [x] App generates a Taproot (P2TR) address via RPC.
+- [x] Address displayed as copyable text.
+- [ ] Address displayed as QR code.
 - [ ] Address labeled as used or unused based on transaction history.
 
 ### Phase 04: Transaction history and UTXO inspection
@@ -82,11 +83,11 @@ Flutter app constructs, signs, and broadcasts transactions with user-controlled 
 
 Flutter app derives keys from a BIP39 seed phrase and signs transactions internally.
 
-- [ ] App generates a BIP39 mnemonic (12 or 24 words).
-- [ ] App derives keys following BIP84 (`m/84'/1'/0'`) for regtest.
+- [x] App generates a BIP39 mnemonic (12 or 24 words).
+- [x] App derives keys following BIP84/86/44/49 for regtest.
+- [x] App generates receiving addresses from the derived key tree.
+- [x] App imports an existing BIP39 mnemonic and restores the same addresses.
 - [ ] App displays the derived xpub and derivation path.
-- [ ] App generates receiving addresses from the derived key tree.
-- [ ] App imports an existing BIP39 mnemonic and restores the same addresses.
 - [ ] App signs transactions internally (private keys in memory; no `signrawtransactionwithwallet`).
 - [ ] Signed transactions verified by broadcasting to regtest and confirming via `getrawtransaction`.
 

@@ -2,6 +2,8 @@
 
 Architecture and code rules for bitcoin-wallet. Read first, always follow.
 
+For full target architecture, see [architecture.md](./architecture.md).
+
 ---
 
 ## Project Overview
@@ -49,112 +51,80 @@ Regtest only. `txindex=1`. No proxy.
 
 ## Architecture
 
-### Layers (Clean Architecture + Hexagonal)
+Feature-first app + business modules as packages + layered modules + hard architecture gate. See [architecture.md](./architecture.md) for full details.
+
+### Layers (Clean + Hexagonal)
 
 ```
-Presentation → Domain ← Data
+Presentation (features in app/) → Application/Domain (modules in packages/) ← Infrastructure (data/ in modules)
 ```
 
-- **Presentation** — Flutter UI + BLoC. `lib/`. Depends on `domain` interfaces only.
-- **Domain** — entities + repository/service interfaces. Pure Dart. `packages/domain`.
-- **Data** — implementations. `packages/data`. Uses `domain`, `rpc_client`, `storage`.
-- **Infra** — `rpc_client`, `storage`: each wraps one external system, no domain knowledge.
-- **UI** — `ui_kit`: design system, Flutter-only, no domain knowledge.
+- **Feature** — Flutter UI + BLoC per flow. `lib/feature/`. Depends on module public API only.
+- **Module domain** — entities + repository/service/data source interfaces. Pure Dart. `packages/<module>/src/domain/`.
+- **Module application** — use cases, query APIs. `packages/<module>/src/application/`.
+- **Module data** — implementations. `packages/<module>/src/data/`.
+- **Infrastructure** — `bitcoin_node`, `platform_storage`, `observability`: each wraps one external system.
+- **Design system** — `design_system`: Flutter-only, no domain knowledge.
+- **Shared kernel** — `shared_kernel`: tiny shared primitives (BitcoinNetwork, Failure, Result).
 
-### Project structure
-
-```
-bitcoin_wallet/
-├── lib/
-│   ├── core/
-│   │   ├── constants/app_constants.dart
-│   │   ├── di/                          # AppDependencies, AppDependenciesBuilder, AppScope
-│   │   └── routing/app_router.dart
-│   ├── common/                          # widgets/, extensions/, utils/
-│   ├── feature/
-│   │   ├── address/                                ← independent bounded context
-│   │   │   ├── domain/
-│   │   │   │   └── usecase/
-│   │   │   │       ├── generate_address_use_case.dart
-│   │   │   │       ├── get_addresses_use_case.dart
-│   │   │   │       └── strategy/
-│   │   │   ├── bloc/
-│   │   │   │   ├── address_bloc.dart
-│   │   │   │   ├── address_event.dart
-│   │   │   │   └── address_state.dart
-│   │   │   ├── di/address_scope.dart
-│   │   │   └── view/
-│   │   │       ├── screen/address_screen.dart
-│   │   │       └── widget/address_type_section.dart
-│   │   │
-│   │   └── wallet/
-│   │       ├── domain/
-│   │       │   └── usecase/             # Application-layer use cases
-│   │       ├── bloc/wallet/
-│   │       │   ├── wallet_bloc.dart
-│   │       │   ├── wallet_event.dart
-│   │       │   └── wallet_state.dart
-│   │       ├── di/wallet_scope.dart
-│   │       └── view/
-│   │           ├── screen/
-│   │           │   ├── list/            # WalletListScreen
-│   │           │   ├── setup/           # CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen
-│   │           │   └── detail/          # WalletDetailScreen
-│   │           └── widget/
-│   └── main.dart
-└── packages/
-    ├── domain/     # entities, repository interfaces, service interfaces (shared across features)
-    ├── data/       # repository + service impls, local store, gateway, crypto
-    ├── rpc_client/ # BitcoinRpcClient, RpcException
-    ├── storage/    # SecureStorage interface + SecureStorageImpl
-    └── ui_kit/     # tokens, typography, theme
-```
+See [architecture.md — Project Structure](./architecture.md#project-structure) for the full folder tree.
 
 ### Package dependency graph
 
 ```
-data      → domain, rpc_client, storage
-ui_kit    → Flutter SDK
-rpc_client → http
-storage   → flutter_secure_storage
-domain    → (nothing)
+wallet         → shared_kernel, keys
+address        → shared_kernel, keys
+keys           → shared_kernel
+bitcoin_node   → wallet, address (implements their DataSource interfaces)
+platform_storage → (nothing business)
+observability  → (nothing business)
+design_system  → Flutter SDK
+shared_kernel  → (nothing)
 ```
 
 ### Package type rules
 
 | Type | Packages | Rule |
 |------|----------|------|
-| **core** | `domain` | Entities + interfaces. Pure Dart. Zero deps. |
-| **core** | `data` | Implements domain. Orchestrates infra adapters. |
-| **infra** | `rpc_client`, `storage` | Wraps one external system. No domain knowledge. |
-| **ui** | `ui_kit` | Design system only. No domain knowledge. |
+| **shared** | `shared_kernel` | Tiny shared primitives. Pure Dart. Zero business deps. |
+| **business** | `wallet`, `address`, `keys` | domain/ + application/ + data/. Own entities, use cases, implementations. |
+| **infra** | `bitcoin_node`, `platform_storage`, `observability` | Wraps one external system. No domain knowledge. |
+| **ui** | `design_system` | Design system only. No domain knowledge. |
 
 ### Feature rules
 
-- Feature = **BLoC + DI + View + Application use cases**.
-- A feature **may** contain `domain/usecase/` — these are Application-layer use cases
-  that orchestrate infrastructure for this specific Bounded Context.
-- A feature **must not** contain `data/` — repository/service implementations live in packages.
-- Shared domain primitives (entities, repository interfaces, service interfaces) live in
-  `packages/domain` and are consumed by both use cases and implementations.
-- Each new Bounded Context gets its own `feature/<name>/` with its own `domain/usecase/`, BLoC, and view.
-  Shared infra is added to packages.
-- **Feature independence:** Features are independent Bounded Contexts. They do NOT import code from
-  other features' domain/bloc layers. Cross-feature dependencies only allowed in:
+- Feature = **Bounded Context UI representation**.
+- Each feature contains per-flow sub-directories: `list/`, `setup/`, `detail/`, etc.
+- Each flow has its own **BLoC + Scope + Presentation** — no god-object BLoC.
+- BLoC calls module public API (use cases) directly.
+- Optional feature-local `application/` for screen-specific orchestration composing multiple module APIs.
+- A feature **must not** contain `data/` — implementations live in module packages.
+- A feature **must not** contain `domain/` — entities, interfaces, use cases live in module packages.
+- **Feature independence:** Features are independent Bounded Contexts. They do NOT import code from other features' bloc layers. Cross-feature communication only via:
+  - `AppEventBus` (event bus for cross-feature notifications)
   - Router (composition point)
-  - UI (view importing another feature's view/widget is acceptable)
-  - DI (scopes wired in app.dart)
-- **Address feature:** Independent from Wallet. Owned by Wallet (walletId exists), but:
-  - Can be queried independently (future: TransactionHistory will query addresses)
-  - Has own AddressScope, BLoCs, views
-  - Wallet feature does NOT import address/{domain,bloc}; uses address/{view,widget}
+  - UI (view importing another feature's shared/ widget is acceptable)
+  - DI (scopes wired in AppRouterDelegate)
+
+### Ownership rules
+
+- Each entity has **one owner module** — no shared ownership.
+- Other modules use: Id, small value objects, public query APIs (ReadApi).
+- See [architecture.md](./architecture.md) for full ownership table.
+
+### DataSource ownership
+
+- DataSource interfaces (contracts for storage and external systems) are **owned by the consumer module**, not the adapter.
+- Example: `BitcoinCoreRemoteDataSource` lives in `wallet/domain/data_sources/`, not in `bitcoin_node/`.
+- `bitcoin_node` implements `BitcoinCoreRemoteDataSource`.
+- This is DIP: high-level module defines the contract, low-level module implements it.
 
 ---
 
 ## Design Principles
 
 SOLID, KISS, YAGNI, GRASP (High Cohesion, Low Coupling).
-Patterns: Repository, Adapter, Factory, Observer, Strategy.
+Patterns: Repository, Adapter, Factory, Observer, Strategy, Port/Adapter.
 See [guidelines.md](./guidelines.md) for detailed examples.
 
 ---
@@ -165,59 +135,78 @@ BLoC only — no Cubits. Events = past-tense user actions (`WalletListRequested`
 Hand-written immutable state classes — no `freezed` or code generation.
 
 ```dart
-final class WalletState {
-  const WalletState({
+final class WalletListState {
+  const WalletListState({
     this.wallets = const [],
-    this.status = WalletStatus.initial,
-    this.pendingWallet,
-    this.pendingMnemonic,
+    this.status = WalletListStatus.initial,
     this.errorMessage,
   });
 
   final List<Wallet> wallets;
-  final WalletStatus status;
-  final Wallet? pendingWallet;
-  final Mnemonic? pendingMnemonic;
+  final WalletListStatus status;
   final String? errorMessage;
 
-  WalletState copyWith({...});
+  WalletListState copyWith({...});
 }
 
-enum WalletStatus { initial, loading, loaded, creating, awaitingSeedConfirmation, error }
+enum WalletListStatus { initial, loading, loaded, error }
 ```
 
-BLoC constructors receive **use cases**, not repositories.
+BLoC constructors receive **use cases** (from module application layer). When no orchestration is needed, receiving repositories directly is acceptable.
 
 ---
 
 ## Dependency Injection
 
 - Constructor-based DI only. No service locator (no GetIt).
-- **App-level**: `AppDependenciesBuilder` → `AppDependencies` (infra). `AppScope` (InheritedWidget) exposes it to tree.
-- **Feature-level**: `WalletScope` is a `StatefulWidget` composition root:
-  - Reads `AppDependencies` via `AppScope.of(context)` in `initState` 
-  - Creates all feature use cases from dependencies
-  - Session-level BLoC (`WalletBloc`) is created via static factory `WalletBlocFactory.create(...)` inside `BlocProvider(create: ...)` in `build()`
-  - Session BLoC available to all descendants via `context.read<WalletBloc>()`
-  - Screen-level BLoCs created on-demand via `WalletScope.newXxxBloc(context)` (static helper)
-  - Screen-level BLoCs wrapped in `BlocProvider(create: ...)` inside route builders in `AppRouter`
-- **Factory pattern**: Static factories (`abstract final class WalletBlocFactory`, `AddressBlocFactory`) with static `create(...)` methods — no instantiation, encapsulates assembly logic
+- **App-level**: `AppBootstrap` creates infra + module assemblies → `AppDependencies` (container). `AppScope` (InheritedWidget) exposes it to tree.
+- **Module-level**: Each module has `*Assembly` class that creates data/ implementations, application/ services, and public API.
+- **Feature-level**: Each flow has its own Scope (`StatefulWidget`):
+  - Reads `AppDependencies` via `AppScope.of(context)` in `didChangeDependencies` with `_initialized` guard
+  - Assembles dependencies (use cases, repositories) needed by the flow's BLoC
+  - Exposes a **factory** (static method + `InheritedWidget`) to create BLoC instances
+  - Scope does NOT hold or own BLoC instances — it provides a way to CREATE them
+  - `BlocProvider(create: ...)` is placed **low** in tree, near the screen that uses the BLoC
+  - `BlocProvider(create: ...)` auto-manages BLoC lifecycle (auto-dispose)
+  - All screens access BLoC via `context.read<T>()` or `context.watch<T>()`
+- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
+- **Never** pass BLoCs as constructor params to widgets — use `context.read<T>()`
+- Scopes are wired in `AppRouterDelegate.build()`, below `MaterialApp` but above `Navigator`
 
 ---
 
-## Repositories and Gateways
+## Event Bus
+
+- `AppEventBus` lives in `core/event_bus/` — no business module owns it
+- `StreamController<AppEvent>.broadcast()` — multiple subscribers
+- Typed events: `sealed class AppEvent` → `WalletCreated`, `AddressGenerated`, etc.
+- BLoCs subscribe in constructor, unsubscribe in `close()`
+- Full decoupling: emitter doesn't know consumers exist
+- Cross-feature only — intra-feature communication stays within BLoC
+
+---
+
+## Repositories, DataSources, and Use Cases
 
 - `abstract interface class` for interfaces; `Impl` suffix for implementations.
 - Doc comments on all interface methods.
-- **Repository** = storage contract (CRUD). No business logic.
-  - `WalletQueryRepository` — read-only composite interface (ISP).
-  - `NodeWalletRepository implements WalletQueryRepository` — commands go via RPC gateway; queries served from local cache.
-  - `HdWalletRepository implements WalletQueryRepository` — pure local CRUD.
-  - `SeedRepository` — secure storage of mnemonics.
-- **Gateway** = data-internal adapter for an external system. Not exported to domain.
-  - `BitcoinCoreGateway` / `BitcoinCoreGatewayImpl` — wraps Bitcoin Core JSON-RPC. Lives in `packages/data/src/gateway/`.
-- **CompositeWalletQueryRepository** — merges node + HD repositories for `GetWalletsUseCase`.
-- **Use Cases** — Application layer, live in `lib/feature/<name>/domain/usecase/`. Orchestrate repositories and services; produce and return domain entities.
+- **Repository** = storage contract (CRUD). No business logic. Interface in module `domain/`, implementation in module `data/`.
+- **DataSource** = contract for storage or external system, **owned by the consumer module**. Interface in consumer's `domain/data_sources/`, implementation in `data/` or adapter package.
+  - `WalletLocalDataSource` — in `wallet/domain/data_sources/`
+  - `AddressLocalDataSource` — in `address/domain/data_sources/`
+  - `BitcoinCoreRemoteDataSource` — in `wallet/domain/data_sources/`, implemented in `bitcoin_node/`
+- **Use Cases** — Application layer, live in `packages/<module>/src/application/`. Orchestrate repositories, services, and data sources; produce and return domain entities.
+
+---
+
+## Navigation
+
+Navigator 2.0 via custom `RouterDelegate` — no third-party routing packages.
+
+- `AppRouterDelegate` registered with `MaterialApp.router(routerDelegate: _delegate)`
+- `build()` wraps `Navigator` with feature scopes
+- Imperative pushes via `AppRouter` static methods
+- Screens navigate directly via `AppRouter` — no callbacks up the tree
 
 ---
 
@@ -231,6 +220,7 @@ See [code-style-guide.md](./code-style-guide.md).
 
 - All Bitcoin-specific code (BIP39, derivation, coin selection, script) must have unit tests.
 - RPC integration — tests against a live regtest node. Do not mock Bitcoin Core.
+- Module tests organized by layer: `domain/` (pure unit), `application/` (mocked ports), `data/` (integration).
 
 ---
 
@@ -254,12 +244,14 @@ These are hard rules. Never violate them.
 - **Never** use GetIt or any service locator — constructor DI + InheritedWidget only
 - **Never** expose private keys outside the data/domain layer
 - **Never** use relative imports — always `package:` imports
-- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
 - **Never** pass BLoC as constructor parameter to Widget — use `context.read<T>()` instead
-- **Never** do `BlocProvider(create: (_) => widget.bloc)` — this hands lifecycle to provider while BLoC was created externally; let provider own the BLoC
+- **Never** do `BlocProvider(create: (_) => widget.bloc)` — this hands lifecycle to provider while BLoC was created externally
 - **Never** commit with analyzer warnings or infos — `flutter analyze --fatal-infos --fatal-warnings` must pass
 - **Never** use `^` in dependency versions — exact versions only (e.g. `crypto: 3.0.7`)
 - **Never** create private `_buildXxx` methods in widgets — extract as separate widget classes
-- **Never** put repository/service implementations inside a feature directory — use `packages/data`
-- **Never** put shared entities or interfaces inside a feature directory — use `packages/domain`
+- **Never** put repository/service implementations inside a feature directory — use module `data/`
+- **Never** put entities or interfaces inside a feature directory — use module `domain/`
 - **Never** log or expose mnemonic/seed/private key material in UI, logs, or error messages
+- **Never** import from another feature's bloc or domain — cross-feature only via event bus or router
+- **Never** import module `src/data/*` from features — use public API (barrel) only
+- **Never** create god-object BLoCs handling multiple flows — one BLoC per flow
