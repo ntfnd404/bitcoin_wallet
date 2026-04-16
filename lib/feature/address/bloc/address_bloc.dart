@@ -1,17 +1,17 @@
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
 import 'package:bitcoin_wallet/feature/address/domain/usecase/generate_address_use_case.dart';
-import 'package:bitcoin_wallet/feature/address/domain/usecase/get_addresses_use_case.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 final class AddressBloc extends Bloc<AddressEvent, AddressState> {
-  final GetAddressesUseCase _getAddresses;
+  final AddressRepository _addressRepository;
   final GenerateAddressUseCase _generateAddress;
 
   AddressBloc({
-    required GetAddressesUseCase getAddresses,
+    required AddressRepository addressRepository,
     required GenerateAddressUseCase generateAddress,
-  })  : _getAddresses = getAddresses,
+  })  : _addressRepository = addressRepository,
         _generateAddress = generateAddress,
         super(const AddressState()) {
     on<AddressListRequested>(_onAddressListRequested);
@@ -24,7 +24,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(state.copyWith(status: AddressStatus.loading, clearErrorMessage: true));
     try {
-      final addresses = await _getAddresses(event.wallet.id);
+      final addresses = await _addressRepository.getAddresses(event.wallet.id);
       if (isClosed) return;
 
       emit(state.copyWith(status: AddressStatus.loaded, addresses: addresses));

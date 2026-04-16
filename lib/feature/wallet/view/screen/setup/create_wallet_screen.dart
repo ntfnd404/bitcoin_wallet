@@ -1,7 +1,7 @@
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_bloc.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_event.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_state.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,18 +49,26 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
       body: BlocConsumer<WalletBloc, WalletState>(
         listenWhen: (previous, current) =>
             (current.status == WalletStatus.loaded && previous.status == WalletStatus.creating) ||
+            (current.status == WalletStatus.loaded &&
+                previous.status == WalletStatus.awaitingSeedConfirmation) ||
             current.status == WalletStatus.awaitingSeedConfirmation ||
             current.status == WalletStatus.error,
         listener: (context, state) {
           if (state.status == WalletStatus.loaded) {
             final wallet = state.pendingWallet;
             if (wallet != null) {
+              // Node wallet just created — navigate to detail.
               AppRouter.toWalletDetail(context, wallet);
+            } else {
+              // HD wallet seed confirmed — pop CreateWalletScreen.
+              Navigator.pop(context);
             }
           } else if (state.status == WalletStatus.awaitingSeedConfirmation) {
-            // Seed phrase screen is pushed by WalletDetailScreen via BlocListener
-            // For now, just pop to let the navigation flow naturally
-            Navigator.pop(context);
+            final mnemonic = state.pendingMnemonic;
+            final wallet = state.pendingWallet;
+            if (mnemonic != null && wallet != null) {
+              AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
+            }
           } else if (state.status == WalletStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),

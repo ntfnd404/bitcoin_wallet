@@ -1,30 +1,29 @@
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_event.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_state.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_hd_wallet_use_case.dart';
 import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_node_wallet_use_case.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/get_seed_use_case.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/get_wallets_use_case.dart';
 import 'package:bitcoin_wallet/feature/wallet/domain/usecase/restore_hd_wallet_use_case.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 final class WalletBloc extends Bloc<WalletEvent, WalletState> {
-  final GetWalletsUseCase _getWallets;
+  final WalletRepository _walletRepository;
+  final SeedRepository _seedRepository;
   final CreateNodeWalletUseCase _createNodeWallet;
   final CreateHdWalletUseCase _createHdWallet;
   final RestoreHdWalletUseCase _restoreHdWallet;
-  final GetSeedUseCase _getSeed;
 
   WalletBloc({
-    required GetWalletsUseCase getWallets,
+    required WalletRepository walletRepository,
+    required SeedRepository seedRepository,
     required CreateNodeWalletUseCase createNodeWallet,
     required CreateHdWalletUseCase createHdWallet,
     required RestoreHdWalletUseCase restoreHdWallet,
-    required GetSeedUseCase getSeed,
-  }) : _getWallets = getWallets,
+  }) : _walletRepository = walletRepository,
+       _seedRepository = seedRepository,
        _createNodeWallet = createNodeWallet,
        _createHdWallet = createHdWallet,
        _restoreHdWallet = restoreHdWallet,
-       _getSeed = getSeed,
        super(const WalletState()) {
     on<WalletListRequested>(_onWalletListRequested);
     on<NodeWalletCreateRequested>(_onNodeWalletCreateRequested);
@@ -40,7 +39,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
   ) async {
     emit(state.copyWith(status: WalletStatus.loading, clearErrorMessage: true));
     try {
-      final wallets = await _getWallets();
+      final wallets = await _walletRepository.getWallets();
       if (isClosed) return;
       emit(
         state.copyWith(
@@ -150,7 +149,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     Emitter<WalletState> emit,
   ) async {
     try {
-      final mnemonic = await _getSeed(event.walletId);
+      final mnemonic = await _seedRepository.getSeed(event.walletId);
       if (isClosed) return;
       if (mnemonic == null) {
         emit(

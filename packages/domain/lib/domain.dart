@@ -1,19 +1,21 @@
-// Entities
-export 'src/entity/address.dart';
-export 'src/entity/address_type.dart';
-export 'src/entity/bitcoin_network.dart';
-export 'src/entity/mnemonic.dart';
-export 'src/entity/wallet.dart';
-export 'src/entity/wallet_type.dart';
+// DataSource interfaces
+export 'src/data_sources/address_local_data_source.dart';
+export 'src/data_sources/bitcoin_core_remote_data_source.dart';
+export 'src/data_sources/wallet_local_data_source.dart';
 
-// Gateway ports
-export 'src/gateway/bitcoin_core_gateway.dart';
+// Entities
+export 'src/entities/address.dart';
+export 'src/entities/address_type.dart';
+export 'src/entities/bitcoin_network.dart';
+export 'src/entities/mnemonic.dart';
+export 'src/entities/wallet.dart';
+export 'src/entities/wallet_type.dart';
 
 // Repository interfaces
-export 'src/repository/address_repository.dart';
-export 'src/repository/seed_repository.dart';
-export 'src/repository/wallet_repository.dart';
+export 'src/repositories/address_repository.dart';
+export 'src/repositories/seed_repository.dart';
+export 'src/repositories/wallet_repository.dart';
 
 // Service interfaces
-export 'src/service/bip39_service.dart';
-export 'src/service/key_derivation_service.dart';
+export 'src/services/bip39_service.dart';
+export 'src/services/key_derivation_service.dart';

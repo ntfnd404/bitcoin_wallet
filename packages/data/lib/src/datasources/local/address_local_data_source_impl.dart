@@ -1,57 +1,63 @@
 import 'dart:convert';
 
+import 'package:data/src/mappers/address_mapper.dart';
 import 'package:domain/domain.dart';
 import 'package:storage/storage.dart';
-
-import 'address_mapper.dart';
 
 /// Persists addresses in [SecureStorage].
 ///
 /// Each wallet has its own address list, keyed by walletId.
 /// Index management is handled automatically.
-final class AddressLocalStore {
-  final SecureStorage _storage;
-  final String _keyPrefix;
+final class AddressLocalDataSourceImpl implements AddressLocalDataSource {
+  static const String _keyPrefix = 'wallet_';
 
-  const AddressLocalStore({
+  final SecureStorage _storage;
+  final AddressMapper _mapper;
+
+  const AddressLocalDataSourceImpl({
     required SecureStorage storage,
-    required String keyPrefix,
-  }) : _storage = storage,
-       _keyPrefix = keyPrefix;
+    required AddressMapper mapper,
+  }) : _mapper = mapper,
+       _storage = storage;
 
   /// Returns all addresses for [walletId].
+  @override
   Future<List<Address>> getAddresses(String walletId) async {
-    final raw = await _storage.getString(_addressesKey(walletId));
+    final key = _addressesKey(walletId);
+    final raw = await _storage.getString(key);
     if (raw == null) return const [];
 
-    return (jsonDecode(raw) as List<Object?>)
+    final jsonList = jsonDecode(raw) as List<Object?>;
+
+    return jsonList
         .cast<Map<String, Object?>>()
-        .map(AddressMapper.fromMap)
+        .map(_mapper.decode) // Map → Address
         .toList();
   }
 
   /// Appends [address] to the stored list for its wallet.
+  @override
   Future<void> saveAddress(Address address) async {
     final key = _addressesKey(address.walletId);
     final raw = await _storage.getString(key);
-    final list = raw == null
+
+    final List<Map<String, Object?>> list = raw == null
         ? <Map<String, Object?>>[]
-        : (jsonDecode(raw) as List<Object?>).cast<Map<String, Object?>>();
-    list.add(AddressMapper.toMap(address));
+        : (jsonDecode(raw) as List).cast<Map<String, Object?>>();
+
+    list.add(_mapper.encode(address)); // Address → Map
+
     await _storage.setString(key, jsonEncode(list));
   }
 
   /// Returns the next sequential address index for [walletId].
+  @override
   Future<int> nextAddressIndex(String walletId) async {
     final raw = await _storage.getString(_addressesKey(walletId));
     if (raw == null) return 0;
 
     return (jsonDecode(raw) as List<Object?>).length;
   }
-
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
 
   String _addressesKey(String walletId) => '${_keyPrefix}addresses_$walletId';
 }

@@ -5,9 +5,9 @@ import 'package:test/test.dart';
 import 'fake_secure_storage.dart';
 
 AddressRepositoryImpl _makeRepo() => AddressRepositoryImpl(
-      localStore: AddressLocalStore(
+      localStore: AddressLocalDataSourceImpl(
         storage: FakeSecureStorage(),
-        keyPrefix: 'wallet_',
+        mapper: const AddressMapperImpl(),
       ),
     );
 

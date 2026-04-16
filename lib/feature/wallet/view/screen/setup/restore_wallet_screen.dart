@@ -1,8 +1,8 @@
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_bloc.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_event.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_state.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

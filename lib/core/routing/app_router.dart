@@ -1,5 +1,3 @@
-import 'package:bitcoin_wallet/feature/address/bloc/address_bloc.dart';
-import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/detail/wallet_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/create_wallet_screen.dart';
@@ -7,7 +5,6 @@ import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/restore_wallet_s
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/seed_phrase_screen.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Centralised navigation helpers for the wallet feature.
 ///
@@ -56,7 +53,7 @@ final class AppRouter {
   ) =>
       Navigator.push<void>(
         context,
-        _buildDetailRoute(context, wallet),
+        _buildDetailRoute(wallet),
       );
 
   /// Pushes [AddressScreen] for [addr].
@@ -89,21 +86,9 @@ final class AppRouter {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  static MaterialPageRoute<void> _buildDetailRoute(
-    BuildContext context,
-    Wallet wallet,
-  ) {
-    final addressBloc = AddressScope.newAddressBloc(context);
-
-    return MaterialPageRoute(
-      settings: const RouteSettings(name: walletDetail),
-      builder: (ctx) => BlocProvider<AddressBloc>(
-        create: (_) => addressBloc,
-        child: WalletDetailScreen(
-          wallet: wallet,
-          onAddressSelected: (addr) => toAddress(ctx, addr),
-        ),
-      ),
-    );
-  }
+  static MaterialPageRoute<void> _buildDetailRoute(Wallet wallet) =>
+      MaterialPageRoute(
+        settings: const RouteSettings(name: walletDetail),
+        builder: (_) => WalletDetailScreen(wallet: wallet),
+      );
 }

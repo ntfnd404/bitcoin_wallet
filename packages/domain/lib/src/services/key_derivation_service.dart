@@ -1,6 +1,6 @@
-import 'package:domain/src/entity/address.dart';
-import 'package:domain/src/entity/address_type.dart';
-import 'package:domain/src/entity/mnemonic.dart';
+import 'package:domain/src/entities/address.dart';
+import 'package:domain/src/entities/address_type.dart';
+import 'package:domain/src/entities/mnemonic.dart';
 
 abstract interface class KeyDerivationService {
   /// Derives a Bitcoin address from [mnemonic] at [type] and [index].

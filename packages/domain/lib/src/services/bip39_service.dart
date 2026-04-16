@@ -1,4 +1,4 @@
-import 'package:domain/src/entity/mnemonic.dart';
+import 'package:domain/src/entities/mnemonic.dart';
 
 abstract interface class Bip39Service {
   /// Generates a BIP39 mnemonic with [wordCount] words (12 or 24).

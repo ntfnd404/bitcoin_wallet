@@ -3,7 +3,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'mocks/mock_bitcoin_core_gateway.dart';
+import 'mocks/mock_bitcoin_core_remote_data_source.dart';
 import 'mocks/mock_wallet_repository.dart';
 
 void main() {
@@ -19,18 +19,18 @@ void main() {
   });
 
   group('CreateNodeWalletUseCase', () {
-    late MockBitcoinCoreGateway mockGateway;
+    late MockBitcoinCoreRemoteDataSource mockRemoteDataSource;
     late MockWalletRepository mockRepo;
     late CreateNodeWalletUseCase useCase;
 
     setUp(() {
-      mockGateway = MockBitcoinCoreGateway();
+      mockRemoteDataSource = MockBitcoinCoreRemoteDataSource();
       mockRepo = MockWalletRepository();
-      when(() => mockGateway.createWallet(any())).thenAnswer((_) async {});
+      when(() => mockRemoteDataSource.createWallet(any())).thenAnswer((_) async {});
       when(() => mockRepo.saveWallet(any())).thenAnswer((_) async {});
       when(() => mockRepo.getWallets()).thenAnswer((_) async => []);
       useCase = CreateNodeWalletUseCase(
-        gateway: mockGateway,
+        remoteDataSource: mockRemoteDataSource,
         walletRepository: mockRepo,
       );
     });
@@ -46,7 +46,7 @@ void main() {
     test('calls gateway.createWallet with the wallet name', () async {
       await useCase('My Node');
 
-      verify(() => mockGateway.createWallet('My Node')).called(1);
+      verify(() => mockRemoteDataSource.createWallet('My Node')).called(1);
     });
 
     test('persists wallet to repository', () async {
@@ -71,7 +71,7 @@ void main() {
     test('gateway is called before wallet is saved', () async {
       final wallet = await useCase('Test');
 
-      verify(() => mockGateway.createWallet('Test')).called(1);
+      verify(() => mockRemoteDataSource.createWallet('Test')).called(1);
       verify(
         () => mockRepo.saveWallet(
           any(

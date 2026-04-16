@@ -6,13 +6,13 @@ import 'package:domain/domain.dart';
 /// Delegates to Bitcoin Core RPC for the address value,
 /// then persists via [AddressRepository].
 final class NodeAddressGenerationStrategy implements AddressGenerationStrategy {
-  final BitcoinCoreGateway _gateway;
+  final BitcoinCoreRemoteDataSource _remoteDataSource;
   final AddressRepository _addressRepository;
 
   const NodeAddressGenerationStrategy({
-    required BitcoinCoreGateway gateway,
+    required BitcoinCoreRemoteDataSource remoteDataSource,
     required AddressRepository addressRepository,
-  })  : _gateway = gateway,
+  })  : _remoteDataSource = remoteDataSource,
         _addressRepository = addressRepository;
 
   @override
@@ -20,7 +20,7 @@ final class NodeAddressGenerationStrategy implements AddressGenerationStrategy {
 
   @override
   Future<Address> generate(Wallet wallet, AddressType addressType) async {
-    final value = await _gateway.generateAddress(wallet.name, addressType);
+    final value = await _remoteDataSource.generateAddress(wallet.name, addressType);
     final index = await _addressRepository.nextAddressIndex(wallet.id);
     final address = Address(
       value: value,

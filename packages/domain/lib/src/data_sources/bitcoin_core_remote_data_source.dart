@@ -1,11 +1,11 @@
-import 'package:domain/src/entity/address_type.dart';
+import 'package:domain/src/entities/address_type.dart';
 
 /// Port for communicating with a Bitcoin Core full node via JSON-RPC.
 ///
 /// Lives in domain so use cases can depend on it directly without
 /// knowing about the HTTP/RPC transport layer.
-/// The adapter ([BitcoinCoreGatewayImpl]) lives in the data package.
-abstract interface class BitcoinCoreGateway {
+/// The adapter ([BitcoinCoreRemoteDataSourceImpl]) lives in the data package.
+abstract interface class BitcoinCoreRemoteDataSource {
   /// Creates a named wallet inside Bitcoin Core.
   Future<void> createWallet(String walletName);
 

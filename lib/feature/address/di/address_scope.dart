@@ -1,29 +1,31 @@
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_bloc.dart';
 import 'package:bitcoin_wallet/feature/address/domain/domain.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Feature-scoped DI entry point for the address feature.
 ///
 /// Composition root: creates all address use cases from [AppDependencies]
-/// and wires them to address-specific [AddressBloc] instances.
+/// and exposes a factory for screen-level [AddressBloc] instances via
+/// [_InheritedAddressScope].
 ///
-/// Since [AddressBloc] is wallet-specific, it is created on-demand by
-/// the router and wrapped in a [BlocProvider] per screen.
+/// Use cases are created once in [State.initState] and reused across all
+/// [AddressBloc] instances. The router calls [newAddressBloc] to create
+/// a fresh [AddressBloc] per [WalletDetailScreen].
 class AddressScope extends StatefulWidget {
   const AddressScope({
     super.key,
     required this.child,
   });
 
+  /// Creates a new [AddressBloc] wired with use cases from the nearest
+  /// [AddressScope] ancestor.
   static AddressBloc newAddressBloc(BuildContext context) {
-    final state = context.findAncestorStateOfType<_AddressScopeState>();
-    if (state == null) {
-      throw StateError('AddressScope not found in widget tree');
-    }
+    final scope = context.getInheritedWidgetOfExactType<_InheritedAddressScope>();
+    if (scope == null) throw StateError('AddressScope not found in widget tree');
 
-    return state._newAddressBloc();
+    return scope.newAddressBloc();
   }
 
   final Widget child;
@@ -34,21 +36,28 @@ class AddressScope extends StatefulWidget {
 
 class _AddressScopeState extends State<AddressScope> {
   // Use cases — address
-  late final GetAddressesUseCase _getAddresses;
+  late final AddressRepository _addressRepository;
   late final GenerateAddressUseCase _generateAddress;
+  bool _initialized = false;
+
+  AddressBloc _newAddressBloc() => AddressBloc(
+    addressRepository: _addressRepository,
+    generateAddress: _generateAddress,
+  );
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+
     final dependencies = AppScope.of(context);
 
-    // Create address use cases
-    _getAddresses = GetAddressesUseCase(addressRepository: dependencies.addressRepository);
-
+    _addressRepository = dependencies.addressRepository;
     _generateAddress = GenerateAddressUseCase(
       strategies: [
         NodeAddressGenerationStrategy(
-          gateway: dependencies.bitcoinCoreGateway,
+          remoteDataSource: dependencies.bitcoinCoreRemoteDataSource,
           addressRepository: dependencies.addressRepository,
         ),
         HdAddressGenerationStrategy(
@@ -60,11 +69,21 @@ class _AddressScopeState extends State<AddressScope> {
     );
   }
 
-  AddressBloc _newAddressBloc() => AddressBloc(
-    getAddresses: _getAddresses,
-    generateAddress: _generateAddress,
+  @override
+  Widget build(BuildContext context) => _InheritedAddressScope(
+    newAddressBloc: _newAddressBloc,
+    child: widget.child,
   );
+}
+
+class _InheritedAddressScope extends InheritedWidget {
+  const _InheritedAddressScope({
+    required this.newAddressBloc,
+    required super.child,
+  });
+
+  final AddressBloc Function() newAddressBloc;
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  bool updateShouldNotify(_InheritedAddressScope old) => false;
 }

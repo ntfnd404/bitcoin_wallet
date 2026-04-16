@@ -1,20 +1,19 @@
-import 'package:data/src/local/address_local_store.dart';
 import 'package:domain/domain.dart';
 
-/// [AddressRepository] backed by [AddressLocalStore].
+/// [AddressRepository] backed by [AddressLocalDataSource].
 ///
 /// Single instance serves all wallet types.
 final class AddressRepositoryImpl implements AddressRepository {
-  final AddressLocalStore _localStore;
+  final AddressLocalDataSource _localDataSource;
 
-  const AddressRepositoryImpl({required AddressLocalStore localStore}) : _localStore = localStore;
-
-  @override
-  Future<void> saveAddress(Address address) => _localStore.saveAddress(address);
+  const AddressRepositoryImpl({required AddressLocalDataSource localStore}) : _localDataSource = localStore;
 
   @override
-  Future<List<Address>> getAddresses(String walletId) => _localStore.getAddresses(walletId);
+  Future<void> saveAddress(Address address) => _localDataSource.saveAddress(address);
 
   @override
-  Future<int> nextAddressIndex(String walletId) => _localStore.nextAddressIndex(walletId);
+  Future<List<Address>> getAddresses(String walletId) => _localDataSource.getAddresses(walletId);
+
+  @override
+  Future<int> nextAddressIndex(String walletId) => _localDataSource.nextAddressIndex(walletId);
 }

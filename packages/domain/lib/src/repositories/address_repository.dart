@@ -1,4 +1,4 @@
-import 'package:domain/src/entity/address.dart';
+import 'package:domain/src/entities/address.dart';
 
 /// Unified storage contract for addresses across all wallet types.
 ///

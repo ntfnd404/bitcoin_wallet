@@ -1,16 +1,16 @@
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Feature-scoped DI entry point for the wallet feature.
 ///
-/// Composition root: creates all use cases from [AppDependencies]
-/// and wires them to a session-level [WalletBloc] via [BlocProvider].
+/// Composition root: creates all use cases and the session-level [WalletBloc]
+/// in [didChangeDependencies]. Provides [WalletBloc] to the subtree via
+/// [BlocProvider.value] — lifecycle is owned here (created + disposed).
 ///
-/// All screens in the wallet feature share the same [WalletBloc] instance,
-/// ensuring consistent state across navigation.
+/// Placed above [MaterialApp] so all pushed routes share the same instance.
 class WalletScope extends StatefulWidget {
   const WalletScope({
     super.key,
@@ -24,50 +24,45 @@ class WalletScope extends StatefulWidget {
 }
 
 class _WalletScopeState extends State<WalletScope> {
-  // Use cases — wallet
-  late final GetWalletsUseCase _getWallets;
-  late final CreateNodeWalletUseCase _createNodeWallet;
-  late final CreateHdWalletUseCase _createHdWallet;
-  late final RestoreHdWalletUseCase _restoreHdWallet;
-  late final GetSeedUseCase _getSeed;
+  late final WalletBloc _walletBloc;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    final dependencies = AppScope.of(context);
-
-    // Create wallet use cases
-    _getWallets = GetWalletsUseCase(walletRepository: dependencies.walletRepository);
-
-    _createNodeWallet = CreateNodeWalletUseCase(
-      gateway: dependencies.bitcoinCoreGateway,
-      walletRepository: dependencies.walletRepository,
-    );
-
-    _createHdWallet = CreateHdWalletUseCase(
-      bip39Service: dependencies.bip39Service,
-      seedRepository: dependencies.seedRepository,
-      walletRepository: dependencies.walletRepository,
-    );
-
-    _restoreHdWallet = RestoreHdWalletUseCase(
-      bip39Service: dependencies.bip39Service,
-      seedRepository: dependencies.seedRepository,
-      walletRepository: dependencies.walletRepository,
-    );
-
-    _getSeed = GetSeedUseCase(seedRepository: dependencies.seedRepository);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final deps = AppScope.of(context);
+      _walletBloc = WalletBloc(
+        walletRepository: deps.walletRepository,
+        seedRepository: deps.seedRepository,
+        createNodeWallet: CreateNodeWalletUseCase(
+          remoteDataSource: deps.bitcoinCoreRemoteDataSource,
+          walletRepository: deps.walletRepository,
+        ),
+        createHdWallet: CreateHdWalletUseCase(
+          bip39Service: deps.bip39Service,
+          seedRepository: deps.seedRepository,
+          walletRepository: deps.walletRepository,
+        ),
+        restoreHdWallet: RestoreHdWalletUseCase(
+          bip39Service: deps.bip39Service,
+          seedRepository: deps.seedRepository,
+          walletRepository: deps.walletRepository,
+        ),
+      );
+    }
   }
 
   @override
-  Widget build(BuildContext context) => BlocProvider<WalletBloc>(
-    create: (_) => WalletBloc(
-      getWallets: _getWallets,
-      createNodeWallet: _createNodeWallet,
-      createHdWallet: _createHdWallet,
-      restoreHdWallet: _restoreHdWallet,
-      getSeed: _getSeed,
-    ),
+  void dispose() {
+    _walletBloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<WalletBloc>.value(
+    value: _walletBloc,
     child: widget.child,
   );
 }

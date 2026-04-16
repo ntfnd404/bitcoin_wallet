@@ -1,4 +1,4 @@
-import 'package:domain/src/entity/wallet.dart';
+import 'package:domain/src/entities/wallet.dart';
 
 /// Unified storage contract for all wallet types.
 ///

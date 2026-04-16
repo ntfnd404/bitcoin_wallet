@@ -1,8 +1,8 @@
 import 'package:domain/domain.dart';
 import 'package:rpc_client/rpc_client.dart';
 
-/// [BitcoinCoreGateway] backed by [BitcoinRpcClient].
-final class BitcoinCoreGatewayImpl implements BitcoinCoreGateway {
+/// [BitcoinCoreRemoteDatasource] backed by [BitcoinRpcClient].
+final class BitcoinCoreRemoteDatasourceImpl implements BitcoinCoreRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
 
   // Bitcoin Core RPC address type descriptors
@@ -11,12 +11,10 @@ final class BitcoinCoreGatewayImpl implements BitcoinCoreGateway {
   static const _rpcNativeSegwit = 'bech32';
   static const _rpcTaproot = 'bech32m';
 
-  const BitcoinCoreGatewayImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const BitcoinCoreRemoteDatasourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
-  Future<void> createWallet(String walletName) =>
-      _rpcClient.call('createwallet', [walletName]);
+  Future<void> createWallet(String walletName) => _rpcClient.call('createwallet', [walletName]);
 
   @override
   Future<String> generateAddress(String walletName, AddressType type) async {
@@ -30,9 +28,9 @@ final class BitcoinCoreGatewayImpl implements BitcoinCoreGateway {
   }
 
   String _rpcAddressType(AddressType type) => switch (type) {
-        AddressType.legacy => _rpcLegacy,
-        AddressType.wrappedSegwit => _rpcWrappedSegwit,
-        AddressType.nativeSegwit => _rpcNativeSegwit,
-        AddressType.taproot => _rpcTaproot,
-      };
+    AddressType.legacy => _rpcLegacy,
+    AddressType.wrappedSegwit => _rpcWrappedSegwit,
+    AddressType.nativeSegwit => _rpcNativeSegwit,
+    AddressType.taproot => _rpcTaproot,
+  };
 }

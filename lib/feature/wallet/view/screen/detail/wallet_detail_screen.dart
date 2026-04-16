@@ -1,57 +1,57 @@
+import 'package:bitcoin_wallet/core/routing/app_router.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_bloc.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
+import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
 import 'package:bitcoin_wallet/feature/address/view/widget/address_type_section.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_bloc.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_event.dart';
-import 'package:bitcoin_wallet/feature/wallet/bloc/wallet/wallet_state.dart';
-import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/seed_phrase_screen.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Shows addresses for a single wallet grouped by [AddressType].
 ///
-/// Provides address management and seed phrase viewing for HD wallets.
+/// Creates its own [AddressBloc] via [AddressScope] factory — each instance
+/// owns an isolated address BLoC with its own lifecycle.
+/// Navigates to [AddressScreen] and [SeedPhraseScreen] via [AppRouter].
 class WalletDetailScreen extends StatefulWidget {
   const WalletDetailScreen({
     super.key,
     required this.wallet,
-    required this.onAddressSelected,
   });
 
   final Wallet wallet;
-
-  /// Called when the user taps an address row.
-  final void Function(Address address) onAddressSelected;
 
   @override
   State<WalletDetailScreen> createState() => _WalletDetailScreenState();
 }
 
 class _WalletDetailScreenState extends State<WalletDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<AddressBloc>().add(AddressListRequested(wallet: widget.wallet));
-  }
+  late final AddressBloc _addressBloc;
+  bool _initialized = false;
 
-  void _navigateToSeedPhrase(BuildContext context, Mnemonic mnemonic) {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        settings: const RouteSettings(name: '/wallet/seed'),
-        builder: (_) => SeedPhraseScreen(
-          mnemonic: mnemonic,
-          walletId: widget.wallet.id,
-          onConfirmed: () => Navigator.pop(context),
-        ),
-      ),
-    );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _addressBloc = AddressScope.newAddressBloc(context);
+      _addressBloc.add(AddressListRequested(wallet: widget.wallet));
+    }
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  void dispose() {
+    _addressBloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<AddressBloc>.value(
+    value: _addressBloc,
+    child: Scaffold(
       appBar: AppBar(
         title: Text(widget.wallet.name),
         actions: [
@@ -78,7 +78,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
           if (state.status == WalletStatus.awaitingSeedConfirmation) {
             final mnemonic = state.pendingMnemonic;
             if (mnemonic != null) {
-              _navigateToSeedPhrase(context, mnemonic);
+              AppRouter.toSeedPhrase(context, mnemonic, widget.wallet.id);
             }
           }
         },
@@ -108,12 +108,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                   onGenerate: () => context.read<AddressBloc>().add(
                     AddressGenerateRequested(wallet: widget.wallet, type: type),
                   ),
-                  onAddressSelected: widget.onAddressSelected,
+                  onAddressSelected: (addr) => AppRouter.toAddress(context, addr),
                 );
               }).toList(),
             );
           },
         ),
       ),
-    );
+    ),
+  );
+
 }
