@@ -14,5 +14,7 @@ dependencies:
     path: ../rpc_client
   shared_kernel:
     path: ../shared_kernel
+  transaction:
+    path: ../transaction
   wallet:
     path: ../wallet

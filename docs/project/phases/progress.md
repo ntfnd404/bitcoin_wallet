@@ -10,7 +10,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 - Phase 01: `completed`
 - Phase 02: `completed`
 - Phase 03: `completed`
-- Phase 04: `planned`
+- Phase 04: `in progress`
 - Phase 05: `planned`
 - Phase 06: `in progress`
 - Phase 07: `planned`

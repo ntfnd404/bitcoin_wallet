@@ -5,6 +5,7 @@ import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
 import 'package:keys/keys_assembly.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:storage/storage.dart';
+import 'package:transaction/transaction_assembly.dart';
 import 'package:wallet/wallet_assembly.dart';
 
 /// Composition root — wires all concrete infrastructure implementations.
@@ -62,10 +63,17 @@ final class AppDependenciesBuilder {
         keyDerivationService: keys.keyDerivationService,
       );
 
+      final transactionRemoteDataSource =
+          TransactionRemoteDataSourceImpl(rpcClient: rpcClient);
+      final transaction = TransactionAssembly(
+        remoteDataSource: transactionRemoteDataSource,
+      );
+
       final dependencies = AppDependencies(
         keys: keys,
         wallet: wallet,
         address: address,
+        transaction: transaction,
       );
 
       _builder(dependencies);

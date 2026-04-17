@@ -1,6 +1,7 @@
 import 'package:address/address_assembly.dart';
 import 'package:flutter/foundation.dart';
 import 'package:keys/keys_assembly.dart';
+import 'package:transaction/transaction_assembly.dart';
 import 'package:wallet/wallet_assembly.dart';
 
 /// Immutable container for application-level module assemblies.
@@ -11,10 +12,12 @@ final class AppDependencies {
   final KeysAssembly keys;
   final WalletAssembly wallet;
   final AddressAssembly address;
+  final TransactionAssembly transaction;
 
   const AppDependencies({
     required this.keys,
     required this.wallet,
     required this.address,
+    required this.transaction,
   });
 }
