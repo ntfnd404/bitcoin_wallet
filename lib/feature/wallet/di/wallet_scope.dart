@@ -1,14 +1,13 @@
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Feature-scoped DI entry point for the wallet feature.
 ///
-/// Composition root: creates all use cases and the session-level [WalletBloc]
-/// in [didChangeDependencies]. Provides [WalletBloc] to the subtree via
-/// [BlocProvider.value] — lifecycle is owned here (created + disposed).
+/// Composition root: creates the session-level [WalletBloc] from module
+/// assemblies in [didChangeDependencies]. Provides [WalletBloc] to the
+/// subtree via [BlocProvider.value] — lifecycle is owned here.
 ///
 /// Placed above [MaterialApp] so all pushed routes share the same instance.
 class WalletScope extends StatefulWidget {
@@ -34,22 +33,11 @@ class _WalletScopeState extends State<WalletScope> {
       _initialized = true;
       final deps = AppScope.of(context);
       _walletBloc = WalletBloc(
-        walletRepository: deps.walletRepository,
-        seedRepository: deps.seedRepository,
-        createNodeWallet: CreateNodeWalletUseCase(
-          remoteDataSource: deps.bitcoinCoreRemoteDataSource,
-          walletRepository: deps.walletRepository,
-        ),
-        createHdWallet: CreateHdWalletUseCase(
-          bip39Service: deps.bip39Service,
-          seedRepository: deps.seedRepository,
-          walletRepository: deps.walletRepository,
-        ),
-        restoreHdWallet: RestoreHdWalletUseCase(
-          bip39Service: deps.bip39Service,
-          seedRepository: deps.seedRepository,
-          walletRepository: deps.walletRepository,
-        ),
+        walletRepository: deps.wallet.walletRepository,
+        seedRepository: deps.keys.seedRepository,
+        createNodeWallet: deps.wallet.createNodeWallet,
+        createHdWallet: deps.wallet.createHdWallet,
+        restoreHdWallet: deps.wallet.restoreHdWallet,
       );
     }
   }

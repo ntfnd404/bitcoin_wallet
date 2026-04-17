@@ -1,0 +1,19 @@
+name: address
+description: Address module — entities, repository, generation strategies
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  keys:
+    path: ../keys
+  shared_kernel:
+    path: ../shared_kernel
+  wallet:
+    path: ../wallet
+
+dev_dependencies:
+  test: 1.30.0

@@ -1,5 +1,6 @@
-import 'package:domain/domain.dart';
+import 'package:address/address.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_kernel/shared_kernel.dart';
 
 const _typeLabels = {
   AddressType.legacy: 'Legacy (P2PKH)',
@@ -62,9 +63,8 @@ class AddressTypeSection extends StatelessWidget {
             child: OutlinedButton(
               onPressed: isGenerating ? null : onGenerate,
               child: isGenerating
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
+                  ? const SizedBox.square(
+                      dimension: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Generate'),

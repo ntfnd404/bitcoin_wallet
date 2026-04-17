@@ -1,0 +1,18 @@
+name: bitcoin_node
+description: Bitcoin Core RPC adapter — implements remote data source interfaces
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  address:
+    path: ../address
+  rpc_client:
+    path: ../rpc_client
+  shared_kernel:
+    path: ../shared_kernel
+  wallet:
+    path: ../wallet

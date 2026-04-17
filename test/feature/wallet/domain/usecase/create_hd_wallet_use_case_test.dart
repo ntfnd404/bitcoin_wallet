@@ -1,7 +1,6 @@
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_hd_wallet_use_case.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:wallet/wallet.dart';
 
 import 'fakes/fake_bip39_service.dart';
 import 'fakes/fake_seed_repository.dart';

@@ -1,7 +1,6 @@
+import 'package:address/address.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
-import 'package:bitcoin_wallet/feature/address/domain/usecase/generate_address_use_case.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 final class AddressBloc extends Bloc<AddressEvent, AddressState> {

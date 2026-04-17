@@ -2,9 +2,9 @@ import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/widget/seed_word_tile.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:keys/keys.dart';
 
 /// Shows the generated mnemonic and requires the user to confirm they saved it.
 class SeedPhraseScreen extends StatefulWidget {

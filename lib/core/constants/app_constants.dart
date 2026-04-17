@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:shared_kernel/shared_kernel.dart';
 
 abstract final class AppConstants {
   /// Active Bitcoin network. Change this one constant to switch networks.

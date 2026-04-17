@@ -3,9 +3,9 @@ import 'package:bitcoin_wallet/core/routing/app_router.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:keys/keys.dart';
 
 /// Allows the user to restore an HD wallet by entering an existing seed phrase.
 ///
@@ -35,7 +35,7 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
     final appDeps = AppScope.of(context);
     final invalid = text.trim().isEmpty
         ? <String>[]
-        : words.where((w) => w.isNotEmpty && !appDeps.bip39Service.isValidWord(w)).toList();
+        : words.where((w) => w.isNotEmpty && !appDeps.keys.bip39Service.isValidWord(w)).toList();
     setState(() => _invalidWords = invalid);
   }
 

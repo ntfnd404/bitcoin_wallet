@@ -1,10 +1,12 @@
+import 'package:address/address.dart';
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/detail/wallet_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/create_wallet_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/restore_wallet_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/seed_phrase_screen.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:keys/keys.dart';
+import 'package:wallet/wallet.dart';
 
 /// Centralised navigation helpers for the wallet feature.
 ///

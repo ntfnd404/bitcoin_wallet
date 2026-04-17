@@ -1,9 +1,8 @@
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_node_wallet_use_case.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:wallet/wallet.dart';
 
-import 'mocks/mock_bitcoin_core_remote_data_source.dart';
+import 'mocks/mock_wallet_remote_data_source.dart';
 import 'mocks/mock_wallet_repository.dart';
 
 void main() {
@@ -19,12 +18,12 @@ void main() {
   });
 
   group('CreateNodeWalletUseCase', () {
-    late MockBitcoinCoreRemoteDataSource mockRemoteDataSource;
+    late MockWalletRemoteDataSource mockRemoteDataSource;
     late MockWalletRepository mockRepo;
     late CreateNodeWalletUseCase useCase;
 
     setUp(() {
-      mockRemoteDataSource = MockBitcoinCoreRemoteDataSource();
+      mockRemoteDataSource = MockWalletRemoteDataSource();
       mockRepo = MockWalletRepository();
       when(() => mockRemoteDataSource.createWallet(any())).thenAnswer((_) async {});
       when(() => mockRepo.saveWallet(any())).thenAnswer((_) async {});

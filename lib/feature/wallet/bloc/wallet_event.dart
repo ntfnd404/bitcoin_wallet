@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:keys/keys.dart';
 
 sealed class WalletEvent {
   const WalletEvent();

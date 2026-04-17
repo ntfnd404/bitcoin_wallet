@@ -1,7 +1,8 @@
-import 'package:bitcoin_wallet/feature/address/domain/usecase/generate_address_use_case.dart';
-import 'package:domain/domain.dart';
+import 'package:address/address.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/wallet.dart';
 
 import 'fakes/test_fixtures.dart';
 import 'mocks/mock_address_generation_strategy.dart';

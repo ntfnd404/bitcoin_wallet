@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:keys/keys.dart';
 
 /// Controllable BIP39 service for unit tests.
 final class FakeBip39Service implements Bip39Service {

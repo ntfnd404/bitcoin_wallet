@@ -7,35 +7,40 @@ environment:
   sdk: ^3.11.3
 
 workspace:
-  - packages/domain
-  - packages/data
+  - packages/address
+  - packages/bitcoin_node
+  - packages/keys
   - packages/rpc_client
+  - packages/shared_kernel
   - packages/storage
   - packages/ui_kit
+  - packages/wallet
 
 dependencies:
-  data:
-    path: packages/data
-  domain:
-    path: packages/domain
+  address:
+    path: packages/address
+  bitcoin_node:
+    path: packages/bitcoin_node
   flutter:
     sdk: flutter
   flutter_bloc: 9.1.1
-  json_annotation: 4.11.0
+  keys:
+    path: packages/keys
   rpc_client:
     path: packages/rpc_client
+  shared_kernel:
+    path: packages/shared_kernel
   storage:
     path: packages/storage
   ui_kit:
     path: packages/ui_kit
-  uuid: 4.5.3
+  wallet:
+    path: packages/wallet
 
 dev_dependencies:
-  build_runner: 2.13.1
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  json_serializable: 6.13.1
   mocktail: ^1.0.4
 
 flutter:

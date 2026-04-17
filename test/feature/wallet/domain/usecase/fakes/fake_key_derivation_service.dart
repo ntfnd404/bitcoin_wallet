@@ -1,17 +1,17 @@
-import 'package:domain/domain.dart';
+import 'package:keys/keys.dart';
+import 'package:shared_kernel/shared_kernel.dart';
 
 /// Controllable key derivation service for unit tests.
 final class FakeKeyDerivationService implements KeyDerivationService {
-  final Address address;
+  final DerivedAddress derivedAddress;
 
-  FakeKeyDerivationService({required this.address});
+  FakeKeyDerivationService({required this.derivedAddress});
 
   @override
-  Address deriveAddress(
+  DerivedAddress deriveAddress(
     Mnemonic mnemonic,
     AddressType type,
     int index,
-    String walletId,
   ) =>
-      address.copyWith(walletId: walletId);
+      derivedAddress;
 }

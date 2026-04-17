@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:wallet/wallet.dart';
 
 class MockWalletRepository extends Mock implements WalletRepository {}

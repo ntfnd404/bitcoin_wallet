@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:keys/keys.dart';
 
 /// In-memory seed repository for unit tests.
 final class FakeSeedRepository implements SeedRepository {

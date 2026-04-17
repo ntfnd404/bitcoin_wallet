@@ -7,9 +7,10 @@ import 'package:bitcoin_wallet/feature/address/view/widget/address_type_section.
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/wallet.dart';
 
 /// Shows addresses for a single wallet grouped by [AddressType].
 ///

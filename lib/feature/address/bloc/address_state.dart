@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:address/address.dart';
 
 final class AddressState {
   final List<Address> addresses;

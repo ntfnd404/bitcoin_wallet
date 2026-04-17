@@ -1,13 +1,15 @@
+import 'package:address/address_assembly.dart';
+import 'package:bitcoin_node/bitcoin_node.dart';
 import 'package:bitcoin_wallet/core/constants/app_constants.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
-import 'package:data/data.dart';
+import 'package:keys/keys_assembly.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:storage/storage.dart';
+import 'package:wallet/wallet_assembly.dart';
 
 /// Composition root — wires all concrete infrastructure implementations.
 ///
-/// Called once at startup via [create()]. Use cases are NOT created here;
-/// they live in feature scope (WalletScope, AddressScope).
+/// Called once at startup via [create()].
 final class AppDependenciesBuilder {
   final void Function(AppDependencies dependencies) _builder;
   final void Function(Object error, StackTrace stack) _onError;
@@ -36,32 +38,34 @@ final class AppDependenciesBuilder {
         user: AppConstants.rpcUser,
         password: AppConstants.rpcPassword,
       );
-      final storage = SecureStorageImpl();
+      const secureStorage = SecureStorageImpl();
 
-      const walletMapper = WalletMapperImpl();
-      final walletLocalDataSource = WalletLocalDataSourceImpl(
-        storage: storage,
-        mapper: walletMapper,
-        keyPrefix: 'wallet_',
+      final keys = KeysAssembly(
+        storage: secureStorage,
+        network: AppConstants.network,
       );
 
-      const addressMapper = AddressMapperImpl();
-      final addressLocalDataSource = AddressLocalDataSourceImpl(
-        storage: storage,
-        mapper: addressMapper,
+      final walletRemoteDataSource = WalletRemoteDataSourceImpl(rpcClient: rpcClient);
+      final addressRemoteDataSource = AddressRemoteDataSourceImpl(rpcClient: rpcClient);
+
+      final wallet = WalletAssembly(
+        storage: secureStorage,
+        remoteDataSource: walletRemoteDataSource,
+        bip39Service: keys.bip39Service,
+        seedRepository: keys.seedRepository,
       );
 
-      final bitcoinCoreRemoteDataSource = BitcoinCoreRemoteDatasourceImpl(
-        rpcClient: rpcClient,
+      final address = AddressAssembly(
+        storage: secureStorage,
+        remoteDataSource: addressRemoteDataSource,
+        seedRepository: keys.seedRepository,
+        keyDerivationService: keys.keyDerivationService,
       );
 
       final dependencies = AppDependencies(
-        walletRepository: WalletRepositoryImpl(localDataSource: walletLocalDataSource),
-        addressRepository: AddressRepositoryImpl(localStore: addressLocalDataSource),
-        bitcoinCoreRemoteDataSource: bitcoinCoreRemoteDataSource,
-        seedRepository: SeedRepositoryImpl(storage: storage),
-        bip39Service: const Bip39ServiceImpl(),
-        keyDerivationService: const KeyDerivationServiceImpl(network: AppConstants.network),
+        keys: keys,
+        wallet: wallet,
+        address: address,
       );
 
       _builder(dependencies);

@@ -1,0 +1,17 @@
+name: keys
+description: Key management module — mnemonic, seed, BIP39/BIP32 derivation
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace
+
+dependencies:
+  crypto: 3.0.7
+  pointycastle: 4.0.0
+  shared_kernel:
+    path: ../shared_kernel
+
+dev_dependencies:
+  test: 1.30.0

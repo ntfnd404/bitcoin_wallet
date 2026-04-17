@@ -1,10 +1,8 @@
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_hd_wallet_use_case.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/create_node_wallet_use_case.dart';
-import 'package:bitcoin_wallet/feature/wallet/domain/usecase/restore_hd_wallet_use_case.dart';
-import 'package:domain/domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:keys/keys.dart';
+import 'package:wallet/wallet.dart';
 
 final class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository _walletRepository;

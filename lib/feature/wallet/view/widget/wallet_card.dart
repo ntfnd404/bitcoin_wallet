@@ -1,5 +1,5 @@
-import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:wallet/wallet.dart';
 
 /// A single wallet list tile.
 class WalletCard extends StatelessWidget {

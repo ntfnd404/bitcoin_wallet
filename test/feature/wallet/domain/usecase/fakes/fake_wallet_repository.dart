@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:wallet/wallet.dart';
 
 /// In-memory wallet repository for unit tests.
 final class FakeWalletRepository implements WalletRepository {

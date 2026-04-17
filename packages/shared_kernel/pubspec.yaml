@@ -1,0 +1,8 @@
+name: shared_kernel
+description: Tiny shared primitives used by all business modules
+publish_to: none
+
+environment:
+  sdk: ^3.11.3
+
+resolution: workspace

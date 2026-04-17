@@ -11,3 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_secure_storage: 10.0.0
+  meta: ^1.17.0
+  shared_kernel:
+    path: ../shared_kernel

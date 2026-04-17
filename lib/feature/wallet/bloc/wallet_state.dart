@@ -1,4 +1,5 @@
-import 'package:domain/domain.dart';
+import 'package:keys/keys.dart';
+import 'package:wallet/wallet.dart';
 
 final class WalletState {
   /// All persisted wallets.

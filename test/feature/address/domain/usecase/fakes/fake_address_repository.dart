@@ -1,4 +1,4 @@
-import 'package:domain/domain.dart';
+import 'package:address/address.dart';
 
 /// In-memory address repository for unit tests.
 final class FakeAddressRepository implements AddressRepository {

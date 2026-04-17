@@ -1,4 +1,4 @@
-# Target Architecture
+# Architecture
 
 Feature-first app + business modules as packages + layered modules + hard architecture gate.
 
@@ -45,16 +45,20 @@ This is a hybrid approach, not a single pattern:
     ┌──────────────┐                      │
     │ bitcoin_node │──────────────────────┘
     │              │
-    │ BitcoinCore  │ → platform_storage
-    │ RemoteData   │ → observability
-    │ SourceImpl   │
+    │ WalletRemote │ → rpc_client
+    │ AddressRemote│
+    │ DataSource   │
+    │ Impl         │
     └──────────────┘
 
     ─────► depends on (imports)
-    wallet ──► keys ──► shared_kernel
+    wallet  ──► keys ──► shared_kernel
     address ──► keys ──► shared_kernel
-    bitcoin_node ──► wallet (for BitcoinCoreRemoteDataSource)
-    bitcoin_node ──► address (for BitcoinCoreRemoteDataSource)
+    address ──► wallet (for Wallet, WalletType)
+    bitcoin_node ──► wallet (for WalletRemoteDataSource)
+    bitcoin_node ──► address (for AddressRemoteDataSource)
+    bitcoin_node ──► rpc_client
+    bitcoin_node ──► shared_kernel
 ```
 
 ---
@@ -64,98 +68,40 @@ This is a hybrid approach, not a single pattern:
 ```
 app/
   lib/
-    app/
-      bootstrap/                       ← main() + init logic
-      root_app.dart                    ← App widget
+    app.dart                               ← App widget
     core/
-      di/                              ← AppDependencies, AppScope
-      routing/                         ← AppRouterDelegate, AppRouter
-      event_bus/                       ← AppEventBus, sealed AppEvent
-      common/                          ← shared extensions/utils
+      constants/                           ← AppConstants (network, host, port)
+      di/                                  ← AppDependencies, AppDependenciesBuilder, AppScope
+      routing/                             ← AppRouterDelegate, AppRouter
     feature/
       wallet/
-        list/
-          di/                          ← WalletListScope
-          bloc/                        ← WalletListBloc
-          presentation/                ← WalletListScreen, WalletCard
-        setup/
-          di/                          ← WalletSetupScope
-          bloc/                        ← WalletSetupBloc
-          presentation/                ← CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen
-        detail/
-          di/                          ← WalletDetailScope
-          bloc/                        ← WalletDetailBloc
-          presentation/                ← WalletDetailScreen
-        shared/                        ← widgets shared across wallet flows
+        di/                                ← WalletScope
+        bloc/                              ← WalletBloc, WalletEvent, WalletState
+        view/screen/
+          list/                            ← WalletListScreen
+          setup/                           ← CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen
+          detail/                          ← WalletDetailScreen
       address/
-        generate/
-          di/                          ← AddressGenerateScope
-          bloc/                        ← AddressGenerateBloc
-          presentation/                ← AddressScreen
-        shared/
+        di/                                ← AddressScope
+        bloc/                              ← AddressBloc, AddressEvent, AddressState
+        view/widget/                       ← AddressScreen, AddressTypeSection
 
 packages/
-  shared_kernel/                       ← BitcoinNetwork, Failure, Result, Amount
-  design_system/                       ← tokens, typography, theme, widgets
-  platform_storage/                    ← SecureStorage interface + impl
-  observability/                       ← logging, error tracking
-  bitcoin_node/                        ← RPC client + adapter implementations
-
-  wallet/
-    lib/
-      wallet.dart                      ← barrel (public API only)
-      wallet_assembly.dart             ← module DI factory
-      src/
-        domain/
-          entity/
-            wallet.dart
-            wallet_type.dart
-          repository/
-            wallet_repository.dart     ← interface
-          data_sources/
-            wallet_local_data_source.dart        ← interface
-            bitcoin_core_remote_data_source.dart  ← interface (consumer-owned)
-        application/
-          create_node_wallet.dart
-          create_hd_wallet.dart
-          restore_hd_wallet.dart
-          wallet_read_api.dart         ← query API for other modules
-        data/
-          wallet_repository_impl.dart
-          wallet_local_store.dart
-          wallet_mapper.dart
-
-  address/
-    lib/
-      address.dart
-      address_assembly.dart
-      src/
-        domain/
-          entity/
-            address.dart
-            address_type.dart
-          repository/
-            address_repository.dart
-          data_sources/
-            address_local_data_source.dart
-        application/
-          generate_address.dart
-          hd_address_strategy.dart
-          node_address_strategy.dart
-          address_read_api.dart
-        data/
-          address_repository_impl.dart
-          address_local_store.dart
-          address_mapper.dart
+  shared_kernel/                           ← BitcoinNetwork, AddressType, SecureStorage
+  ui_kit/                                  ← UI components (placeholder)
+  storage/                                 ← SecureStorageImpl (Flutter, flutter_secure_storage)
+  rpc_client/                              ← BitcoinRpcClient (JSON-RPC over HTTP)
+  bitcoin_node/                            ← WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl
 
   keys/
     lib/
-      keys.dart
-      keys_assembly.dart
+      keys.dart                            ← barrel (public API only)
+      keys_assembly.dart                   ← module DI factory
       src/
         domain/
           entity/
             mnemonic.dart
+            derived_address.dart            ← value object (breaks keys↔address cycle)
           repository/
             seed_repository.dart
           service/
@@ -163,11 +109,65 @@ packages/
             key_derivation_service.dart
         data/
           bip39_service_impl.dart
+          bip39_wordlist.dart
           key_derivation_service_impl.dart
           seed_repository_impl.dart
-          bip32/
-          encoding/
-          bip39_wordlist.dart
+          crypto/
+            base58.dart
+            bech32.dart
+            bip32.dart
+            extended_key.dart
+            hash_utils.dart
+    test/
+      bip39_service_impl_test.dart
+      key_derivation_service_impl_test.dart
+      seed_repository_impl_test.dart
+
+  wallet/
+    lib/
+      wallet.dart                          ← barrel (public API only)
+      wallet_assembly.dart                 ← module DI factory
+      src/
+        domain/
+          entity/
+            wallet.dart
+            wallet_type.dart
+          repository/
+            wallet_repository.dart
+          data_sources/
+            wallet_local_data_source.dart
+            wallet_remote_data_source.dart  ← ISP interface (createWallet only)
+        application/
+          create_node_wallet_use_case.dart
+          create_hd_wallet_use_case.dart
+          restore_hd_wallet_use_case.dart
+        data/
+          wallet_repository_impl.dart
+          wallet_local_data_source_impl.dart
+          wallet_serializer.dart
+
+  address/
+    lib/
+      address.dart                         ← barrel (public API only)
+      address_assembly.dart                ← module DI factory
+      src/
+        domain/
+          entity/
+            address.dart
+          repository/
+            address_repository.dart
+          data_sources/
+            address_local_data_source.dart
+            address_remote_data_source.dart ← ISP interface (generateAddress only)
+        application/
+          generate_address_use_case.dart
+          address_generation_strategy.dart
+          hd_address_generation_strategy.dart
+          node_address_generation_strategy.dart
+        data/
+          address_repository_impl.dart
+          address_local_data_source_impl.dart
+          address_serializer.dart
 ```
 
 ---
@@ -176,14 +176,14 @@ packages/
 
 | Module | Owns | Exposes to Others |
 |--------|------|-------------------|
-| **wallet** | Wallet, WalletType, WalletRepository, WalletLocalDataSource, BitcoinCoreRemoteDataSource (wallet part) | WalletId, WalletReadApi |
-| **address** | Address, AddressType, AddressRepository, AddressLocalDataSource | AddressId, AddressReadApi |
-| **keys** | Mnemonic, SeedRepository, Bip39Service, KeyDerivationService | All domain types + services |
-| **bitcoin_node** | BitcoinRpcClient, BitcoinCoreRemoteDataSourceImpl | DataSource implementations only |
-| **shared_kernel** | BitcoinNetwork, Failure, Result, Amount | Everything (shared primitives) |
-| **platform_storage** | SecureStorage, SecureStorageImpl | Storage interface + impl |
-| **observability** | Logger, ErrorTracker | Logging/tracking API |
-| **design_system** | Tokens, Typography, Theme, Widgets | UI components |
+| **shared_kernel** | BitcoinNetwork, AddressType, SecureStorage | Everything (shared primitives + contracts) |
+| **keys** | Mnemonic, DerivedAddress, SeedRepository, Bip39Service, KeyDerivationService | All domain types + services |
+| **wallet** | Wallet, WalletType, WalletRepository, WalletLocalDataSource, WalletRemoteDataSource | Entities, repository, use cases |
+| **address** | Address, AddressRepository, AddressLocalDataSource, AddressRemoteDataSource | Entities, repository, use case, strategies |
+| **bitcoin_node** | WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl | DataSource implementations only |
+| **storage** | SecureStorageImpl | Storage implementation |
+| **rpc_client** | BitcoinRpcClient | RPC client |
+| **ui_kit** | UI components | Shared widgets |
 
 ### Ownership rules
 
@@ -201,7 +201,7 @@ packages/
 - BLoC / state / events (per-flow)
 - Scopes (DI composition root per flow)
 - Navigation
-- Feature-local orchestration (optional application/ layer when composing multiple module APIs)
+- Feature-local orchestration (optional application/ layer when composing multiple module APIs for one screen)
 
 ### packages/\<module\>/src/domain/
 
@@ -214,14 +214,13 @@ packages/
 ### packages/\<module\>/src/application/
 
 - Shared use cases of this module
-- Query/command APIs (ReadApi for other modules)
 - Orchestration not tied to a single screen
 
 ### packages/\<module\>/src/data/
 
 - Repository implementations
-- Remote/local datasource
-- DTO/mapper
+- Remote/local datasource implementations
+- Serializers (encode/decode between entity and Map)
 - DataSource implementations (bitcoin_node implements consumer-owned DataSource interfaces)
 
 ---
@@ -240,64 +239,44 @@ packages/<module>/
 │       ├── application/         ← ORCHESTRATION: uses domain + ports
 │       └── data/                ← INFRASTRUCTURE: implements domain interfaces
 └── test/
-    ├── domain/                  ← unit tests (pure, fast)
-    ├── application/             ← unit tests with mocked ports
-    └── data/                    ← integration tests
 ```
 
 Layer rules within a module:
 
 ```
 domain/      ← depends on: shared_kernel ONLY
-application/ ← depends on: own domain, other modules' public API (lightweight, rare)
-data/        ← depends on: own domain, platform_storage, observability
+application/ ← depends on: own domain, other modules' public API (lightweight types only, rare)
+data/        ← depends on: own domain, shared_kernel (for SecureStorage)
 ```
 
 ---
 
-## Feature Internal Structure
+## ISP: Interface Segregation for Remote Data Sources
 
-Feature = Bounded Context. Flow = screen/scenario within BC.
+The original monolithic `BitcoinCoreRemoteDataSource` was split into focused interfaces:
 
-Each flow has its own BLoC, scope, and presentation:
+| Interface | Module | Methods |
+|-----------|--------|---------|
+| `WalletRemoteDataSource` | wallet | `createWallet(String walletName)` |
+| `AddressRemoteDataSource` | address | `generateAddress(String walletName, AddressType type)` |
 
-```
-app/lib/feature/<bc>/
-├── <flow>/
-│   ├── di/             ← Scope: creates BLoC in didChangeDependencies + _initialized
-│   ├── bloc/           ← BLoC + events + state for this flow only
-│   └── presentation/   ← screens + widgets for this flow
-└── shared/             ← widgets shared across flows of this BC
-```
-
-Feature rules:
-- Each flow has its **own BLoC** — no god-object BLoC
-- BLoC calls module public API (use cases) directly
-- Optional feature-local `application/` when orchestrating multiple module APIs for one screen
-- **Scope** = assembles dependencies in `didChangeDependencies`, exposes factory (static method + InheritedWidget). Does NOT hold BLoC instances
-- **BlocProvider(create: ...)** = placed low in tree near screen. Creates BLoC via Scope factory. Auto-disposes
-- **Never** use `BlocProvider.value` — always `BlocProvider(create: ...)`
-- Cross-flow communication via `AppEventBus`, not BLoC-to-BLoC subscription
+Each interface is owned by its consumer module (DIP). The `bitcoin_node` package provides implementations for both.
 
 ---
 
-## How Feature Connects to Module
+## DerivedAddress: Breaking the keys↔address Cycle
 
-```
-app/feature/wallet/setup/presentation/
-  → WalletSetupBloc
-  → WalletSetupScope
+`keys` cannot depend on `address` (would create a cycle). `KeyDerivationService.deriveAddress()` returns `DerivedAddress` — a lightweight value object in keys:
 
-WalletSetupBloc
-  → wallet public use cases (CreateNodeWallet, CreateHdWallet, RestoreHdWallet)
-  → keys public API (Bip39Service for mnemonic validation)
-
-If feature-local application needed:
-feature/wallet/setup/application/
-  → ValidateAndCreate (composes wallet + keys APIs for setup flow)
+```dart
+final class DerivedAddress {
+  final String value;
+  final AddressType type;
+  final String derivationPath;
+}
 ```
 
-UI flow lives in feature. Reusable business logic lives in module package.
+`HdAddressGenerationStrategy` (in address package) constructs the full `Address` entity from `DerivedAddress` + wallet context.
 
 ---
 
@@ -307,13 +286,11 @@ UI flow lives in feature. Reusable business logic lives in module package.
 
 ```
 feature/*              → module public API (barrel)
-feature/*              → design_system
-feature/*              → observability
-feature/*              → core/event_bus
-feature/*              → feature-local application
+feature/*              → ui_kit
+feature/*              → core/*
 module/application     → own domain
 module/data            → own domain
-module/data            → platform_storage, observability
+module/data            → shared_kernel (for SecureStorage)
 module/application     → other module public API (lightweight types only, rare)
 bitcoin_node           → module/domain (DataSource interfaces to implement)
 ```
@@ -321,14 +298,12 @@ bitcoin_node           → module/domain (DataSource interfaces to implement)
 ### Forbidden
 
 ```
-feature/*              → module/src/data/* (deep import)
+feature/*              → module/src/* (deep import)
 feature/*              → other feature/bloc or feature/domain
 module/data            → other module/data
 module/domain          → feature/*
 module/domain          → other module/data
-module/domain          → design_system
 shared_kernel          → business modules
-bitcoin_node           → module/src/* (deep import, only public DataSource interfaces)
 ```
 
 ---
@@ -340,39 +315,14 @@ Modules form a **DAG**, never a cycle.
 ```
 keys           → shared_kernel
 wallet         → shared_kernel, keys
-address        → shared_kernel, keys
-bitcoin_node   → wallet, address (implements their ports)
+address        → shared_kernel, keys, wallet
+bitcoin_node   → wallet, address, rpc_client, shared_kernel
 ```
 
 If a cycle appears (e.g., wallet ↔ address):
-- Extract shared contract into a separate small module
-- Or replace direct dependency with query API / event / id reference
-
----
-
-## Event Bus
-
-```dart
-// core/event_bus/app_event.dart
-sealed class AppEvent {}
-final class WalletCreated extends AppEvent { final String walletId; }
-final class WalletDeleted extends AppEvent { final String walletId; }
-final class SeedStored extends AppEvent { final String walletId; }
-final class AddressGenerated extends AppEvent { final String walletId; }
-
-// core/event_bus/app_event_bus.dart
-final class AppEventBus {
-  final _controller = StreamController<AppEvent>.broadcast();
-  Stream<AppEvent> get stream => _controller.stream;
-  void emit(AppEvent event) => _controller.add(event);
-  void dispose() => _controller.close();
-}
-```
-
-- Lives in `core/event_bus/` — no business module owns it
-- `AppEventBus` created in bootstrap, provided via `AppScope`
-- BLoCs subscribe in constructor, unsubscribe in `close()`
-- Full decoupling: emitter doesn't know consumers exist
+- Extract shared contract into shared_kernel
+- Or create a lightweight value object (like DerivedAddress) in the lower-level module
+- Or replace direct dependency with id reference
 
 ---
 
@@ -380,36 +330,34 @@ final class AppEventBus {
 
 ```
 main()
-  → AppBootstrap
-    → BitcoinRpcClient           (infra)
-    → SecureStorageImpl          (infra)
-    → AppEventBus                (core)
+  → AppDependenciesBuilder.build()
+    → BitcoinRpcClient               (rpc_client)
+    → SecureStorageImpl               (storage)
 
-    → KeysAssembly               (keys module)
+    → KeysAssembly                    (keys module)
       → Bip39ServiceImpl
       → KeyDerivationServiceImpl
       → SeedRepositoryImpl
 
-    → WalletAssembly             (wallet module)
+    → WalletRemoteDataSourceImpl      (bitcoin_node)
+    → WalletAssembly                  (wallet module)
       → WalletRepositoryImpl
-      → CreateNodeWallet, CreateHd, RestoreHd
-      → WalletReadApi
+      → CreateNodeWalletUseCase
+      → CreateHdWalletUseCase
+      → RestoreHdWalletUseCase
 
-    → AddressAssembly            (address module)
+    → AddressRemoteDataSourceImpl     (bitcoin_node)
+    → AddressAssembly                 (address module)
       → AddressRepositoryImpl
-      → GenerateAddress (+ strategies)
-      → AddressReadApi
+      → GenerateAddressUseCase (+ strategies)
 
-    → BitcoinCoreRemoteDataSourceImpl  (bitcoin_node, implements BitcoinCoreRemoteDataSource)
-
-    → AppDependencies            (container)
-    → RootApp
+    → AppDependencies                 (container: keys, wallet, address assemblies)
+    → App widget
 ```
 
 Each Assembly creates: data/ implementations, application/ services, public module API.
 
-Feature Scopes assemble dependencies and expose BLoC **factory** (static method + InheritedWidget).
-`BlocProvider(create: Scope.newBloc(context))` placed low in tree near screen — auto-disposes.
+Feature Scopes provide BLoC **factory** via static methods + InheritedWidget.
 
 ---
 
@@ -418,27 +366,28 @@ Feature Scopes assemble dependencies and expose BLoC **factory** (static method 
 | Decision | Rationale |
 |----------|-----------|
 | DataSource interfaces owned by consumers, not adapter | DIP: high-level defines contract, low-level implements. ISP: each module gets exactly the interface it needs |
+| ISP split of remote data sources | Single Responsibility: each interface has one reason to change |
 | Mnemonic in keys, not wallet | Information Expert: crypto/key-management context owns crypto primitives |
+| DerivedAddress in keys | Avoids keys→address cycle; keys returns lightweight VO, address builds full entity |
+| AddressType in shared_kernel | Used by both keys and address — shared primitive, not owned by either |
+| SecureStorage interface in shared_kernel | Allows pure Dart packages (keys, wallet, address) to depend on the interface without pulling Flutter |
+| SecureStorageImpl in storage (Flutter) | Only the app layer and composition root need the Flutter implementation |
 | Strategies in application, not domain | Strategies do IO (call services, repositories) — domain must stay pure |
 | Per-flow BLoC, not per-feature | SRP: one BLoC handles one flow. Prevents god-object accumulation |
-| Event bus for cross-feature | Full decoupling: emitter doesn't know consumers exist |
-| Address as separate module | Independent lifecycle: receive, gap tracking, UTXO, labeling |
-| No Event Sourcing / CQRS | Mobile client over Bitcoin Core's ledger — Core already does ES for us |
-| No formal Domain Events | BLoC is already event-driven; AppEventBus covers cross-feature |
-| Per-module packages from day one | Scalable architecture from the start, not deferred |
+| Serializer pattern (single final class) | Replaces abstract Codec/Mapper + Impl hierarchy — simpler, no separate files |
 | Assembly per module | Each module owns its DI, not a monolithic builder |
-| Scope = factory, BlocProvider low | Scope assembles deps and exposes factory. BlocProvider(create:) near screen auto-disposes. Never BlocProvider.value |
+| No Event Sourcing / CQRS | Mobile client over Bitcoin Core's ledger — Core already does ES for us |
 
 ---
 
 ## What Goes in shared_kernel
 
-Only very small shared primitives:
+Only very small shared primitives and contracts:
 
 - BitcoinNetwork
-- Failure / Result
-- Amount / Money
-- DateRange
-- PageRequest / PageResult
+- AddressType
+- SecureStorage (interface)
+- Failure / Result (future)
+- Amount / Money (future)
 
 **Never** put in shared_kernel: large entities, module repositories, use cases, "everything shared just in case."

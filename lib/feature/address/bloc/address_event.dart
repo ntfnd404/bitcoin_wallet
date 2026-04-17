@@ -1,4 +1,5 @@
-import 'package:domain/domain.dart';
+import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/wallet.dart';
 
 sealed class AddressEvent {
   const AddressEvent();
