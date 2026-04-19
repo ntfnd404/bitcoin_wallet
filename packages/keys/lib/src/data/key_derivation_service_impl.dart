@@ -4,6 +4,7 @@ import 'package:keys/src/data/crypto/base58.dart';
 import 'package:keys/src/data/crypto/bech32.dart';
 import 'package:keys/src/data/crypto/bip32.dart';
 import 'package:keys/src/data/crypto/hash_utils.dart';
+import 'package:keys/src/domain/entity/account_xpub.dart';
 import 'package:keys/src/domain/entity/derived_address.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
 import 'package:keys/src/domain/service/key_derivation_service.dart';
@@ -41,6 +42,85 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
       derivationPath: _pathString(type, index),
     );
   }
+
+  @override
+  Uint8List derivePrivateKey(Mnemonic mnemonic, AddressType type, int index) {
+    if (index < 0) {
+      throw ArgumentError.value(index, 'index', 'must be >= 0');
+    }
+
+    final seed = mnemonicToSeed(mnemonic.words);
+    final master = deriveMasterKey(seed);
+    final child = deriveKeyPath(master, _indexPath(type, index));
+
+    return Uint8List.fromList(child.privateKey);
+  }
+
+  @override
+  Uint8List derivePublicKey(Mnemonic mnemonic, AddressType type, int index) {
+    if (index < 0) {
+      throw ArgumentError.value(index, 'index', 'must be >= 0');
+    }
+
+    final seed = mnemonicToSeed(mnemonic.words);
+    final master = deriveMasterKey(seed);
+    final child = deriveKeyPath(master, _indexPath(type, index));
+
+    return privateKeyToPublic(child.privateKey);
+  }
+
+  @override
+  AccountXpub deriveAccountXpub(Mnemonic mnemonic, AddressType type) {
+    final seed = mnemonicToSeed(mnemonic.words);
+    final master = deriveMasterKey(seed);
+
+    // Account path: m/purpose'/coinType'/0'
+    final accountPath = [
+      _purpose(type) | 0x80000000,
+      network.coinType | 0x80000000,
+      0x80000000, // account 0'
+    ];
+
+    // Derive the parent (m/purpose'/coinType') to compute the fingerprint
+    final parentPath = accountPath.sublist(0, 2);
+    final parentKey = deriveKeyPath(master, parentPath);
+    final parentPub = privateKeyToPublic(parentKey.privateKey);
+    final fingerprint = hash160(parentPub).sublist(0, 4);
+
+    // Derive the account key (m/purpose'/coinType'/0')
+    final accountKey = deriveKeyPath(master, accountPath);
+    final accountPub = privateKeyToPublic(accountKey.privateKey);
+
+    // BIP32 xpub serialisation
+    // Testnet/regtest version: 0x043587CF
+    final version = network == BitcoinNetwork.mainnet
+        ? Uint8List.fromList([0x04, 0x88, 0xB2, 0x1E])  // mainnet xpub
+        : Uint8List.fromList([0x04, 0x35, 0x87, 0xCF]); // testnet/regtest tpub
+
+    final childNumber = Uint8List(4); // account 0' = 0x80000000
+    final childNumInt = accountPath.last;
+    childNumber[0] = (childNumInt >> 24) & 0xff;
+    childNumber[1] = (childNumInt >> 16) & 0xff;
+    childNumber[2] = (childNumInt >> 8) & 0xff;
+    childNumber[3] = childNumInt & 0xff;
+
+    final payload = Uint8List.fromList([
+      ...version,
+      3, // depth
+      ...fingerprint,
+      ...childNumber,
+      ...accountKey.chainCode,
+      ...accountPub,
+    ]);
+
+    return AccountXpub(
+      xpub: base58CheckEncode(payload),
+      derivationPath: _accountPathString(type),
+    );
+  }
+
+  String _accountPathString(AddressType type) =>
+      "m/${_purpose(type)}'/${network.coinType}'/0'";
 
   // ---------------------------------------------------------------------------
   // Derivation paths
