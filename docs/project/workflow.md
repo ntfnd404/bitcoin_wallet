@@ -42,6 +42,49 @@ IDEA_READY → PRD_READY → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
 
 Each gate is blocking. The next role starts only after the current gate is satisfied.
 
+## Branch Strategy
+
+One ticket = one feature branch. No exceptions.
+
+### Rules
+
+- Branch is created from `main` at the start of a new ticket: `git checkout -b BW-XXXX-short-name`
+- `docs/BW-XXXX/` is created on the feature branch — it lives there and **never merges into `main`**
+- `main` only ever contains `docs/project/` (persistent docs) — never `docs/BW-XXXX/` (branch-local)
+- Code changes are committed to the feature branch throughout implementation
+- The ticket is closed by merging the feature branch into `main`
+
+### Ticket lifecycle
+
+```text
+git checkout -b BW-XXXX-short-name   ← ticket opens
+  → /aidd-new-ticket                 ← creates docs/BW-XXXX/ on the branch
+  → implement phases                 ← commits on BW-XXXX branch
+  → all phases done, QA pass
+  → git checkout main && git merge BW-XXXX-short-name --no-ff
+  → delete docs/BW-XXXX/ from main   ← branch-local docs do not land in main
+  → update docs/project/phases/progress.md
+  → ticket closed
+```
+
+### Commit convention
+
+```
+feat(BW-XXXX): short description
+fix(BW-XXXX): short description
+chore(BW-XXXX): short description
+```
+
+### What lands in `main`
+
+| Lands in `main` | Does NOT land in `main` |
+|---|---|
+| All feature code (`lib/`, `packages/`, `test/`) | `docs/BW-XXXX/` workspace |
+| `docs/project/` updates | Phase plans, PRDs, research, tasklists |
+| `progress.md` update (phase → completed) | |
+
+---
+
 ## Documentation Model
 
 ### Persistent docs: `docs/project/`
