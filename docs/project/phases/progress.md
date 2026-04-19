@@ -5,14 +5,22 @@ This document tracks what has already been completed, what is currently in progr
 Checklist items are closed when the Flutter app implements the feature, not when a `make` command is run.
 `make` commands are exploration tools — use them to understand the RPC surface before building the app layer.
 
+## Ticket map
+
+| Ticket | Phases | Status |
+|--------|--------|--------|
+| BW-0001 | 01, 02, 03 | closed |
+| BW-0002 | 04, 05 | closed |
+| BW-0003 | 06 | in progress |
+
 ## Current status
 
-- Phase 01: `completed`
-- Phase 02: `completed`
-- Phase 03: `completed`
-- Phase 04: `planned`
-- Phase 05: `planned`
-- Phase 06: `in progress`
+- Phase 01: `completed` — BW-0001
+- Phase 02: `completed` — BW-0001
+- Phase 03: `completed` — BW-0001
+- Phase 04: `completed` — BW-0002
+- Phase 05: `completed` — BW-0002
+- Phase 06: `in progress` — BW-0003
 - Phase 07: `planned`
 - Phase 08: `planned`
 
@@ -56,28 +64,28 @@ Flutter app generates and displays Bitcoin addresses.
 
 Flutter app displays transaction history and raw UTXO state.
 
-- [ ] App displays wallet transaction list with direction, amount, and confirmations.
-- [ ] App displays transaction detail: all inputs, all outputs, fee, size in bytes, weight.
-- [ ] App displays raw transaction hex.
-- [ ] App distinguishes mempool (unconfirmed) transactions from confirmed ones.
-- [ ] App displays UTXO list with TXID, vout, amount, confirmations, address, and script type.
-- [ ] App displays individual UTXO detail including raw output script and derivation path.
+- [x] App displays wallet transaction list with direction, amount, and confirmations.
+- [x] App displays transaction detail: all inputs, all outputs, fee, size in bytes, weight.
+- [x] App displays raw transaction hex.
+- [x] App distinguishes mempool (unconfirmed) transactions from confirmed ones.
+- [x] App displays UTXO list with TXID, vout, amount, confirmations, address, and script type.
+- [x] App displays individual UTXO detail including raw output script and derivation path.
 
 ### Phase 05: Send transaction and coin selection strategies
 
 Flutter app constructs, signs, and broadcasts transactions with user-controlled coin selection.
 
-- [ ] App sends a transaction with destination address and amount input.
-- [ ] App shows transaction summary (inputs, outputs, fee, change) before broadcast.
-- [ ] App implements FIFO coin selection strategy (oldest UTXOs first).
-- [ ] App implements LIFO coin selection strategy (newest UTXOs first).
-- [ ] App implements minimize-inputs strategy (fewest UTXOs to cover amount).
-- [ ] App implements minimize-change strategy (closest match to minimize change output).
-- [ ] App compares strategies side by side: estimated fee, input count, change amount.
+- [x] App sends a transaction with destination address and amount input.
+- [x] App shows transaction summary (inputs, outputs, fee, change) before broadcast.
+- [x] App implements FIFO coin selection strategy (oldest UTXOs first).
+- [x] App implements LIFO coin selection strategy (newest UTXOs first).
+- [x] App implements minimize-inputs strategy (fewest UTXOs to cover amount).
+- [x] App implements minimize-change strategy (closest match to minimize change output).
+- [x] App compares strategies side by side: estimated fee, input count, change amount.
 - [ ] App allows manual UTXO selection for a transaction.
-- [ ] App broadcasts raw transaction via `sendrawtransaction`.
-- [ ] App displays TXID after successful broadcast.
-- [ ] App exposes "Mine block" action (`generatetoaddress`) to confirm pending transactions.
+- [x] App broadcasts raw transaction via `sendrawtransaction`.
+- [x] App displays TXID after successful broadcast.
+- [x] App exposes "Mine block" action (`generatetoaddress`) to confirm pending transactions.
 
 ### Phase 06: Key derivation and self-signing
 

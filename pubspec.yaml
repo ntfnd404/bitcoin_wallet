@@ -13,6 +13,7 @@ workspace:
   - packages/rpc_client
   - packages/shared_kernel
   - packages/storage
+  - packages/transaction
   - packages/ui_kit
   - packages/wallet
 
@@ -32,6 +33,8 @@ dependencies:
     path: packages/shared_kernel
   storage:
     path: packages/storage
+  transaction:
+    path: packages/transaction
   ui_kit:
     path: packages/ui_kit
   wallet:
