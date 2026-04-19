@@ -1,4 +1,8 @@
 import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
+import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
+import 'package:bitcoin_wallet/feature/signing/di/signing_scope.dart';
+import 'package:bitcoin_wallet/feature/transaction/di/transaction_scope.dart';
+import 'package:bitcoin_wallet/feature/utxo/di/utxo_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/di/wallet_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/list/wallet_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -20,19 +24,27 @@ final class AppRouterDelegate extends RouterDelegate<Object>
   @override
   Widget build(BuildContext context) => WalletScope(
     child: AddressScope(
-      child: Navigator(
-        key: navigatorKey,
-        onGenerateInitialRoutes: (navigator, initialRoute) => [
-          MaterialPageRoute<void>(
-            settings: const RouteSettings(name: '/'),
-            builder: (_) => const WalletListScreen(),
+      child: TransactionScope(
+        child: UtxoScope(
+          child: SigningScope(
+            child: SendScope(
+              child: Navigator(
+              key: navigatorKey,
+              onGenerateInitialRoutes: (navigator, initialRoute) => [
+                MaterialPageRoute<void>(
+                  settings: const RouteSettings(name: '/'),
+                  builder: (_) => const WalletListScreen(),
+                ),
+              ],
+              onUnknownRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => const WalletListScreen(),
+              ),
+            ),
           ),
-        ],
-        onUnknownRoute: (_) => MaterialPageRoute<void>(
-          builder: (_) => const WalletListScreen(),
         ),
       ),
     ),
+  ),
   );
 
   @override

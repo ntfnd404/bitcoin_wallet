@@ -1,10 +1,13 @@
 import 'package:address/address_assembly.dart';
 import 'package:bitcoin_node/bitcoin_node.dart';
+import 'package:bitcoin_wallet/core/adapters/hd_address_data_source_impl.dart';
+import 'package:bitcoin_wallet/core/adapters/hd_transaction_signer.dart';
 import 'package:bitcoin_wallet/core/constants/app_constants.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
 import 'package:keys/keys_assembly.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:storage/storage.dart';
+import 'package:transaction/transaction.dart';
 import 'package:transaction/transaction_assembly.dart';
 import 'package:wallet/wallet_assembly.dart';
 
@@ -63,10 +66,32 @@ final class AppDependenciesBuilder {
         keyDerivationService: keys.keyDerivationService,
       );
 
-      final transactionRemoteDataSource =
-          TransactionRemoteDataSourceImpl(rpcClient: rpcClient);
+      final nodeTxDataSource = NodeTransactionDataSourceImpl(rpcClient: rpcClient);
+      final blockGenDataSource = BlockGenerationDataSourceImpl(rpcClient: rpcClient);
+      final broadcastDataSource = BroadcastDataSourceImpl(rpcClient: rpcClient);
+      final hdAddressDataSource = HdAddressDataSourceImpl(
+        repository: address.addressRepository,
+      );
+      final hdSigner = HdTransactionSigner(
+        signTransaction: keys.signTransaction,
+      );
+
       final transaction = TransactionAssembly(
-        remoteDataSource: transactionRemoteDataSource,
+        transactionRemoteDataSource: TransactionRemoteDataSourceImpl(rpcClient: rpcClient),
+        utxoRemoteDataSource: UtxoRemoteDataSourceImpl(rpcClient: rpcClient),
+        utxoScanDataSource: UtxoScanDataSourceImpl(rpcClient: rpcClient),
+        broadcastDataSource: broadcastDataSource,
+        nodeTransactionDataSource: nodeTxDataSource,
+        blockGenerationDataSource: blockGenDataSource,
+        hdAddressDataSource: hdAddressDataSource,
+        coinSelectors: const [
+          FifoCoinSelector(),
+          LifoCoinSelector(),
+          MinimizeInputsCoinSelector(),
+          MinimizeChangeCoinSelector(),
+        ],
+        feeEstimator: const P2wpkhFeeEstimator(),
+        hdSigner: hdSigner,
       );
 
       final dependencies = AppDependencies(

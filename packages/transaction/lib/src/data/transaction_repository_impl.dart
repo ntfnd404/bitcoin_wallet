@@ -1,5 +1,6 @@
 import 'package:transaction/src/domain/data_sources/transaction_remote_data_source.dart';
 import 'package:transaction/src/domain/entity/transaction.dart';
+import 'package:transaction/src/domain/entity/transaction_detail.dart';
 import 'package:transaction/src/domain/repository/transaction_repository.dart';
 
 /// [TransactionRepository] backed by [TransactionRemoteDataSource].
@@ -15,4 +16,8 @@ final class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<List<Transaction>> getTransactions(String walletName) =>
       _remoteDataSource.getTransactions(walletName);
+
+  @override
+  Future<TransactionDetail> getTransactionDetail(String txid, String walletName) =>
+      _remoteDataSource.getTransactionDetail(txid, walletName);
 }

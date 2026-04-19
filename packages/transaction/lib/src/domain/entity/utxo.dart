@@ -1,9 +1,8 @@
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:transaction/src/domain/entity/confirmable.dart';
 
 /// An unspent transaction output (UTXO) as reported by Bitcoin Core.
-///
-/// Amounts are in satoshis (1 BTC = 100,000,000 satoshis).
-final class Utxo {
+final class Utxo with Confirmable {
   /// Transaction ID that created this output, hex string.
   final String txid;
 
@@ -11,13 +10,15 @@ final class Utxo {
   final int vout;
 
   /// Amount in satoshis.
-  final int amountSat;
+  final Satoshi amountSat;
 
   /// Number of confirmations. 0 = mempool, >0 = confirmed.
+  @override
   final int confirmations;
 
   /// Bitcoin address that received this output.
-  final String address;
+  /// May be null for OP_RETURN, P2PK, and other unaddressable outputs.
+  final String? address;
 
   /// Raw scriptPubKey in hex.
   final String scriptPubKey;
@@ -28,8 +29,14 @@ final class Utxo {
   /// True if the UTXO is spendable by this wallet.
   final bool spendable;
 
-  /// True if the UTXO is in the mempool (not yet confirmed).
-  bool get isMempool => confirmations == 0;
+  /// BIP derivation path extracted from the Bitcoin Core descriptor.
+  ///
+  /// Format: `m/purpose'/coin_type'/account'/change/index`
+  /// (e.g. `m/84'/1'/0'/0/5`). Null if the descriptor is unavailable.
+  final String? derivationPath;
+
+  @override
+  int get hashCode => Object.hash(txid, vout);
 
   const Utxo({
     required this.txid,
@@ -40,5 +47,11 @@ final class Utxo {
     required this.scriptPubKey,
     required this.type,
     required this.spendable,
+    this.derivationPath,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Utxo && txid == other.txid && vout == other.vout;
 }

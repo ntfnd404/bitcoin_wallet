@@ -1,25 +1,13 @@
+import 'package:bitcoin_node/src/transaction_direction_rpc_mapper.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 
-/// [TransactionRemoteDataSource] backed by [BitcoinRpcClient].
+/// Fetches wallet transaction history from Bitcoin Core.
 ///
-/// Calls Bitcoin Core RPC methods and maps responses to domain entities.
-/// No DTOs — JSON maps are parsed directly to entities here.
+/// Calls `listtransactions` for list and `gettransaction` for detail.
 final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
-
-  // Bitcoin Core `listtransactions` category values
-  static const _categoryReceive = 'receive';
-  static const _categoryGenerate = 'generate';
-  static const _categoryImmature = 'immature';
-
-  // Bitcoin Core `listunspent` scriptPubKey type values
-  static const _typeP2pkh = 'pubkeyhash';
-  static const _typeP2sh = 'scripthash';
-  static const _typeP2wpkh = 'witness_v0_keyhash';
-  static const _typeP2wsh = 'witness_v0_scripthash';
-  static const _typeP2tr = 'witness_v1_taproot';
 
   const TransactionRemoteDataSourceImpl({required BitcoinRpcClient rpcClient})
       : _rpcClient = rpcClient;
@@ -44,36 +32,72 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
   }
 
   @override
-  Future<List<Utxo>> getUtxos(String walletName) async {
-    // minconf=0 to include mempool UTXOs
+  Future<TransactionDetail> getTransactionDetail(
+    String txid,
+    String walletName,
+  ) async {
+    // verbose=true returns the decoded transaction in the "decoded" field
     final result = await _rpcClient.call(
-      'listunspent',
-      [0],
+      'gettransaction',
+      [txid, true],
       walletName,
     );
 
-    final list = result as List<Object?>;
+    final raw = result as Map<String, Object?>;
 
-    return list.cast<Map<String, Object?>>().map(_mapUtxo).toList();
+    // Amount and direction from wallet perspective
+    final btcAmount = raw['amount'] as num;
+    final btcFee = raw['fee'] as num?;
+    final direction = btcAmount >= 0
+        ? TransactionDirection.incoming
+        : TransactionDirection.outgoing;
+
+    final confirmations = (raw['confirmations'] as num?)?.toInt() ?? 0;
+    final unixTime =
+        (raw['time'] as num?)?.toInt() ??
+        (raw['timereceived'] as num?)?.toInt() ??
+        0;
+
+    final transaction = Transaction(
+      txid: txid,
+      direction: direction,
+      amountSat: _btcToSat(btcAmount),
+      feeSat: btcFee != null ? _btcToSat(btcFee) : null,
+      confirmations: confirmations,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(unixTime * 1000),
+    );
+
+    final decoded = raw['decoded'] as Map<String, Object?>? ?? {};
+    final size = (decoded['size'] as num?)?.toInt() ?? 0;
+    final weight = (decoded['weight'] as num?)?.toInt() ?? 0;
+    final hex = raw['hex'] as String? ?? '';
+
+    final vinList =
+        (decoded['vin'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
+    final voutList =
+        (decoded['vout'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
+
+    return TransactionDetail(
+      transaction: transaction,
+      inputs: vinList.map(_mapInput).toList(),
+      outputs: voutList.map(_mapOutput).toList(),
+      size: size,
+      weight: weight,
+      hex: hex,
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
-
   Transaction _mapTransaction(Map<String, Object?> raw) {
-    // Bitcoin Core returns amount in BTC (float) — convert to satoshis
-    final btcAmount = (raw['amount'] as num).toDouble();
-    final btcFee = raw['fee'] != null ? (raw['fee'] as num).toDouble() : null;
+    final btcAmount = raw['amount'] as num;
+    final btcFee = raw['fee'] as num?;
 
     final category = raw['category'] as String;
-    final direction = _mapDirection(category);
+    final direction = TransactionDirectionRpcMapper.fromRpcCategory(category);
 
-    // confirmations may be absent for mempool txs — default to 0
     final confirmations = (raw['confirmations'] as num?)?.toInt() ?? 0;
 
-    // Bitcoin Core returns Unix timestamp as int
-    final unixTime = (raw['time'] as num?)?.toInt() ??
+    final unixTime =
+        (raw['time'] as num?)?.toInt() ??
         (raw['timereceived'] as num?)?.toInt() ??
         0;
 
@@ -87,60 +111,36 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
     );
   }
 
-  Utxo _mapUtxo(Map<String, Object?> raw) {
-    final btcAmount = (raw['amount'] as num).toDouble();
-    final scriptPubKeyHex = raw['scriptPubKey'] as String? ?? '';
-    final scriptType = raw['desc'] != null
-        ? _mapScriptTypeFromDesc(raw['desc'] as String)
-        : _mapScriptTypeFromKey(raw['scriptPubKey'] as String? ?? '');
+  TransactionInput _mapInput(Map<String, Object?> raw) {
+    final isCoinbase = raw.containsKey('coinbase');
+    final scriptSig = raw['scriptSig'] as Map<String, Object?>?;
+    final witnessList =
+        (raw['txinwitness'] as List<Object?>?)?.cast<String>() ?? [];
 
-    return Utxo(
-      txid: raw['txid'] as String,
-      vout: (raw['vout'] as num).toInt(),
-      amountSat: _btcToSat(btcAmount),
-      confirmations: (raw['confirmations'] as num?)?.toInt() ?? 0,
-      address: raw['address'] as String? ?? '',
-      scriptPubKey: scriptPubKeyHex,
-      type: scriptType,
-      spendable: raw['spendable'] as bool? ?? false,
+    return TransactionInput(
+      prevTxid: isCoinbase ? null : raw['txid'] as String?,
+      prevVout: isCoinbase ? null : (raw['vout'] as num?)?.toInt(),
+      scriptSigHex: scriptSig?['hex'] as String? ?? '',
+      witness: witnessList,
+      sequence: (raw['sequence'] as num?)?.toInt() ?? 0,
     );
   }
 
-  /// Converts BTC amount (float) to satoshis (int).
+  TransactionOutput _mapOutput(Map<String, Object?> raw) {
+    final scriptPubKey = raw['scriptPubKey'] as Map<String, Object?>? ?? {};
+    final btcValue = raw['value'] as num? ?? 0;
+
+    return TransactionOutput(
+      n: (raw['n'] as num?)?.toInt() ?? 0,
+      amountSat: _btcToSat(btcValue),
+      address: scriptPubKey['address'] as String?,
+      scriptPubKeyHex: scriptPubKey['hex'] as String? ?? '',
+    );
+  }
+
+  /// Converts BTC amount (num) to satoshis as [Satoshi] value object.
   ///
   /// Uses rounding to avoid floating-point precision errors.
-  /// e.g. 0.001 BTC → 100000 satoshis
-  static int _btcToSat(double btc) => (btc * 100000000).round();
-
-  TransactionDirection _mapDirection(String category) => switch (category) {
-    _categoryReceive || _categoryGenerate || _categoryImmature => TransactionDirection.incoming,
-    _ => TransactionDirection.outgoing,
-  };
-
-  /// Maps Bitcoin Core scriptPubKey type string to [AddressType].
-  ///
-  /// Bitcoin Core type values:
-  /// - "pubkeyhash"            → P2PKH (legacy)
-  /// - "scripthash"            → P2SH (wrapped SegWit)
-  /// - "witness_v0_keyhash"    → P2WPKH (native SegWit)
-  /// - "witness_v0_scripthash" → P2WSH
-  /// - "witness_v1_taproot"    → P2TR (Taproot)
-  AddressType _mapScriptTypeFromKey(String scriptType) => switch (scriptType) {
-    _typeP2pkh => AddressType.legacy,
-    _typeP2sh => AddressType.wrappedSegwit,
-    _typeP2wpkh => AddressType.nativeSegwit,
-    _typeP2wsh => AddressType.nativeSegwit, // P2WSH treated as nativeSegwit for display
-    _typeP2tr => AddressType.taproot,
-    _ => AddressType.legacy, // fallback
-  };
-
-  /// Infers address type from the descriptor string (e.g. "wpkh(...)").
-  AddressType _mapScriptTypeFromDesc(String desc) {
-    if (desc.startsWith('tr(')) return AddressType.taproot;
-    if (desc.startsWith('wpkh(')) return AddressType.nativeSegwit;
-    if (desc.startsWith('sh(wpkh(')) return AddressType.wrappedSegwit;
-    if (desc.startsWith('pkh(')) return AddressType.legacy;
-
-    return AddressType.legacy; // fallback
-  }
+  /// e.g. 0.001 BTC → Satoshi(100000)
+  static Satoshi _btcToSat(num btc) => Satoshi((btc * 100000000).round());
 }

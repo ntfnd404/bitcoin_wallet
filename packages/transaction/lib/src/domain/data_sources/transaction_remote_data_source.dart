@@ -1,7 +1,7 @@
 import 'package:transaction/src/domain/entity/transaction.dart';
-import 'package:transaction/src/domain/entity/utxo.dart';
+import 'package:transaction/src/domain/entity/transaction_detail.dart';
 
-/// ISP interface for fetching on-chain data from a Bitcoin node.
+/// ISP interface for fetching transaction history from a Bitcoin node.
 ///
 /// Owned by the transaction module (consumer) — the adapter in bitcoin_node
 /// implements this contract, not the other way around.
@@ -12,8 +12,8 @@ abstract interface class TransactionRemoteDataSource {
   /// Returns transactions ordered by most recent first.
   Future<List<Transaction>> getTransactions(String walletName);
 
-  /// Fetches unspent outputs via `listunspent`.
+  /// Fetches full transaction detail via `gettransaction <txid> true`.
   ///
-  /// [walletName] is the Bitcoin Core wallet name.
-  Future<List<Utxo>> getUtxos(String walletName);
+  /// Returns decoded inputs, outputs, size, weight, and raw hex.
+  Future<TransactionDetail> getTransactionDetail(String txid, String walletName);
 }
