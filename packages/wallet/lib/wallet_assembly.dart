@@ -4,8 +4,8 @@ import 'package:wallet/src/application/create_hd_wallet_use_case.dart';
 import 'package:wallet/src/application/create_node_wallet_use_case.dart';
 import 'package:wallet/src/application/restore_hd_wallet_use_case.dart';
 import 'package:wallet/src/data/wallet_local_data_source_impl.dart';
+import 'package:wallet/src/data/wallet_mapper.dart';
 import 'package:wallet/src/data/wallet_repository_impl.dart';
-import 'package:wallet/src/data/wallet_serializer.dart';
 import 'package:wallet/src/domain/data_sources/wallet_remote_data_source.dart';
 import 'package:wallet/src/domain/repository/wallet_repository.dart';
 
@@ -24,26 +24,23 @@ final class WalletAssembly {
     final repository = WalletRepositoryImpl(
       localDataSource: WalletLocalDataSourceImpl(
         storage: storage,
-        serializer: const WalletSerializer(),
-        keyPrefix: 'wallet_',
+        mapper: const WalletMapper(),
       ),
+      remoteDataSource: remoteDataSource,
     );
 
     return WalletAssembly._(
       walletRepository: repository,
-      createNodeWallet: CreateNodeWalletUseCase(
-        remoteDataSource: remoteDataSource,
-        walletRepository: repository,
-      ),
+      createNodeWallet: CreateNodeWalletUseCase(nodeWalletRepository: repository),
       createHdWallet: CreateHdWalletUseCase(
         bip39Service: bip39Service,
         seedRepository: seedRepository,
-        walletRepository: repository,
+        hdWalletRepository: repository,
       ),
       restoreHdWallet: RestoreHdWalletUseCase(
         bip39Service: bip39Service,
         seedRepository: seedRepository,
-        walletRepository: repository,
+        hdWalletRepository: repository,
       ),
     );
   }

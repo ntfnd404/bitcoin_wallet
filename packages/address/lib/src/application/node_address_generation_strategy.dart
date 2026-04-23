@@ -5,7 +5,7 @@ import 'package:address/src/domain/repository/address_repository.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:wallet/wallet.dart';
 
-/// Address generation strategy for [WalletType.node] wallets.
+/// Address generation strategy for [NodeWallet] wallets.
 ///
 /// Delegates to Bitcoin Core RPC for the address value,
 /// then persists via [AddressRepository].
@@ -20,7 +20,7 @@ final class NodeAddressGenerationStrategy implements AddressGenerationStrategy {
        _addressRepository = addressRepository;
 
   @override
-  bool supports(WalletType type) => type == WalletType.node;
+  bool supports(Wallet wallet) => wallet is NodeWallet;
 
   @override
   Future<Address> generate(Wallet wallet, AddressType addressType) async {

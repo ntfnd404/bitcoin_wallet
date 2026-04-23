@@ -14,7 +14,10 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeLabel = wallet.displayLabel;
+    final typeLabel = switch (wallet) {
+      NodeWallet() => 'Node',
+      HdWallet() => 'HD',
+    };
     final dateStr =
         '${wallet.createdAt.year}-${wallet.createdAt.month.toString().padLeft(2, '0')}-${wallet.createdAt.day.toString().padLeft(2, '0')}';
 

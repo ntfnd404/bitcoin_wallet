@@ -8,6 +8,7 @@ final class BitcoinRpcClient {
   final String _baseUrl;
   final String _credentials;
   final http.Client _client;
+  int _id = 0;
 
   BitcoinRpcClient({
     required String url,
@@ -34,6 +35,15 @@ final class BitcoinRpcClient {
     String? walletName,
   ]) async {
     final url = walletName != null ? Uri.parse('$_baseUrl/wallet/$walletName') : Uri.parse(_baseUrl);
+    final requestId = _id++;
+    final requestBody = jsonEncode({
+      'jsonrpc': '1.0',
+      'id': requestId,
+      'method': method,
+      'params': params,
+    });
+
+    log('RPC[$requestId] → $method $params', name: 'bitcoin_rpc');
 
     final response = await _client.post(
       url,
@@ -41,15 +51,10 @@ final class BitcoinRpcClient {
         'Content-Type': 'application/json',
         'Authorization': 'Basic $_credentials',
       },
-      body: jsonEncode({
-        'jsonrpc': '1.0',
-        'id': method,
-        'method': method,
-        'params': params,
-      }),
+      body: requestBody,
     );
 
-    log('RPC $method → ${response.statusCode}', name: 'bitcoin_rpc');
+    log('RPC[$requestId] ← ${response.statusCode}', name: 'bitcoin_rpc');
 
     final body = jsonDecode(response.body) as Map<String, Object?>;
     final error = body['error'];

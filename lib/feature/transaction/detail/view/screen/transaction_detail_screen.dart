@@ -3,7 +3,7 @@ import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_bloc.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_state.dart';
-import 'package:bitcoin_wallet/feature/transaction/di/transaction_scope.dart';
+import 'package:bitcoin_wallet/feature/transaction/detail/di/transaction_detail_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
@@ -25,7 +25,7 @@ class TransactionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<TransactionDetailBloc>(
-        create: (ctx) => TransactionScope.newTransactionDetailBloc(ctx)
+        create: (ctx) => TransactionDetailScope.newTransactionDetailBloc(ctx)
           ..add(TransactionDetailRequested(
             txid: transaction.txid,
             walletName: wallet.name,

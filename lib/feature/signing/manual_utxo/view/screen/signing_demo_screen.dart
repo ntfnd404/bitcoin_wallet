@@ -1,9 +1,9 @@
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/core/constants/app_constants.dart';
-import 'package:bitcoin_wallet/feature/signing/di/signing_scope.dart';
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_bloc.dart';
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_event.dart';
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_state.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_bloc.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/di/manual_utxo_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
@@ -36,7 +36,7 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
 
   @override
   Widget build(BuildContext context) => BlocProvider<SigningBloc>(
-        create: (ctx) => SigningScope.newSigningBloc(ctx),
+        create: (ctx) => ManualUtxoScope.newSigningBloc(ctx),
         child: Scaffold(
           appBar: AppBar(title: const Text('Sign & Send')),
           body: BlocConsumer<SigningBloc, SigningState>(
@@ -145,7 +145,7 @@ class _UtxoTile extends StatelessWidget {
           ),
           subtitle: utxo.address != null
               ? Text(
-                  utxo.address!,
+                  utxo.address ?? '',
                   style:
                       const TextStyle(fontFamily: 'monospace', fontSize: 11),
                   overflow: TextOverflow.ellipsis,
@@ -173,7 +173,7 @@ class _SendForm extends StatelessWidget {
   final String walletId;
 
   void _submit(BuildContext context) {
-    if (!formKey.currentState!.validate()) return;
+    if (formKey.currentState == null || !formKey.currentState!.validate()) return;
 
     final amount = int.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) return;
@@ -260,13 +260,13 @@ class _BroadcastResult extends StatelessWidget {
           const SizedBox(height: 12),
           DetailSection(
             title: 'TXID',
-            child: CopyableText(text: state.txid!),
+            child: CopyableText(text: state.txid ?? ''),
           ),
-          if (state.broadcastedTx != null) ...[
+          if (state.broadcastedTx case final tx?) ...[
             const SizedBox(height: 12),
             DetailSection(
               title: 'Confirmations',
-              child: Text('${state.broadcastedTx!.confirmations}'),
+              child: Text('${tx.confirmations}'),
             ),
           ],
         ],

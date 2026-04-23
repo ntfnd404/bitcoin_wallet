@@ -10,7 +10,8 @@ const _bech32mConstant = 0x2bc830a3;
 /// [witnessVersion] — 0 for P2WPKH/P2WSH, 1 for P2TR.
 /// [witnessProgram] — the witness program bytes (20 or 32 bytes).
 String segwitEncode(String hrp, int witnessVersion, Uint8List witnessProgram) {
-  final converted = _convertBits(witnessProgram, 8, 5, pad: true)!;
+  final converted = _convertBits(witnessProgram, 8, 5, pad: true);
+  if (converted == null) throw StateError('bech32 encode: bit conversion failed');
   final data = [witnessVersion, ...converted];
   final spec = witnessVersion == 0 ? _bech32Constant : _bech32mConstant;
   final checksum = _createChecksum(hrp, data, spec);

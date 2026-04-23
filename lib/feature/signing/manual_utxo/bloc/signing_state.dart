@@ -1,4 +1,4 @@
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_status.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_status.dart';
 import 'package:transaction/transaction.dart';
 
 export 'signing_status.dart';

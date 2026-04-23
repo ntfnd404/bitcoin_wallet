@@ -18,7 +18,7 @@ import 'package:wallet/wallet.dart';
 /// Creates its own [AddressBloc] via [AddressScope] factory — each instance
 /// owns an isolated address BLoC with its own lifecycle.
 /// Navigates to [AddressScreen] and [SeedPhraseScreen] via [AppRouter].
-class WalletDetailScreen extends StatefulWidget {
+class WalletDetailScreen extends StatelessWidget {
   const WalletDetailScreen({
     super.key,
     required this.wallet,
@@ -27,43 +27,20 @@ class WalletDetailScreen extends StatefulWidget {
   final Wallet wallet;
 
   @override
-  State<WalletDetailScreen> createState() => _WalletDetailScreenState();
-}
-
-class _WalletDetailScreenState extends State<WalletDetailScreen> {
-  late final AddressBloc _addressBloc;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      _addressBloc = AddressScope.newAddressBloc(context);
-      _addressBloc.add(AddressListRequested(wallet: widget.wallet));
-    }
-  }
-
-  @override
-  void dispose() {
-    _addressBloc.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => BlocProvider<AddressBloc>.value(
-    value: _addressBloc,
+  Widget build(BuildContext context) => BlocProvider<AddressBloc>(
+    create: (ctx) => AddressScope.newAddressBloc(ctx)
+      ..add(AddressListRequested(wallet: wallet)),
     child: Scaffold(
       appBar: AppBar(
-        title: Text(widget.wallet.name),
+        title: Text(wallet.name),
         actions: [
-          if (widget.wallet.isHd)
+          if (wallet is HdWallet)
             Semantics(
               label: 'View seed phrase',
               button: true,
               child: TextButton(
                 onPressed: () {
-                  context.read<WalletBloc>().add(SeedViewRequested(walletId: widget.wallet.id));
+                  context.read<WalletBloc>().add(SeedViewRequested(walletId: wallet.id));
                 },
                 child: const Text('View Seed'),
               ),
@@ -80,7 +57,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
           if (state.status == WalletStatus.awaitingSeedConfirmation) {
             final mnemonic = state.pendingMnemonic;
             if (mnemonic != null) {
-              AppRouter.toSeedPhrase(context, mnemonic, widget.wallet.id);
+              AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
             }
           }
         },
@@ -105,38 +82,38 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                   title: const Text('Transaction History'),
                   leading: const Icon(Icons.history),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toTransactionList(context, widget.wallet),
+                  onTap: () => AppRouter.toTransactionList(context, wallet),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   title: const Text('Unspent Outputs'),
                   leading: const Icon(Icons.account_balance_wallet_outlined),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toUtxoList(context, widget.wallet),
+                  onTap: () => AppRouter.toUtxoList(context, wallet),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   title: const Text('Send'),
                   leading: const Icon(Icons.send),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toSend(context, widget.wallet),
+                  onTap: () => AppRouter.toSend(context, wallet),
                 ),
                 const Divider(height: 1),
-                _MineBlockTile(wallet: widget.wallet),
+                _MineBlockTile(wallet: wallet),
                 const Divider(height: 1),
-                if (widget.wallet.isHd) ...[
+                if (wallet is HdWallet) ...[
                   ListTile(
                     title: const Text('Account xpubs'),
                     leading: const Icon(Icons.key_outlined),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => AppRouter.toXpub(context, widget.wallet),
+                    onTap: () => AppRouter.toXpub(context, wallet),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     title: const Text('Sign & Send (demo)'),
                     leading: const Icon(Icons.send_outlined),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => AppRouter.toSigningDemo(context, widget.wallet),
+                    onTap: () => AppRouter.toSigningDemo(context, wallet),
                   ),
                   const Divider(height: 1),
                 ],
@@ -148,7 +125,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                     addresses: filtered,
                     isGenerating: isGenerating,
                     onGenerate: () => context.read<AddressBloc>().add(
-                      AddressGenerateRequested(wallet: widget.wallet, type: type),
+                      AddressGenerateRequested(wallet: wallet, type: type),
                     ),
                     onAddressSelected: (addr) => AppRouter.toAddress(context, addr),
                   );
@@ -189,7 +166,7 @@ class _MineBlockTileState extends State<_MineBlockTile> {
 
       // Resolve target address.
       final String toAddress;
-      if (widget.wallet.isNode) {
+      if (widget.wallet is NodeWallet) {
         toAddress = await deps.transaction.prepareNodeSend
             // Reuse NodeTransactionDataSource.getNewAddress via the assembly.
             // We call it through the existing PrepareNodeSendUseCase's data source

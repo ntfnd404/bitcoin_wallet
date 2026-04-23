@@ -1,7 +1,7 @@
 import 'package:address/address.dart';
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
 import 'package:bitcoin_wallet/feature/send/view/screen/send_screen.dart';
-import 'package:bitcoin_wallet/feature/signing/send/view/screen/signing_demo_screen.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/screen/signing_demo_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/view/screen/xpub_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/screen/transaction_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/view/screen/transaction_list_screen.dart';

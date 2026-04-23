@@ -2,82 +2,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:wallet/wallet.dart';
 
-import 'mocks/mock_wallet_remote_data_source.dart';
 import 'mocks/mock_wallet_repository.dart';
 
 void main() {
   setUpAll(() {
     registerFallbackValue(
-      Wallet(
+      NodeWallet(
         id: 'test',
         name: 'test',
-        type: WalletType.node,
         createdAt: DateTime.utc(2024),
       ),
     );
   });
 
   group('CreateNodeWalletUseCase', () {
-    late MockWalletRemoteDataSource mockRemoteDataSource;
     late MockWalletRepository mockRepo;
     late CreateNodeWalletUseCase useCase;
 
+    NodeWallet stubWallet(String name) => NodeWallet(
+      id: 'stub-id',
+      name: name,
+      createdAt: DateTime.utc(2024),
+    );
+
     setUp(() {
-      mockRemoteDataSource = MockWalletRemoteDataSource();
       mockRepo = MockWalletRepository();
-      when(() => mockRemoteDataSource.createWallet(any())).thenAnswer((_) async {});
-      when(() => mockRepo.saveWallet(any())).thenAnswer((_) async {});
+      when(() => mockRepo.createNodeWallet(any()))
+          .thenAnswer((inv) async => stubWallet(inv.positionalArguments[0] as String));
       when(() => mockRepo.getWallets()).thenAnswer((_) async => []);
-      useCase = CreateNodeWalletUseCase(
-        remoteDataSource: mockRemoteDataSource,
-        walletRepository: mockRepo,
-      );
+      useCase = CreateNodeWalletUseCase(nodeWalletRepository: mockRepo);
     });
 
-    test('returns wallet with non-empty UUID and node type', () async {
+    test('returns NodeWallet with the given name', () async {
       final wallet = await useCase('Regtest Node');
 
-      expect(wallet.id, isNotEmpty);
-      expect(wallet.type, WalletType.node);
+      expect(wallet, isA<NodeWallet>());
       expect(wallet.name, 'Regtest Node');
     });
 
-    test('calls gateway.createWallet with the wallet name', () async {
+    test('delegates to repository.createNodeWallet', () async {
       await useCase('My Node');
 
-      verify(() => mockRemoteDataSource.createWallet('My Node')).called(1);
+      verify(() => mockRepo.createNodeWallet('My Node')).called(1);
     });
 
-    test('persists wallet to repository', () async {
-      final wallet = await useCase('My Node');
+    test('each call invokes repository once per name', () async {
+      await useCase('A');
+      await useCase('B');
 
-      verify(
-        () => mockRepo.saveWallet(
-          any(
-            that: isA<Wallet>().having((w) => w.id, 'id', wallet.id),
-          ),
-        ),
-      ).called(1);
-    });
-
-    test('each call generates a distinct wallet id', () async {
-      final first = await useCase('A');
-      final second = await useCase('B');
-
-      expect(first.id, isNot(second.id));
-    });
-
-    test('gateway is called before wallet is saved', () async {
-      final wallet = await useCase('Test');
-
-      verify(() => mockRemoteDataSource.createWallet('Test')).called(1);
-      verify(
-        () => mockRepo.saveWallet(
-          any(
-            that: isA<Wallet>().having((w) => w.id, 'id', wallet.id),
-          ),
-        ),
-      ).called(1);
+      verify(() => mockRepo.createNodeWallet('A')).called(1);
+      verify(() => mockRepo.createNodeWallet('B')).called(1);
     });
   });
 }

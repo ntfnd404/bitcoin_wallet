@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:address/src/data/address_serializer.dart';
+import 'package:address/src/data/address_mapper.dart';
 import 'package:address/src/domain/data_sources/address_local_data_source.dart';
 import 'package:address/src/domain/entity/address.dart';
 import 'package:shared_kernel/shared_kernel.dart';
@@ -13,12 +13,12 @@ final class AddressLocalDataSourceImpl implements AddressLocalDataSource {
   static const String _keyPrefix = 'address_';
 
   final SecureStorage _storage;
-  final AddressSerializer _serializer;
+  final AddressMapper _mapper;
 
   const AddressLocalDataSourceImpl({
     required SecureStorage storage,
-    required AddressSerializer serializer,
-  }) : _serializer = serializer,
+    required AddressMapper mapper,
+  }) : _mapper = mapper,
        _storage = storage;
 
   @override
@@ -29,7 +29,7 @@ final class AddressLocalDataSourceImpl implements AddressLocalDataSource {
 
     final jsonList = jsonDecode(raw) as List<Object?>;
 
-    return jsonList.cast<Map<String, Object?>>().map<Address>(_serializer.decode).toList();
+    return jsonList.cast<Map<String, Object?>>().map<Address>(_mapper.decode).toList();
   }
 
   @override
@@ -41,7 +41,7 @@ final class AddressLocalDataSourceImpl implements AddressLocalDataSource {
         ? <Map<String, Object?>>[]
         : (jsonDecode(raw) as List).cast<Map<String, Object?>>();
 
-    list.add(_serializer.encode(address));
+    list.add(_mapper.encode(address));
 
     await _storage.setString(key, jsonEncode(list));
   }

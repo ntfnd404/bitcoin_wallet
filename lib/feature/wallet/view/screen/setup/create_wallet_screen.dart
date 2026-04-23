@@ -4,7 +4,6 @@ import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wallet/wallet.dart';
 
 /// Allows the user to choose a wallet type and enter a wallet name.
 ///
@@ -18,7 +17,7 @@ class CreateWalletScreen extends StatefulWidget {
 }
 
 class _CreateWalletScreenState extends State<CreateWalletScreen> {
-  WalletType _selectedType = WalletType.node;
+  bool _isHd = false;
   late final TextEditingController _nameController;
 
   @override
@@ -30,10 +29,10 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   void _onSubmit(BuildContext context) {
     final name = _nameController.text.trim();
     final bloc = context.read<WalletBloc>();
-    if (_selectedType == WalletType.node) {
-      bloc.add(NodeWalletCreateRequested(name: name));
-    } else {
+    if (_isHd) {
       bloc.add(HdWalletCreateRequested(name: name));
+    } else {
+      bloc.add(NodeWalletCreateRequested(name: name));
     }
   }
 
@@ -85,20 +84,20 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
               children: [
                 AbsorbPointer(
                   absorbing: isSubmitting,
-                  child: RadioGroup<WalletType>(
-                    groupValue: _selectedType,
-                    onChanged: (value) => setState(() => _selectedType = value ?? _selectedType),
+                  child: RadioGroup<bool>(
+                    groupValue: _isHd,
+                    onChanged: (value) => setState(() => _isHd = value ?? _isHd),
                     child: const Column(
                       children: [
-                        RadioListTile<WalletType>(
+                        RadioListTile<bool>(
                           title: Text('Node Wallet'),
                           subtitle: Text('Custodial — keys managed by Bitcoin Core'),
-                          value: WalletType.node,
+                          value: false,
                         ),
-                        RadioListTile<WalletType>(
+                        RadioListTile<bool>(
                           title: Text('HD Wallet'),
                           subtitle: Text('Non-custodial — you own the seed phrase'),
-                          value: WalletType.hd,
+                          value: true,
                         ),
                       ],
                     ),

@@ -18,3 +18,10 @@ extension AddressTypeDisplay on AddressType {
     AddressType.taproot => 'Taproot (bech32m)',
   };
 }
+
+//TODO: look at this variants 
+  // static const TransactionVariant P2PKH = TransactionVariant._(0, _omitEnumNames ? '' : 'P2PKH');
+  // static const TransactionVariant P2WPKH = TransactionVariant._(1, _omitEnumNames ? '' : 'P2WPKH');
+  // static const TransactionVariant P2TRKEYPATH = TransactionVariant._(2, _omitEnumNames ? '' : 'P2TRKEYPATH');
+  // static const TransactionVariant BRC20TRANSFER = TransactionVariant._(3, _omitEnumNames ? '' : 'BRC20TRANSFER');
+  // static const TransactionVariant NFTINSCRIPTION = TransactionVariant._(4, _omitEnumNames ? '' : 'NFTINSCRIPTION');
