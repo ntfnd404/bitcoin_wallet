@@ -11,7 +11,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 |--------|--------|--------|
 | BW-0001 | 01, 02, 03 | closed |
 | BW-0002 | 04, 05 | closed |
-| BW-0003 | 06 | in progress |
+| BW-0003 | 06 | closed |
 
 ## Current status
 
@@ -20,7 +20,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 - Phase 03: `completed` — BW-0001
 - Phase 04: `completed` — BW-0002
 - Phase 05: `completed` — BW-0002
-- Phase 06: `in progress` — BW-0003
+- Phase 06: `completed` — BW-0003
 - Phase 07: `planned`
 - Phase 08: `planned`
 
