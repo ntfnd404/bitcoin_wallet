@@ -1,10 +1,10 @@
 import 'package:bitcoin_wallet/common/extensions/address_type_display.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
-import 'package:bitcoin_wallet/feature/signing/di/signing_scope.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/bloc/xpub_bloc.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/bloc/xpub_event.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/bloc/xpub_state.dart';
+import 'package:bitcoin_wallet/feature/signing/xpub/di/xpub_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_kernel/shared_kernel.dart';
@@ -21,7 +21,7 @@ class XpubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<XpubBloc>(
-        create: (ctx) => SigningScope.newXpubBloc(ctx)
+        create: (ctx) => XpubScope.newXpubBloc(ctx)
           ..add(XpubLoadRequested(walletId: wallet.id)),
         child: Scaffold(
           appBar: AppBar(title: const Text('Account xpubs')),

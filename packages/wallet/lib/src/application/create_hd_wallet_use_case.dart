@@ -1,8 +1,7 @@
 import 'package:keys/keys.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/entity/wallet_type.dart';
-import 'package:wallet/src/domain/repository/wallet_repository.dart';
+import 'package:wallet/src/domain/repository/hd_wallet_repository.dart';
 
 /// Creates a new HD wallet: generates a mnemonic, stores the seed,
 /// persists wallet metadata, and returns both.
@@ -11,26 +10,25 @@ import 'package:wallet/src/domain/repository/wallet_repository.dart';
 final class CreateHdWalletUseCase {
   final Bip39Service _bip39;
   final SeedRepository _seedRepository;
-  final WalletRepository _walletRepository;
+  final HdWalletRepository _hdWalletRepository;
 
   const CreateHdWalletUseCase({
     required Bip39Service bip39Service,
     required SeedRepository seedRepository,
-    required WalletRepository walletRepository,
+    required HdWalletRepository hdWalletRepository,
   }) : _bip39 = bip39Service,
        _seedRepository = seedRepository,
-       _walletRepository = walletRepository;
+       _hdWalletRepository = hdWalletRepository;
 
-  Future<(Wallet, Mnemonic)> call(String name, {int wordCount = 12}) async {
+  Future<(HdWallet, Mnemonic)> call(String name, {int wordCount = 12}) async {
     final mnemonic = _bip39.generateMnemonic(wordCount: wordCount);
-    final wallet = Wallet(
+    final wallet = HdWallet(
       id: const Uuid().v4(),
       name: name,
-      type: WalletType.hd,
       createdAt: DateTime.now().toUtc(),
     );
     await _seedRepository.storeSeed(wallet.id, mnemonic);
-    await _walletRepository.saveWallet(wallet);
+    await _hdWalletRepository.saveWallet(wallet);
 
     return (wallet, mnemonic);
   }

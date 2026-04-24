@@ -11,7 +11,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 |--------|--------|--------|
 | BW-0001 | 01, 02, 03 | closed |
 | BW-0002 | 04, 05 | closed |
-| BW-0003 | 06 | in progress |
+| BW-0003 | 06 | closed |
 
 ## Current status
 
@@ -20,7 +20,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 - Phase 03: `completed` — BW-0001
 - Phase 04: `completed` — BW-0002
 - Phase 05: `completed` — BW-0002
-- Phase 06: `in progress` — BW-0003
+- Phase 06: `completed` — BW-0003
 - Phase 07: `planned`
 - Phase 08: `planned`
 
@@ -95,8 +95,8 @@ Flutter app derives keys from a BIP39 seed phrase and signs transactions interna
 - [x] App derives keys following BIP84/86/44/49 for regtest.
 - [x] App generates receiving addresses from the derived key tree.
 - [x] App imports an existing BIP39 mnemonic and restores the same addresses.
-- [ ] App displays the derived xpub and derivation path.
-- [ ] App signs transactions internally (private keys in memory; no `signrawtransactionwithwallet`).
+- [x] App displays the derived xpub and derivation path.
+- [x] App signs transactions internally (private keys in memory; no `signrawtransactionwithwallet`).
 - [ ] Signed transactions verified by broadcasting to regtest and confirming via `getrawtransaction`.
 
 ### Phase 07: Bitcoin Script

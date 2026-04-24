@@ -4,5 +4,6 @@ export 'src/application/restore_hd_wallet_use_case.dart';
 export 'src/domain/data_sources/wallet_local_data_source.dart';
 export 'src/domain/data_sources/wallet_remote_data_source.dart';
 export 'src/domain/entity/wallet.dart';
-export 'src/domain/entity/wallet_type.dart';
+export 'src/domain/repository/hd_wallet_repository.dart';
+export 'src/domain/repository/node_wallet_repository.dart';
 export 'src/domain/repository/wallet_repository.dart';

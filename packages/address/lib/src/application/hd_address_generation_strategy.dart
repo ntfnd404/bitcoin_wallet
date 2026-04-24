@@ -5,7 +5,7 @@ import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:wallet/wallet.dart';
 
-/// Address generation strategy for [WalletType.hd] wallets.
+/// Address generation strategy for [HdWallet] wallets.
 ///
 /// Derives the address locally via BIP32 and persists via [AddressRepository].
 final class HdAddressGenerationStrategy implements AddressGenerationStrategy {
@@ -22,7 +22,7 @@ final class HdAddressGenerationStrategy implements AddressGenerationStrategy {
        _addressRepository = addressRepository;
 
   @override
-  bool supports(WalletType type) => type == WalletType.hd;
+  bool supports(Wallet wallet) => wallet is HdWallet;
 
   @override
   Future<Address> generate(Wallet wallet, AddressType addressType) async {

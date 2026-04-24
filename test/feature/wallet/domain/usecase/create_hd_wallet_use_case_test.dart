@@ -11,10 +11,9 @@ import 'mocks/mock_wallet_repository.dart';
 void main() {
   setUpAll(() {
     registerFallbackValue(
-      Wallet(
+      HdWallet(
         id: 'test',
         name: 'test',
-        type: WalletType.hd,
         createdAt: DateTime.utc(2024),
       ),
     );
@@ -34,7 +33,7 @@ void main() {
       useCase = CreateHdWalletUseCase(
         bip39Service: bip39,
         seedRepository: seedRepo,
-        walletRepository: walletRepo,
+        hdWalletRepository: walletRepo,
       );
     });
 
@@ -42,7 +41,7 @@ void main() {
       final (wallet, _) = await useCase('My Wallet');
 
       expect(wallet.id, isNotEmpty);
-      expect(wallet.type, WalletType.hd);
+      expect(wallet, isA<HdWallet>());
       expect(wallet.name, 'My Wallet');
     });
 
@@ -80,7 +79,7 @@ void main() {
       final trackingUseCase = CreateHdWalletUseCase(
         bip39Service: bip39,
         seedRepository: seedRepo,
-        walletRepository: mockRepo,
+        hdWalletRepository: mockRepo,
       );
 
       final (wallet, _) = await trackingUseCase('Test');

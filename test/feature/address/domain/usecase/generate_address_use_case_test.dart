@@ -7,18 +7,22 @@ import 'package:wallet/wallet.dart';
 import 'fakes/test_fixtures.dart';
 import 'mocks/mock_address_generation_strategy.dart';
 
-Wallet _wallet({WalletType type = WalletType.hd}) => Wallet(
+HdWallet _hdWallet() => HdWallet(
   id: 'w1',
   name: 'Test',
-  type: type,
+  createdAt: DateTime.utc(2024),
+);
+
+NodeWallet _nodeWallet() => NodeWallet(
+  id: 'w2',
+  name: 'Test Node',
   createdAt: DateTime.utc(2024),
 );
 
 void main() {
   setUpAll(() {
-    registerFallbackValue(WalletType.hd);
     registerFallbackValue(AddressType.nativeSegwit);
-    registerFallbackValue(_wallet());
+    registerFallbackValue(_hdWallet());
     registerFallbackValue(testAddress());
   });
 
@@ -32,20 +36,20 @@ void main() {
       nodeStrategy = MockAddressGenerationStrategy();
 
       // HD strategy supports hd wallets
-      when(() => hdStrategy.supports(WalletType.hd)).thenReturn(true);
-      when(() => hdStrategy.supports(WalletType.node)).thenReturn(false);
+      when(() => hdStrategy.supports(any(that: isA<HdWallet>()))).thenReturn(true);
+      when(() => hdStrategy.supports(any(that: isA<NodeWallet>()))).thenReturn(false);
       when(() => hdStrategy.generate(any(), any())).thenAnswer((_) async => testAddress());
 
       // Node strategy supports node wallets
-      when(() => nodeStrategy.supports(WalletType.hd)).thenReturn(false);
-      when(() => nodeStrategy.supports(WalletType.node)).thenReturn(true);
+      when(() => nodeStrategy.supports(any(that: isA<HdWallet>()))).thenReturn(false);
+      when(() => nodeStrategy.supports(any(that: isA<NodeWallet>()))).thenReturn(true);
       when(() => nodeStrategy.generate(any(), any())).thenAnswer((_) async => testAddress(value: 'bcrt1qnode'));
 
       useCase = GenerateAddressUseCase(strategies: [hdStrategy, nodeStrategy]);
     });
 
     test('delegates to HD strategy for HD wallet', () async {
-      final wallet = _wallet();
+      final wallet = _hdWallet();
       final address = await useCase(wallet, AddressType.nativeSegwit);
 
       expect(address.value, testAddress().value);
@@ -54,7 +58,7 @@ void main() {
     });
 
     test('delegates to node strategy for node wallet', () async {
-      final wallet = _wallet(type: WalletType.node);
+      final wallet = _nodeWallet();
       final address = await useCase(wallet, AddressType.nativeSegwit);
 
       expect(address.value, 'bcrt1qnode');
@@ -64,7 +68,7 @@ void main() {
 
     test('throws StateError when no strategy supports the wallet type', () {
       const noStrategyUseCase = GenerateAddressUseCase(strategies: []);
-      final wallet = _wallet();
+      final wallet = _hdWallet();
 
       expect(
         () => noStrategyUseCase(wallet, AddressType.nativeSegwit),
@@ -74,10 +78,10 @@ void main() {
 
     test('passes address type to the chosen strategy', () async {
       const expectedType = AddressType.taproot;
-      when(() => hdStrategy.supports(WalletType.hd)).thenReturn(true);
+      when(() => hdStrategy.supports(any(that: isA<HdWallet>()))).thenReturn(true);
       when(() => hdStrategy.generate(any(), expectedType)).thenAnswer((_) async => testAddress(type: expectedType));
 
-      final wallet = _wallet();
+      final wallet = _hdWallet();
       final address = await useCase(wallet, expectedType);
 
       verify(() => hdStrategy.generate(wallet, expectedType)).called(1);
@@ -86,14 +90,14 @@ void main() {
 
     test('uses first matching strategy when multiple support the type', () async {
       final second = MockAddressGenerationStrategy();
-      when(() => hdStrategy.supports(WalletType.hd)).thenReturn(true);
+      when(() => hdStrategy.supports(any(that: isA<HdWallet>()))).thenReturn(true);
       when(() => hdStrategy.generate(any(), any())).thenAnswer((_) async => testAddress());
-      when(() => second.supports(WalletType.hd)).thenReturn(true);
+      when(() => second.supports(any(that: isA<HdWallet>()))).thenReturn(true);
       when(() => second.generate(any(), any())).thenAnswer((_) async => testAddress(value: 'bcrt1qsecond'));
 
       final multiUseCase = GenerateAddressUseCase(strategies: [hdStrategy, second]);
 
-      await multiUseCase(_wallet(), AddressType.nativeSegwit);
+      await multiUseCase(_hdWallet(), AddressType.nativeSegwit);
 
       verify(() => hdStrategy.generate(any(), any())).called(1);
       verifyNever(() => second.generate(any(), any()));

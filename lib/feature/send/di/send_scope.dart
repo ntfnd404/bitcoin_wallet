@@ -40,7 +40,7 @@ class _SendScopeState extends State<SendScope> {
     final tx = deps.transaction;
     final bech32Hrp = AppConstants.network.bech32Hrp;
 
-    _factory = (wallet) => wallet.isNode
+    _factory = (wallet) => wallet is NodeWallet
         ? SendBloc(
             wallet: wallet,
             prepareNode: tx.prepareNodeSend,

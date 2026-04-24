@@ -24,10 +24,13 @@ final class XpubBloc extends Bloc<XpubEvent, XpubState> {
       final results = <AddressType, AccountXpub>{};
       for (final type in AddressType.values) {
         results[type] = await _getXpub(event.walletId, type);
+        if (isClosed) return;
       }
 
       emit(state.copyWith(status: FetchStatus.loaded, xpubs: results));
     } catch (e) {
+      if (isClosed) return;
+
       emit(state.copyWith(
         status: FetchStatus.error,
         errorMessage: e.toString(),

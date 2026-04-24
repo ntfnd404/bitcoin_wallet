@@ -1,6 +1,6 @@
 import 'package:address/address.dart';
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_event.dart';
-import 'package:bitcoin_wallet/feature/signing/send/bloc/signing_state.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';

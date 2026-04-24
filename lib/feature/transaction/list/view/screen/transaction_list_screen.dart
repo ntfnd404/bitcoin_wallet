@@ -1,9 +1,9 @@
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
-import 'package:bitcoin_wallet/feature/transaction/di/transaction_scope.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_bloc.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_state.dart';
+import 'package:bitcoin_wallet/feature/transaction/list/di/transaction_list_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
@@ -11,7 +11,7 @@ import 'package:wallet/wallet.dart';
 
 /// Displays transaction history for a wallet.
 ///
-/// Creates its own [TransactionBloc] via [TransactionScope] — lifecycle is
+/// Creates its own [TransactionBloc] via [TransactionListScope] — lifecycle is
 /// managed automatically by [BlocProvider].
 /// Navigates to [TransactionDetailScreen] via [AppRouter].
 class TransactionListScreen extends StatelessWidget {
@@ -21,7 +21,7 @@ class TransactionListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<TransactionBloc>(
-        create: (ctx) => TransactionScope.newTransactionBloc(ctx)
+        create: (ctx) => TransactionListScope.newTransactionBloc(ctx)
           ..add(TransactionListRequested(wallet: wallet)),
         child: Scaffold(
           appBar: AppBar(title: const Text('Transactions')),

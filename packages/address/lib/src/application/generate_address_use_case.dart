@@ -6,10 +6,10 @@ import 'package:wallet/wallet.dart';
 /// Generates the next address of [type] for [wallet].
 ///
 /// Delegates to the registered [AddressGenerationStrategy] that supports
-/// [wallet.type]. New wallet types extend the system by registering a new
+/// [wallet]. New wallet types extend the system by registering a new
 /// strategy — this use case never changes (Open/Closed Principle).
 ///
-/// Throws [StateError] if no strategy is registered for [wallet.type].
+/// Throws [StateError] if no strategy is registered for the wallet subtype.
 final class GenerateAddressUseCase {
   final List<AddressGenerationStrategy> _strategies;
 
@@ -18,8 +18,10 @@ final class GenerateAddressUseCase {
 
   Future<Address> call(Wallet wallet, AddressType type) {
     final strategy = _strategies.firstWhere(
-      (s) => s.supports(wallet.type),
-      orElse: () => throw StateError('No address generation strategy for wallet type ${wallet.type}'),
+      (s) => s.supports(wallet),
+      orElse: () => throw StateError(
+        'No address generation strategy for ${wallet.runtimeType}',
+      ),
     );
 
     return strategy.generate(wallet, type);

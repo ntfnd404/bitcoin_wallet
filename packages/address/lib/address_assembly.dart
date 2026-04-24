@@ -3,8 +3,8 @@ import 'package:address/src/application/generate_address_use_case.dart';
 import 'package:address/src/application/hd_address_generation_strategy.dart';
 import 'package:address/src/application/node_address_generation_strategy.dart';
 import 'package:address/src/data/address_local_data_source_impl.dart';
+import 'package:address/src/data/address_mapper.dart';
 import 'package:address/src/data/address_repository_impl.dart';
-import 'package:address/src/data/address_serializer.dart';
 import 'package:address/src/domain/data_sources/address_remote_data_source.dart';
 import 'package:address/src/domain/repository/address_repository.dart';
 import 'package:keys/keys.dart';
@@ -23,7 +23,7 @@ final class AddressAssembly {
     final repository = AddressRepositoryImpl(
       localDataSource: AddressLocalDataSourceImpl(
         storage: storage,
-        serializer: const AddressSerializer(),
+        mapper: const AddressMapper(),
       ),
     );
 

@@ -1,8 +1,6 @@
-import 'package:keys/keys.dart'
-    show SigningInputParam, SigningOutput, SignTransactionUseCase;
+import 'package:keys/keys.dart' show SigningInputParam, SigningOutput, SignTransactionUseCase;
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:transaction/transaction.dart' as tx
-    show SigningInput, TransactionSigner;
+import 'package:transaction/transaction.dart' as tx show SigningInput, TransactionSigner;
 
 /// Implements [tx.TransactionSigner] using the HD wallet's mnemonic seed.
 ///
@@ -40,11 +38,10 @@ final class HdTransactionSigner implements tx.TransactionSigner {
 
     final outputs = [
       SigningOutput(address: recipientAddress, amountSat: amountSat),
-      if (changeSat.value > 0)
-        SigningOutput(address: changeAddress, amountSat: changeSat),
+      if (changeSat.value > 0) SigningOutput(address: changeAddress, amountSat: changeSat),
     ];
 
-    return _signTransaction.call(
+    return _signTransaction(
       walletId: walletId,
       inputs: keyInputs,
       outputs: outputs,
