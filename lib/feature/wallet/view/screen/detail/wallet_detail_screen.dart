@@ -28,8 +28,7 @@ class WalletDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<AddressBloc>(
-    create: (ctx) => AddressScope.newAddressBloc(ctx)
-      ..add(AddressListRequested(wallet: wallet)),
+    create: (ctx) => AddressScope.newAddressBloc(ctx)..add(AddressListRequested(wallet: wallet)),
     child: Scaffold(
       appBar: AppBar(
         title: Text(wallet.name),
@@ -137,7 +136,6 @@ class WalletDetailScreen extends StatelessWidget {
       ),
     ),
   );
-
 }
 
 /// Dev-only tile that mines one block, crediting the coinbase to this wallet.
@@ -179,11 +177,8 @@ class _MineBlockTileState extends State<_MineBlockTile> {
             )
             .then((prep) => prep.changeAddress);
       } else {
-        final addresses = await deps.address.addressRepository
-            .getAddresses(widget.wallet.id);
-        final native = addresses
-            .where((a) => a.type == AddressType.nativeSegwit)
-            .toList();
+        final addresses = await deps.address.addressRepository.getAddresses(widget.wallet.id);
+        final native = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
         toAddress = native.isNotEmpty ? native.first.value : '';
       }
 
@@ -204,20 +199,19 @@ class _MineBlockTileState extends State<_MineBlockTile> {
 
   void _showSnack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: const Text('Mine 1 block (dev)'),
-        leading: _isMining
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.construction_outlined),
-        onTap: _isMining ? null : _mine,
-      );
+    title: const Text('Mine 1 block (dev)'),
+    leading: _isMining
+        ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.construction_outlined),
+    onTap: _isMining ? null : _mine,
+  );
 }

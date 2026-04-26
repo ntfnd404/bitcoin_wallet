@@ -5,13 +5,11 @@ import 'package:transaction/src/domain/entity/broadcasted_tx.dart';
 final class BroadcastTransactionUseCase {
   final BroadcastDataSource _dataSource;
 
-  const BroadcastTransactionUseCase({required BroadcastDataSource dataSource})
-      : _dataSource = dataSource;
+  const BroadcastTransactionUseCase({required BroadcastDataSource dataSource}) : _dataSource = dataSource;
 
   /// Broadcasts [rawHex] and returns the resulting txid.
   Future<String> broadcast(String rawHex) => _dataSource.broadcast(rawHex);
 
   /// Fetches transaction info for verification via `getrawtransaction`.
-  Future<BroadcastedTx> getTransaction(String txid) =>
-      _dataSource.getTransaction(txid);
+  Future<BroadcastedTx> getTransaction(String txid) => _dataSource.getTransaction(txid);
 }

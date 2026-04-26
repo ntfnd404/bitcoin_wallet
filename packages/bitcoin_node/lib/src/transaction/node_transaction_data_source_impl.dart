@@ -8,8 +8,7 @@ import 'package:transaction/transaction.dart';
 final class NodeTransactionDataSourceImpl implements NodeTransactionDataSource {
   final BitcoinRpcClient _rpcClient;
 
-  const NodeTransactionDataSourceImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const NodeTransactionDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   /// Generates a new bech32 (P2WPKH) address in [walletName].
   @override
@@ -31,9 +30,7 @@ final class NodeTransactionDataSourceImpl implements NodeTransactionDataSource {
     required List<({String txid, int vout})> inputs,
     required Map<String, double> outputs,
   }) async {
-    final rpcInputs = inputs
-        .map((i) => {'txid': i.txid, 'vout': i.vout})
-        .toList();
+    final rpcInputs = inputs.map((i) => {'txid': i.txid, 'vout': i.vout}).toList();
 
     final result = await _rpcClient.call(
       'createrawtransaction',

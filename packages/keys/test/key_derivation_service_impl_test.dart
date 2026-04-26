@@ -11,11 +11,22 @@ void main() {
   setUp(() => service = const KeyDerivationServiceImpl(network: BitcoinNetwork.regtest));
 
   // BIP39 all-zero entropy → known test mnemonic
-  final testMnemonic = Mnemonic(words: [
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'about',
-  ]);
+  final testMnemonic = Mnemonic(
+    words: [
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'about',
+    ],
+  );
 
   group('BIP39 seed derivation', () {
     test('produces correct seed from known mnemonic', () {
@@ -78,7 +89,9 @@ void main() {
     group('address prefixes', () {
       test('legacy address starts with m or n', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.legacy, 0,
+          testMnemonic,
+          AddressType.legacy,
+          0,
         );
 
         expect(address.value[0], anyOf('m', 'n'));
@@ -86,7 +99,9 @@ void main() {
 
       test('wrapped segwit address starts with 2', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.wrappedSegwit, 0,
+          testMnemonic,
+          AddressType.wrappedSegwit,
+          0,
         );
 
         expect(address.value, startsWith('2'));
@@ -94,7 +109,9 @@ void main() {
 
       test('native segwit address starts with bcrt1q', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
 
         expect(address.value, startsWith('bcrt1q'));
@@ -102,7 +119,9 @@ void main() {
 
       test('taproot address starts with bcrt1p', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.taproot, 0,
+          testMnemonic,
+          AddressType.taproot,
+          0,
         );
 
         expect(address.value, startsWith('bcrt1p'));
@@ -112,7 +131,9 @@ void main() {
     group('address lengths', () {
       test('native segwit address is 44 characters', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
 
         expect(address.value.length, 44);
@@ -120,7 +141,9 @@ void main() {
 
       test('taproot address is 64 characters', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.taproot, 0,
+          testMnemonic,
+          AddressType.taproot,
+          0,
         );
 
         expect(address.value.length, 64);
@@ -130,7 +153,9 @@ void main() {
     group('derivation paths', () {
       test('legacy path is m/44h/1h/0h/0/index', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.legacy, 3,
+          testMnemonic,
+          AddressType.legacy,
+          3,
         );
 
         expect(address.derivationPath, "m/44'/1'/0'/0/3");
@@ -138,7 +163,9 @@ void main() {
 
       test('wrapped segwit path is m/49h/1h/0h/0/index', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.wrappedSegwit, 0,
+          testMnemonic,
+          AddressType.wrappedSegwit,
+          0,
         );
 
         expect(address.derivationPath, "m/49'/1'/0'/0/0");
@@ -146,7 +173,9 @@ void main() {
 
       test('native segwit path is m/84h/1h/0h/0/index', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 5,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          5,
         );
 
         expect(address.derivationPath, "m/84'/1'/0'/0/5");
@@ -154,7 +183,9 @@ void main() {
 
       test('taproot path is m/86h/1h/0h/0/index', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.taproot, 0,
+          testMnemonic,
+          AddressType.taproot,
+          0,
         );
 
         expect(address.derivationPath, "m/86'/1'/0'/0/0");
@@ -164,10 +195,14 @@ void main() {
     group('determinism', () {
       test('same mnemonic and index produce identical address', () {
         final a1 = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
         final a2 = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
 
         expect(a1.value, a2.value);
@@ -175,10 +210,14 @@ void main() {
 
       test('different indexes produce different addresses', () {
         final a0 = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
         final a1 = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 1,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          1,
         );
 
         expect(a0.value, isNot(a1.value));
@@ -186,10 +225,14 @@ void main() {
 
       test('different types produce different addresses', () {
         final legacy = service.deriveAddress(
-          testMnemonic, AddressType.legacy, 0,
+          testMnemonic,
+          AddressType.legacy,
+          0,
         );
         final segwit = service.deriveAddress(
-          testMnemonic, AddressType.nativeSegwit, 0,
+          testMnemonic,
+          AddressType.nativeSegwit,
+          0,
         );
 
         expect(legacy.value, isNot(segwit.value));
@@ -199,7 +242,9 @@ void main() {
     group('address metadata', () {
       test('sets correct type', () {
         final address = service.deriveAddress(
-          testMnemonic, AddressType.taproot, 7,
+          testMnemonic,
+          AddressType.taproot,
+          7,
         );
 
         expect(address.type, AddressType.taproot);

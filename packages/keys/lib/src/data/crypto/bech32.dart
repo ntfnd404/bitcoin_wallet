@@ -62,8 +62,7 @@ Uint8List? segwitDecode(String address, String hrp) {
 // Internals
 // ---------------------------------------------------------------------------
 
-bool _verifyChecksum(String hrp, List<int> data, int spec) =>
-    _polymod([..._hrpExpand(hrp), ...data]) == spec;
+bool _verifyChecksum(String hrp, List<int> data, int spec) => _polymod([..._hrpExpand(hrp), ...data]) == spec;
 
 int _polymod(List<int> values) {
   const gen = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];

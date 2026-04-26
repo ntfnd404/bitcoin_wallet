@@ -22,8 +22,7 @@ final class MinimizeInputsCoinSelector extends CoinSelectorBase {
     required int feeRateSatPerVbyte,
     required int dustThreshold,
   }) {
-    final sorted = [...candidates]
-      ..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value));
+    final sorted = [...candidates]..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value));
 
     return accumulate(
       sorted: sorted,

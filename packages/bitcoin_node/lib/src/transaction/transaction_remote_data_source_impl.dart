@@ -1,4 +1,4 @@
-import 'package:bitcoin_node/src/transaction_direction_rpc_mapper.dart';
+import 'package:bitcoin_node/src/transaction/transaction_direction_rpc_mapper.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
@@ -9,8 +9,7 @@ import 'package:transaction/transaction.dart';
 final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
 
-  const TransactionRemoteDataSourceImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const TransactionRemoteDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<Transaction>> getTransactions(String walletName) async {
@@ -23,12 +22,7 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
 
     final list = result as List<Object?>;
 
-    return list
-        .cast<Map<String, Object?>>()
-        .map(_mapTransaction)
-        .toList()
-        .reversed
-        .toList(); // most recent first
+    return list.cast<Map<String, Object?>>().map(_mapTransaction).toList().reversed.toList(); // most recent first
   }
 
   @override
@@ -48,15 +42,10 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
     // Amount and direction from wallet perspective
     final btcAmount = raw['amount'] as num;
     final btcFee = raw['fee'] as num?;
-    final direction = btcAmount >= 0
-        ? TransactionDirection.incoming
-        : TransactionDirection.outgoing;
+    final direction = btcAmount >= 0 ? TransactionDirection.incoming : TransactionDirection.outgoing;
 
     final confirmations = (raw['confirmations'] as num?)?.toInt() ?? 0;
-    final unixTime =
-        (raw['time'] as num?)?.toInt() ??
-        (raw['timereceived'] as num?)?.toInt() ??
-        0;
+    final unixTime = (raw['time'] as num?)?.toInt() ?? (raw['timereceived'] as num?)?.toInt() ?? 0;
 
     final transaction = Transaction(
       txid: txid,
@@ -72,10 +61,8 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
     final weight = (decoded['weight'] as num?)?.toInt() ?? 0;
     final hex = raw['hex'] as String? ?? '';
 
-    final vinList =
-        (decoded['vin'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
-    final voutList =
-        (decoded['vout'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
+    final vinList = (decoded['vin'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
+    final voutList = (decoded['vout'] as List<Object?>?)?.cast<Map<String, Object?>>() ?? [];
 
     return TransactionDetail(
       transaction: transaction,
@@ -96,10 +83,7 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
 
     final confirmations = (raw['confirmations'] as num?)?.toInt() ?? 0;
 
-    final unixTime =
-        (raw['time'] as num?)?.toInt() ??
-        (raw['timereceived'] as num?)?.toInt() ??
-        0;
+    final unixTime = (raw['time'] as num?)?.toInt() ?? (raw['timereceived'] as num?)?.toInt() ?? 0;
 
     return Transaction(
       txid: raw['txid'] as String,
@@ -114,8 +98,7 @@ final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSour
   TransactionInput _mapInput(Map<String, Object?> raw) {
     final isCoinbase = raw.containsKey('coinbase');
     final scriptSig = raw['scriptSig'] as Map<String, Object?>?;
-    final witnessList =
-        (raw['txinwitness'] as List<Object?>?)?.cast<String>() ?? [];
+    final witnessList = (raw['txinwitness'] as List<Object?>?)?.cast<String>() ?? [];
 
     return TransactionInput(
       prevTxid: isCoinbase ? null : raw['txid'] as String?,

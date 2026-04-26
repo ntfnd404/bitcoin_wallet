@@ -54,8 +54,7 @@ final class Bip39ServiceImpl implements Bip39Service {
 
     // Compute checksum from entropy
     final hash = sha256.convert(entropy);
-    final hashBits =
-        hash.bytes.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
+    final hashBits = hash.bytes.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
     final actualChecksum = hashBits.substring(0, checksumBits);
 
     return expectedChecksum == actualChecksum;
@@ -82,12 +81,10 @@ final class Bip39ServiceImpl implements Bip39Service {
     final checksumBits = entropy.length ~/ 4; // entropy_bits / 32
 
     // Convert entropy to bit string
-    final entropyBitString =
-        entropy.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
+    final entropyBitString = entropy.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
 
     // Convert hash to bit string and take first checksumBits
-    final hashBitString =
-        hash.bytes.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
+    final hashBitString = hash.bytes.map((b) => b.toRadixString(2).padLeft(8, '0')).join();
     final checksum = hashBitString.substring(0, checksumBits);
 
     // Concatenate entropy + checksum

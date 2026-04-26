@@ -5,9 +5,7 @@ import 'package:transaction/src/domain/repository/utxo_repository.dart';
 final class GetUtxosUseCase {
   final UtxoRepository _repository;
 
-  const GetUtxosUseCase({required UtxoRepository repository})
-      : _repository = repository;
+  const GetUtxosUseCase({required UtxoRepository repository}) : _repository = repository;
 
-  Future<List<Utxo>> call(String walletName) =>
-      _repository.getUtxos(walletName);
+  Future<List<Utxo>> call(String walletName) => _repository.getUtxos(walletName);
 }

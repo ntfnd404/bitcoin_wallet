@@ -17,11 +17,9 @@ final class TransactionDetailState {
     TransactionDetail? detail,
     String? errorMessage,
     bool clearErrorMessage = false,
-  }) =>
-      TransactionDetailState(
-        status: status ?? this.status,
-        detail: detail ?? this.detail,
-        errorMessage:
-            clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
-      );
+  }) => TransactionDetailState(
+    status: status ?? this.status,
+    detail: detail ?? this.detail,
+    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+  );
 }

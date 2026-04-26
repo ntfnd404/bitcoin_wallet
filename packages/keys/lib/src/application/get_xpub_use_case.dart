@@ -11,8 +11,8 @@ final class GetXpubUseCase {
   const GetXpubUseCase({
     required SeedRepository seedRepository,
     required KeyDerivationService derivation,
-  })  : _seedRepository = seedRepository,
-        _derivation = derivation;
+  }) : _seedRepository = seedRepository,
+       _derivation = derivation;
 
   Future<AccountXpub> call(String walletId, AddressType type) async {
     final mnemonic = await _seedRepository.getSeed(walletId);

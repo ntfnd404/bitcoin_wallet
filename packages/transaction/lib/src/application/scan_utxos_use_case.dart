@@ -7,9 +7,7 @@ import 'package:transaction/src/domain/entity/scanned_utxo.dart';
 final class ScanUtxosUseCase {
   final UtxoScanDataSource _dataSource;
 
-  const ScanUtxosUseCase({required UtxoScanDataSource dataSource})
-      : _dataSource = dataSource;
+  const ScanUtxosUseCase({required UtxoScanDataSource dataSource}) : _dataSource = dataSource;
 
-  Future<List<ScannedUtxo>> call(List<String> addresses) =>
-      _dataSource.scanForAddresses(addresses);
+  Future<List<ScannedUtxo>> call(List<String> addresses) => _dataSource.scanForAddresses(addresses);
 }

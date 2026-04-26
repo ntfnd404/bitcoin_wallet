@@ -10,8 +10,7 @@ import 'package:wallet/src/domain/repository/node_wallet_repository.dart';
 /// Both wallet types share the same local storage. Node wallet creation
 /// additionally calls [WalletRemoteDataSource] to register the wallet in
 /// Bitcoin Core before persisting metadata locally.
-final class WalletRepositoryImpl
-    implements NodeWalletRepository, HdWalletRepository {
+final class WalletRepositoryImpl implements NodeWalletRepository, HdWalletRepository {
   final WalletLocalDataSource _localDataSource;
   final WalletRemoteDataSource _remoteDataSource;
 

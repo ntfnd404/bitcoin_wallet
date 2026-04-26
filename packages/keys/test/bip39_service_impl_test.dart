@@ -98,11 +98,22 @@ void main() {
         // Entropy: 00000000000000000000000000000000
         // Expected: abandon abandon abandon abandon abandon abandon
         //           abandon abandon abandon abandon abandon about
-        final knownMnemonic = Mnemonic(words: [
-          'abandon', 'abandon', 'abandon', 'abandon',
-          'abandon', 'abandon', 'abandon', 'abandon',
-          'abandon', 'abandon', 'abandon', 'about',
-        ]);
+        final knownMnemonic = Mnemonic(
+          words: [
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'abandon',
+            'about',
+          ],
+        );
 
         expect(service.validateMnemonic(knownMnemonic), isTrue);
       });

@@ -29,6 +29,5 @@ final class CoinCandidate {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CoinCandidate && txid == other.txid && vout == other.vout;
+      identical(this, other) || other is CoinCandidate && txid == other.txid && vout == other.vout;
 }

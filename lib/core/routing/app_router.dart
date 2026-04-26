@@ -37,139 +37,126 @@ final class AppRouter {
 
   const AppRouter._();
 
-  static Future<void> toCreateWallet(BuildContext context) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: createWallet),
-          builder: (_) => const CreateWalletScreen(),
-        ),
-      );
+  static Future<void> toCreateWallet(BuildContext context) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: createWallet),
+      builder: (_) => const CreateWalletScreen(),
+    ),
+  );
 
-  static Future<void> toRestoreWallet(BuildContext context) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: restoreWallet),
-          builder: (_) => const RestoreWalletScreen(),
-        ),
-      );
+  static Future<void> toRestoreWallet(BuildContext context) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: restoreWallet),
+      builder: (_) => const RestoreWalletScreen(),
+    ),
+  );
 
   static Future<void> toWalletDetail(
     BuildContext context,
     Wallet wallet,
-  ) =>
-      Navigator.push<void>(
-        context,
-        _buildDetailRoute(wallet),
-      );
+  ) => Navigator.push<void>(
+    context,
+    _buildDetailRoute(wallet),
+  );
 
-  static Future<void> toAddress(BuildContext context, Address addr) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: address),
-          builder: (_) => AddressScreen(address: addr),
-        ),
-      );
+  static Future<void> toAddress(BuildContext context, Address addr) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: address),
+      builder: (_) => AddressScreen(address: addr),
+    ),
+  );
 
   static Future<void> toSeedPhrase(
     BuildContext context,
     Mnemonic mnemonic,
     String walletId,
-  ) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: seedPhrase),
-          builder: (_) => SeedPhraseScreen(
-            mnemonic: mnemonic,
-            walletId: walletId,
-            onConfirmed: () => Navigator.pop(context),
-          ),
-        ),
-      );
+  ) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: seedPhrase),
+      builder: (_) => SeedPhraseScreen(
+        mnemonic: mnemonic,
+        walletId: walletId,
+        onConfirmed: () => Navigator.pop(context),
+      ),
+    ),
+  );
 
   static Future<void> toTransactionList(
     BuildContext context,
     Wallet wallet,
-  ) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: transactionList),
-          builder: (_) => TransactionListScreen(wallet: wallet),
-        ),
-      );
+  ) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: transactionList),
+      builder: (_) => TransactionListScreen(wallet: wallet),
+    ),
+  );
 
   static Future<void> toTransactionDetail(
     BuildContext context,
     Transaction transaction,
     Wallet wallet,
-  ) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: transactionDetail),
-          builder: (_) => TransactionDetailScreen(
-            transaction: transaction,
-            wallet: wallet,
-          ),
-        ),
-      );
+  ) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: transactionDetail),
+      builder: (_) => TransactionDetailScreen(
+        transaction: transaction,
+        wallet: wallet,
+      ),
+    ),
+  );
 
-  static Future<void> toUtxoList(BuildContext context, Wallet wallet) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: utxoList),
-          builder: (_) => UtxoListScreen(wallet: wallet),
-        ),
-      );
+  static Future<void> toUtxoList(BuildContext context, Wallet wallet) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: utxoList),
+      builder: (_) => UtxoListScreen(wallet: wallet),
+    ),
+  );
 
-  static Future<void> toUtxoDetail(BuildContext context, Utxo utxo) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: utxoDetail),
-          builder: (_) => UtxoDetailScreen(utxo: utxo),
-        ),
-      );
+  static Future<void> toUtxoDetail(BuildContext context, Utxo utxo) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: utxoDetail),
+      builder: (_) => UtxoDetailScreen(utxo: utxo),
+    ),
+  );
 
-  static Future<void> toXpub(BuildContext context, Wallet wallet) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: xpub),
-          builder: (_) => XpubScreen(wallet: wallet),
-        ),
-      );
+  static Future<void> toXpub(BuildContext context, Wallet wallet) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: xpub),
+      builder: (_) => XpubScreen(wallet: wallet),
+    ),
+  );
 
-  static Future<void> toSigningDemo(BuildContext context, Wallet wallet) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: signingDemo),
-          builder: (_) => SigningDemoScreen(wallet: wallet),
-        ),
-      );
+  static Future<void> toSigningDemo(BuildContext context, Wallet wallet) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: signingDemo),
+      builder: (_) => SigningDemoScreen(wallet: wallet),
+    ),
+  );
 
-  static Future<void> toSend(BuildContext context, Wallet wallet) =>
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: send),
-          builder: (_) => SendScreen(wallet: wallet),
-        ),
-      );
+  static Future<void> toSend(BuildContext context, Wallet wallet) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: send),
+      builder: (_) => SendScreen(wallet: wallet),
+    ),
+  );
 
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  static MaterialPageRoute<void> _buildDetailRoute(Wallet wallet) =>
-      MaterialPageRoute(
-        settings: const RouteSettings(name: walletDetail),
-        builder: (_) => WalletDetailScreen(wallet: wallet),
-      );
+  static MaterialPageRoute<void> _buildDetailRoute(Wallet wallet) => MaterialPageRoute(
+    settings: const RouteSettings(name: walletDetail),
+    builder: (_) => WalletDetailScreen(wallet: wallet),
+  );
 }

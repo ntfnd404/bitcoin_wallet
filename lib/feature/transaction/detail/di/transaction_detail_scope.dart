@@ -6,8 +6,7 @@ class TransactionDetailScope extends StatefulWidget {
   const TransactionDetailScope({super.key, required this.child});
 
   static TransactionDetailBloc newTransactionDetailBloc(BuildContext context) {
-    final scope = context
-        .getInheritedWidgetOfExactType<_InheritedTransactionDetailScope>();
+    final scope = context.getInheritedWidgetOfExactType<_InheritedTransactionDetailScope>();
     if (scope == null) {
       throw StateError('TransactionDetailScope not found in widget tree');
     }
@@ -37,9 +36,9 @@ class _TransactionDetailScopeState extends State<TransactionDetailScope> {
 
   @override
   Widget build(BuildContext context) => _InheritedTransactionDetailScope(
-        newTransactionDetailBloc: _factory,
-        child: widget.child,
-      );
+    newTransactionDetailBloc: _factory,
+    child: widget.child,
+  );
 }
 
 class _InheritedTransactionDetailScope extends InheritedWidget {

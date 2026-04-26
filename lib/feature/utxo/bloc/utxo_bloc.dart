@@ -12,8 +12,8 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
 
   UtxoBloc({
     required GetUtxosUseCase getUtxos,
-  })  : _getUtxos = getUtxos,
-        super(const UtxoState()) {
+  }) : _getUtxos = getUtxos,
+       super(const UtxoState()) {
     on<UtxoListRequested>(_onUtxoListRequested);
     on<UtxoRefreshRequested>(_onUtxoRefreshRequested);
   }
@@ -28,18 +28,22 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
       final utxos = await _getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(
-        utxos: utxos,
-        status: FetchStatus.loaded,
-        clearErrorMessage: true,
-      ));
+      emit(
+        state.copyWith(
+          utxos: utxos,
+          status: FetchStatus.loaded,
+          clearErrorMessage: true,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -52,18 +56,22 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
       final utxos = await _getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(
-        utxos: utxos,
-        status: FetchStatus.loaded,
-        clearErrorMessage: true,
-      ));
+      emit(
+        state.copyWith(
+          utxos: utxos,
+          status: FetchStatus.loaded,
+          clearErrorMessage: true,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

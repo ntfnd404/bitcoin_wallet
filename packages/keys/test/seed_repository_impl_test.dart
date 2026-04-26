@@ -9,11 +9,22 @@ void main() {
   late SeedRepositoryImpl repository;
 
   const walletId = 'test-wallet-id';
-  final mnemonic = Mnemonic(words: [
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'about',
-  ]);
+  final mnemonic = Mnemonic(
+    words: [
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'abandon',
+      'about',
+    ],
+  );
 
   setUp(() {
     storage = FakeSecureStorage();
@@ -36,10 +47,22 @@ void main() {
       });
 
       test('overwrites existing seed for same walletId', () async {
-        final other = Mnemonic(words: [
-          'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo',
-          'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'wrong',
-        ]);
+        final other = Mnemonic(
+          words: [
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'wrong',
+          ],
+        );
         await repository.storeSeed(walletId, mnemonic);
         await repository.storeSeed(walletId, other);
         final result = await repository.getSeed(walletId);
@@ -68,10 +91,22 @@ void main() {
     group('key isolation', () {
       test('different walletIds do not interfere', () async {
         const otherId = 'other-wallet-id';
-        final other = Mnemonic(words: [
-          'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo',
-          'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'wrong',
-        ]);
+        final other = Mnemonic(
+          words: [
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'zoo',
+            'wrong',
+          ],
+        );
         await repository.storeSeed(walletId, mnemonic);
         await repository.storeSeed(otherId, other);
 

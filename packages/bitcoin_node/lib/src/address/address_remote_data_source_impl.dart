@@ -1,5 +1,5 @@
 import 'package:address/address.dart';
-import 'package:bitcoin_node/src/address_type_rpc.dart';
+import 'package:bitcoin_node/src/address/address_type_rpc.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 

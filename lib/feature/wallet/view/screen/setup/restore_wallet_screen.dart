@@ -59,93 +59,93 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(title: const Text('Restore Wallet')),
-      body: BlocConsumer<WalletBloc, WalletState>(
-        listenWhen: (previous, current) =>
-            (current.status == WalletStatus.loaded && previous.status == WalletStatus.creating) ||
-            current.status == WalletStatus.error,
-        listener: (context, state) {
-          if (state.status == WalletStatus.loaded) {
-            final wallet = state.wallets.last;
-            AppRouter.toWalletDetail(context, wallet);
-          } else if (state.status == WalletStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
-            );
-          }
-        },
-        builder: (context, state) {
-          final isSubmitting = state.status == WalletStatus.creating;
-          final trimmed = _phraseController.text.trim();
-          final words = trimmed.isEmpty ? <String>[] : trimmed.split(RegExp(r'\s+'));
-          final wordCount = words.length;
-          final isValidCount = wordCount == 12 || wordCount == 24;
-          final canRestore =
-              isValidCount && _invalidWords.isEmpty && _nameController.text.trim().isNotEmpty && !isSubmitting;
-
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Semantics(
-                  label: 'Wallet name input',
-                  child: TextField(
-                    controller: _nameController,
-                    enabled: !isSubmitting,
-                    decoration: const InputDecoration(
-                      labelText: 'Wallet name',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'Seed phrase input',
-                  child: TextField(
-                    controller: _phraseController,
-                    enabled: !isSubmitting,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Seed phrase (12 or 24 words)',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint: true,
-                    ),
-                    onChanged: _onPhraseChanged,
-                  ),
-                ),
-                if (trimmed.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  _WordHighlight(words: words, invalidWords: _invalidWords),
-                ],
-                const SizedBox(height: 8),
-                if (!isValidCount && trimmed.isNotEmpty)
-                  Text(
-                    'Enter 12 or 24 words (current: $wordCount)',
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'Restore wallet button',
-                  button: true,
-                  child: ElevatedButton(
-                    onPressed: canRestore ? () => _onSubmit(context) : null,
-                    child: isSubmitting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Restore'),
-                  ),
-                ),
-              ],
-            ),
+    appBar: AppBar(title: const Text('Restore Wallet')),
+    body: BlocConsumer<WalletBloc, WalletState>(
+      listenWhen: (previous, current) =>
+          (current.status == WalletStatus.loaded && previous.status == WalletStatus.creating) ||
+          current.status == WalletStatus.error,
+      listener: (context, state) {
+        if (state.status == WalletStatus.loaded) {
+          final wallet = state.wallets.last;
+          AppRouter.toWalletDetail(context, wallet);
+        } else if (state.status == WalletStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
           );
-        },
-      ),
-    );
+        }
+      },
+      builder: (context, state) {
+        final isSubmitting = state.status == WalletStatus.creating;
+        final trimmed = _phraseController.text.trim();
+        final words = trimmed.isEmpty ? <String>[] : trimmed.split(RegExp(r'\s+'));
+        final wordCount = words.length;
+        final isValidCount = wordCount == 12 || wordCount == 24;
+        final canRestore =
+            isValidCount && _invalidWords.isEmpty && _nameController.text.trim().isNotEmpty && !isSubmitting;
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                label: 'Wallet name input',
+                child: TextField(
+                  controller: _nameController,
+                  enabled: !isSubmitting,
+                  decoration: const InputDecoration(
+                    labelText: 'Wallet name',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Semantics(
+                label: 'Seed phrase input',
+                child: TextField(
+                  controller: _phraseController,
+                  enabled: !isSubmitting,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Seed phrase (12 or 24 words)',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                  onChanged: _onPhraseChanged,
+                ),
+              ),
+              if (trimmed.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _WordHighlight(words: words, invalidWords: _invalidWords),
+              ],
+              const SizedBox(height: 8),
+              if (!isValidCount && trimmed.isNotEmpty)
+                Text(
+                  'Enter 12 or 24 words (current: $wordCount)',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              const SizedBox(height: 16),
+              Semantics(
+                label: 'Restore wallet button',
+                button: true,
+                child: ElevatedButton(
+                  onPressed: canRestore ? () => _onSubmit(context) : null,
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Restore'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 
 /// Renders the phrase with invalid words highlighted in red.

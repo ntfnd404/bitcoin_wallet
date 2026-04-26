@@ -11,8 +11,8 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final GetTransactionsUseCase _getTransactions;
 
   TransactionBloc({required GetTransactionsUseCase getTransactions})
-      : _getTransactions = getTransactions,
-        super(const TransactionState()) {
+    : _getTransactions = getTransactions,
+      super(const TransactionState()) {
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
   }
@@ -26,18 +26,22 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final transactions = await _getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(
-        transactions: transactions,
-        status: FetchStatus.loaded,
-        clearErrorMessage: true,
-      ));
+      emit(
+        state.copyWith(
+          transactions: transactions,
+          status: FetchStatus.loaded,
+          clearErrorMessage: true,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -49,18 +53,22 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final transactions = await _getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(
-        transactions: transactions,
-        status: FetchStatus.loaded,
-        clearErrorMessage: true,
-      ));
+      emit(
+        state.copyWith(
+          transactions: transactions,
+          status: FetchStatus.loaded,
+          clearErrorMessage: true,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

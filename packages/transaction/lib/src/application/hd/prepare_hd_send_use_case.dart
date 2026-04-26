@@ -1,5 +1,5 @@
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:transaction/src/application/hd_send_preparation.dart';
+import 'package:transaction/src/application/hd/hd_send_preparation.dart';
 import 'package:transaction/src/domain/data_sources/hd_address_data_source.dart';
 import 'package:transaction/src/domain/data_sources/utxo_scan_data_source.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
@@ -25,10 +25,10 @@ final class PrepareHdSendUseCase {
     required UtxoScanDataSource utxoScanDataSource,
     required List<CoinSelector> selectors,
     required FeeEstimator feeEstimator,
-  })  : _addressDataSource = addressDataSource,
-        _utxoScanDataSource = utxoScanDataSource,
-        _selectors = selectors,
-        _feeEstimator = feeEstimator;
+  }) : _addressDataSource = addressDataSource,
+       _utxoScanDataSource = utxoScanDataSource,
+       _selectors = selectors,
+       _feeEstimator = feeEstimator;
 
   Future<HdSendPreparation> call({
     required String walletId,
@@ -37,21 +37,18 @@ final class PrepareHdSendUseCase {
   }) async {
     // 1. Load all stored HD-wallet addresses with derivation metadata.
     final entries = await _addressDataSource.getAddressesForWallet(walletId);
-    final nativeSegwit = entries
-        .where((e) => e.type == AddressType.nativeSegwit)
-        .toList();
+    final nativeSegwit = entries.where((e) => e.type == AddressType.nativeSegwit).toList();
 
     // 2. Scan the UTXO set for outputs at those addresses.
-    final addressStrings = nativeSegwit.map((e) => e.address).toList();
+    final addressStrings = nativeSegwit.map((e) => e.value).toList();
     final scanned = await _utxoScanDataSource.scanForAddresses(addressStrings);
 
     // 3. Build address → entry lookup for O(1) resolution.
-    final addressLookup = {for (final e in nativeSegwit) e.address: e};
+    final addressLookup = {for (final e in nativeSegwit) e.value: e};
 
     // 4. Map scanned UTXOs → CoinCandidate (age = rank, oldest = highest rank).
     //    Sort by block height ASC so the oldest UTXO gets rank = scanned.length.
-    final sortedByHeight = [...scanned]
-      ..sort((a, b) => a.height.compareTo(b.height));
+    final sortedByHeight = [...scanned]..sort((a, b) => a.height.compareTo(b.height));
 
     final candidates = <CoinCandidate>[];
     final signingInputs = <(String, int), SigningInput>{};
@@ -60,12 +57,14 @@ final class PrepareHdSendUseCase {
       final u = sortedByHeight[i];
       final age = sortedByHeight.length - i; // oldest → highest age
 
-      candidates.add(CoinCandidate(
-        txid: u.txid,
-        vout: u.vout,
-        amountSat: u.amountSat,
-        age: age,
-      ));
+      candidates.add(
+        CoinCandidate(
+          txid: u.txid,
+          vout: u.vout,
+          amountSat: u.amountSat,
+          age: age,
+        ),
+      );
 
       final entry = u.address != null ? addressLookup[u.address] : null;
       if (entry != null) {
@@ -83,7 +82,7 @@ final class PrepareHdSendUseCase {
     // 5. Pick the highest-index nativeSegwit address as change address.
     final changeAddress = nativeSegwit.isEmpty
         ? ''
-        : (nativeSegwit..sort((a, b) => b.index.compareTo(a.index))).first.address;
+        : (nativeSegwit..sort((a, b) => b.index.compareTo(a.index))).first.value;
 
     // 6. Run all strategies; failures (insufficient funds) are omitted.
     final strategies = <String, CoinSelectionResult>{};

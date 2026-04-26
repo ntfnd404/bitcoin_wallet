@@ -5,15 +5,14 @@ import 'package:shared_kernel/shared_kernel.dart';
 /// Single source of truth for script/descriptor type parsing.
 /// Throws [ArgumentError] on unknown values to fail fast.
 abstract final class AddressTypeRpcMapper {
-  static AddressType fromScriptType(String type) =>
-      switch (type) {
-        'pubkeyhash' => AddressType.legacy,
-        'scripthash' => AddressType.wrappedSegwit,
-        'witness_v0_keyhash' => AddressType.nativeSegwit,
-        'witness_v0_scripthash' => AddressType.nativeSegwit,
-        'witness_v1_taproot' => AddressType.taproot,
-        _ => throw ArgumentError('Unknown scriptPubKey type: $type'),
-      };
+  static AddressType fromScriptType(String type) => switch (type) {
+    'pubkeyhash' => AddressType.legacy,
+    'scripthash' => AddressType.wrappedSegwit,
+    'witness_v0_keyhash' => AddressType.nativeSegwit,
+    'witness_v0_scripthash' => AddressType.nativeSegwit,
+    'witness_v1_taproot' => AddressType.taproot,
+    _ => throw ArgumentError('Unknown scriptPubKey type: $type'),
+  };
 
   static AddressType fromDescriptor(String desc) {
     if (desc.startsWith('tr(')) return AddressType.taproot;

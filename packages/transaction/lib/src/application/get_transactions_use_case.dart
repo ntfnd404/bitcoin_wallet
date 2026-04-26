@@ -5,9 +5,7 @@ import 'package:transaction/src/domain/repository/transaction_repository.dart';
 final class GetTransactionsUseCase {
   final TransactionRepository _repository;
 
-  const GetTransactionsUseCase({required TransactionRepository repository})
-      : _repository = repository;
+  const GetTransactionsUseCase({required TransactionRepository repository}) : _repository = repository;
 
-  Future<List<Transaction>> call(String walletName) =>
-      _repository.getTransactions(walletName);
+  Future<List<Transaction>> call(String walletName) => _repository.getTransactions(walletName);
 }

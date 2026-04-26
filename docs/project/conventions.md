@@ -71,16 +71,7 @@ See [architecture.md — Project Structure](./architecture.md#project-structure)
 
 ### Package dependency graph
 
-```
-wallet         → shared_kernel, keys
-address        → shared_kernel, keys
-keys           → shared_kernel
-bitcoin_node   → wallet, address (implements their DataSource interfaces)
-platform_storage → (nothing business)
-observability  → (nothing business)
-design_system  → Flutter SDK
-shared_kernel  → (nothing)
-```
+See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) for the authoritative graph.
 
 ### Package type rules
 
@@ -229,6 +220,12 @@ See [code-style-guide.md](./code-style-guide.md).
 - Exact versions: `crypto: 3.0.7`, not `^3.0.7`. Alphabetical in pubspec.yaml.
 - No high-level Bitcoin wallet library — implement BIP39/BIP32/address encoding manually
   using `crypto` + `pointycastle`. Goal: demonstrate knowledge of Bitcoin standards.
+
+---
+
+## Process Rules
+
+**README touch rule**: any change to a package's layer structure (subfolder add, remove, or rename under `domain/`, `application/`, or `data/`) must touch that package's `README.md` in the same PR. This is a process rule; no CI check enforces it — reviewer discipline is the barrier.
 
 ---
 

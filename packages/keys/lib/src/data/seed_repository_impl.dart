@@ -7,8 +7,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 final class SeedRepositoryImpl implements SeedRepository {
   final SecureStorage _storage;
 
-  const SeedRepositoryImpl({required SecureStorage storage})
-      : _storage = storage;
+  const SeedRepositoryImpl({required SecureStorage storage}) : _storage = storage;
 
   @override
   Future<void> storeSeed(String walletId, Mnemonic mnemonic) =>

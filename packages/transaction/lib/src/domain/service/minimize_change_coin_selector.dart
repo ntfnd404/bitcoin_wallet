@@ -26,13 +26,13 @@ final class MinimizeChangeCoinSelector implements CoinSelector {
     required int feeRateSatPerVbyte,
     required int dustThreshold,
   }) {
-    final pool = (candidates.length > _cap
-            ? (candidates.toList()
-              ..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value)))
-                .take(_cap)
-                .toList()
-            : candidates.toList())
-      ..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value));
+    final pool =
+        (candidates.length > _cap
+              ? (candidates.toList()..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value)))
+                    .take(_cap)
+                    .toList()
+              : candidates.toList())
+          ..sort((a, b) => b.amountSat.value.compareTo(a.amountSat.value));
 
     final poolTotal = pool.fold(Satoshi.zero, (s, c) => s + c.amountSat);
     final maxFee = feeEstimator.estimate(
