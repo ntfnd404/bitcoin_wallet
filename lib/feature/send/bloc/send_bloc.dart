@@ -37,14 +37,14 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     SendHdTransactionUseCase? sendHd,
     required BlockGenerationDataSource blockGeneration,
     required String bech32Hrp,
-  })  : _wallet = wallet,
-        _prepareNode = prepareNode,
-        _sendNode = sendNode,
-        _prepareHd = prepareHd,
-        _sendHd = sendHd,
-        _blockGeneration = blockGeneration,
-        _bech32Hrp = bech32Hrp,
-        super(const SendState()) {
+  }) : _wallet = wallet,
+       _prepareNode = prepareNode,
+       _sendNode = sendNode,
+       _prepareHd = prepareHd,
+       _sendHd = sendHd,
+       _blockGeneration = blockGeneration,
+       _bech32Hrp = bech32Hrp,
+       super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
     on<SendConfirmed>(_onConfirmed);
@@ -81,27 +81,33 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       }
 
       if (strategies.isEmpty) {
-        emit(state.copyWith(
-          status: SendStatus.error,
-          errorMessage: 'Insufficient funds for any strategy',
-        ));
+        emit(
+          state.copyWith(
+            status: SendStatus.error,
+            errorMessage: 'Insufficient funds for any strategy',
+          ),
+        );
 
         return;
       }
 
-      emit(state.copyWith(
-        status: SendStatus.awaitingConfirmation,
-        strategies: strategies,
-        selectedStrategy: strategies.keys.first,
-        changeAddress: changeAddress,
-        recipientAddress: event.recipientAddress,
-        amountSat: event.amountSat,
-      ));
+      emit(
+        state.copyWith(
+          status: SendStatus.awaitingConfirmation,
+          strategies: strategies,
+          selectedStrategy: strategies.keys.first,
+          changeAddress: changeAddress,
+          recipientAddress: event.recipientAddress,
+          amountSat: event.amountSat,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: SendStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: SendStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -150,10 +156,12 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
 
       emit(state.copyWith(status: SendStatus.sent, txid: txid));
     } catch (e) {
-      emit(state.copyWith(
-        status: SendStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: SendStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -167,10 +175,12 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       await _blockGeneration.generateToAddress(1, event.toAddress);
       emit(state.copyWith(status: SendStatus.mined));
     } catch (e) {
-      emit(state.copyWith(
-        status: SendStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: SendStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

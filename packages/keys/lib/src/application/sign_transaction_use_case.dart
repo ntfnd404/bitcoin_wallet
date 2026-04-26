@@ -19,9 +19,9 @@ final class SignTransactionUseCase {
     required SeedRepository seedRepository,
     required KeyDerivationService derivation,
     required TransactionSigningService signing,
-  })  : _seedRepository = seedRepository,
-        _derivation = derivation,
-        _signing = signing;
+  }) : _seedRepository = seedRepository,
+       _derivation = derivation,
+       _signing = signing;
 
   Future<String> call({
     required String walletId,

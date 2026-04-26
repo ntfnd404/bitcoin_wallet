@@ -1,6 +1,6 @@
-export 'src/application/create_hd_wallet_use_case.dart';
-export 'src/application/create_node_wallet_use_case.dart';
-export 'src/application/restore_hd_wallet_use_case.dart';
+export 'src/application/hd/create_hd_wallet_use_case.dart';
+export 'src/application/hd/restore_hd_wallet_use_case.dart';
+export 'src/application/node/create_node_wallet_use_case.dart';
 export 'src/domain/data_sources/wallet_local_data_source.dart';
 export 'src/domain/data_sources/wallet_remote_data_source.dart';
 export 'src/domain/entity/wallet.dart';

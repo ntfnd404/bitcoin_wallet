@@ -10,9 +10,9 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
   AddressBloc({
     required AddressRepository addressRepository,
     required GenerateAddressUseCase generateAddress,
-  })  : _addressRepository = addressRepository,
-        _generateAddress = generateAddress,
-        super(const AddressState()) {
+  }) : _addressRepository = addressRepository,
+       _generateAddress = generateAddress,
+       super(const AddressState()) {
     on<AddressListRequested>(_onAddressListRequested);
     on<AddressGenerateRequested>(_onAddressGenerateRequested);
   }

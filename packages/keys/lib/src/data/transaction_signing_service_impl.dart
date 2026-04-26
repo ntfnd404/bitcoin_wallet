@@ -27,12 +27,14 @@ final class TransactionSigningServiceImpl implements TransactionSigningService {
 
     // Build sighash inputs — scriptCode for P2WPKH uses the scriptPubKey form
     final sighashInputs = inputs
-        .map((inp) => SighashInput(
-              prevTxid: inp.txid,
-              prevVout: inp.vout,
-              amountSat: inp.amountSat.value,
-              scriptCode: _p2wpkhScriptCode(inp.publicKey),
-            ))
+        .map(
+          (inp) => SighashInput(
+            prevTxid: inp.txid,
+            prevVout: inp.vout,
+            amountSat: inp.amountSat.value,
+            scriptCode: _p2wpkhScriptCode(inp.publicKey),
+          ),
+        )
         .toList();
 
     // Build sighash outputs — convert addresses to scriptPubKeys
@@ -61,12 +63,14 @@ final class TransactionSigningServiceImpl implements TransactionSigningService {
       final derSig = ecdsaSign(inp.privateKey, sighash);
       final pubKey = inp.publicKey;
 
-      signedInputs.add(SignedInput(
-        prevTxid: inp.txid,
-        prevVout: inp.vout,
-        sequence: sighashInputs[i].sequence,
-        witness: [derSig, pubKey],
-      ));
+      signedInputs.add(
+        SignedInput(
+          prevTxid: inp.txid,
+          prevVout: inp.vout,
+          sequence: sighashInputs[i].sequence,
+          witness: [derSig, pubKey],
+        ),
+      );
     }
 
     return serializeSegwitTx(

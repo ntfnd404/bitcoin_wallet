@@ -9,9 +9,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 final class XpubBloc extends Bloc<XpubEvent, XpubState> {
   final GetXpubUseCase _getXpub;
 
-  XpubBloc({required GetXpubUseCase getXpub})
-      : _getXpub = getXpub,
-        super(const XpubState()) {
+  XpubBloc({required GetXpubUseCase getXpub}) : _getXpub = getXpub, super(const XpubState()) {
     on<XpubLoadRequested>(_onLoadRequested);
   }
 
@@ -31,10 +29,12 @@ final class XpubBloc extends Bloc<XpubEvent, XpubState> {
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

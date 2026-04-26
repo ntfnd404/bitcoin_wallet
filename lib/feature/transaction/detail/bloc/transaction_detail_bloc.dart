@@ -8,13 +8,12 @@ import 'package:transaction/transaction.dart';
 ///
 /// Handles [TransactionDetailRequested] to fetch [TransactionDetail]
 /// for a given txid and wallet name.
-final class TransactionDetailBloc
-    extends Bloc<TransactionDetailEvent, TransactionDetailState> {
+final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, TransactionDetailState> {
   final GetTransactionDetailUseCase _getDetail;
 
   TransactionDetailBloc({required GetTransactionDetailUseCase getDetail})
-      : _getDetail = getDetail,
-        super(const TransactionDetailState()) {
+    : _getDetail = getDetail,
+      super(const TransactionDetailState()) {
     on<TransactionDetailRequested>(_onRequested);
   }
 
@@ -31,10 +30,12 @@ final class TransactionDetailBloc
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: FetchStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: FetchStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

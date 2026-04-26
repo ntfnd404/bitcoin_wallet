@@ -1,5 +1,5 @@
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:transaction/src/application/node_send_preparation.dart';
+import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
 import 'package:transaction/src/domain/repository/utxo_repository.dart';
@@ -23,10 +23,10 @@ final class PrepareNodeSendUseCase {
     required NodeTransactionDataSource nodeDataSource,
     required List<CoinSelector> selectors,
     required FeeEstimator feeEstimator,
-  })  : _utxoRepository = utxoRepository,
-        _nodeDataSource = nodeDataSource,
-        _selectors = selectors,
-        _feeEstimator = feeEstimator;
+  }) : _utxoRepository = utxoRepository,
+       _nodeDataSource = nodeDataSource,
+       _selectors = selectors,
+       _feeEstimator = feeEstimator;
 
   Future<NodeSendPreparation> call({
     required String walletName,

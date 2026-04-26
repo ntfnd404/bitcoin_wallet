@@ -24,12 +24,11 @@ final class SigningState {
     String? txid,
     BroadcastedTx? broadcastedTx,
     String? errorMessage,
-  }) =>
-      SigningState(
-        status: status ?? this.status,
-        utxos: utxos ?? this.utxos,
-        txid: txid ?? this.txid,
-        broadcastedTx: broadcastedTx ?? this.broadcastedTx,
-        errorMessage: errorMessage ?? this.errorMessage,
-      );
+  }) => SigningState(
+    status: status ?? this.status,
+    utxos: utxos ?? this.utxos,
+    txid: txid ?? this.txid,
+    broadcastedTx: broadcastedTx ?? this.broadcastedTx,
+    errorMessage: errorMessage ?? this.errorMessage,
+  );
 }

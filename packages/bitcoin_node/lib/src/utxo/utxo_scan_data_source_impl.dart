@@ -8,16 +8,13 @@ import 'package:transaction/transaction.dart';
 final class UtxoScanDataSourceImpl implements UtxoScanDataSource {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoScanDataSourceImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const UtxoScanDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<ScannedUtxo>> scanForAddresses(List<String> addresses) async {
     if (addresses.isEmpty) return [];
 
-    final descriptors = addresses
-        .map((addr) => {'desc': 'addr($addr)'})
-        .toList();
+    final descriptors = addresses.map((addr) => {'desc': 'addr($addr)'}).toList();
 
     final result = await _rpcClient.call('scantxoutset', ['start', descriptors]);
     final map = result as Map<String, Object?>;
@@ -26,8 +23,7 @@ final class UtxoScanDataSourceImpl implements UtxoScanDataSource {
       throw StateError('scantxoutset failed');
     }
 
-    final unspents = (map['unspents'] as List<Object?>? ?? [])
-        .cast<Map<String, Object?>>();
+    final unspents = (map['unspents'] as List<Object?>? ?? []).cast<Map<String, Object?>>();
 
     return unspents.map(_mapScannedUtxo).toList();
   }

@@ -17,10 +17,9 @@ final class XpubState {
     FetchStatus? status,
     Map<AddressType, AccountXpub>? xpubs,
     String? errorMessage,
-  }) =>
-      XpubState(
-        status: status ?? this.status,
-        xpubs: xpubs ?? this.xpubs,
-        errorMessage: errorMessage ?? this.errorMessage,
-      );
+  }) => XpubState(
+    status: status ?? this.status,
+    xpubs: xpubs ?? this.xpubs,
+    errorMessage: errorMessage ?? this.errorMessage,
+  );
 }

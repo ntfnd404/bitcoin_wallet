@@ -10,14 +10,14 @@ class SeedWordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        '$index. $word',
-        style: const TextStyle(fontFamily: 'monospace'),
-      ),
-    );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    decoration: BoxDecoration(
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      '$index. $word',
+      style: const TextStyle(fontFamily: 'monospace'),
+    ),
+  );
 }

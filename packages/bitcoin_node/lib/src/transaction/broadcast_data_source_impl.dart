@@ -7,8 +7,7 @@ import 'package:transaction/transaction.dart';
 final class BroadcastDataSourceImpl implements BroadcastDataSource {
   final BitcoinRpcClient _rpcClient;
 
-  const BroadcastDataSourceImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const BroadcastDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<String> broadcast(String rawHex) async {

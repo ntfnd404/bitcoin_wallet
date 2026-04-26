@@ -51,7 +51,5 @@ final class Utxo with Confirmable {
   });
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Utxo && txid == other.txid && vout == other.vout;
+  bool operator ==(Object other) => identical(this, other) || other is Utxo && txid == other.txid && vout == other.vout;
 }

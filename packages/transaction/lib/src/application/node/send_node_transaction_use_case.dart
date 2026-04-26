@@ -1,5 +1,5 @@
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:transaction/src/application/node_send_preparation.dart';
+import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
 import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
 
@@ -14,8 +14,8 @@ final class SendNodeTransactionUseCase {
   const SendNodeTransactionUseCase({
     required NodeTransactionDataSource nodeDataSource,
     required BroadcastDataSource broadcastDataSource,
-  })  : _nodeDataSource = nodeDataSource,
-        _broadcastDataSource = broadcastDataSource;
+  }) : _nodeDataSource = nodeDataSource,
+       _broadcastDataSource = broadcastDataSource;
 
   /// Returns the txid of the broadcast transaction.
   Future<String> call({
@@ -30,17 +30,14 @@ final class SendNodeTransactionUseCase {
       throw ArgumentError('Strategy "$strategyName" not found in preparation');
     }
 
-    final inputs = result.inputs
-        .map((c) => (txid: c.txid, vout: c.vout))
-        .toList();
+    final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();
 
     final outputs = <String, double>{
       recipientAddress: amountSat.value / 100000000,
     };
 
     if (result.changeSat.value > 0) {
-      outputs[preparation.changeAddress] =
-          result.changeSat.value / 100000000;
+      outputs[preparation.changeAddress] = result.changeSat.value / 100000000;
     }
 
     final hexUnsigned = await _nodeDataSource.createRawTransaction(

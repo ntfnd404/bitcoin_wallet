@@ -14,8 +14,7 @@ final class TransactionRepositoryImpl implements TransactionRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<List<Transaction>> getTransactions(String walletName) =>
-      _remoteDataSource.getTransactions(walletName);
+  Future<List<Transaction>> getTransactions(String walletName) => _remoteDataSource.getTransactions(walletName);
 
   @override
   Future<TransactionDetail> getTransactionDetail(String txid, String walletName) =>

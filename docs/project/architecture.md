@@ -20,46 +20,43 @@ This is a hybrid approach, not a single pattern:
 ## Dependency Graph
 
 ```
-                    ┌─────────────┐
-                    │ shared_     │
-                    │ kernel      │
-                    │ (nothing)   │
-                    └──────▲──────┘
-                     ╱     │      ╲
-                   ╱       │        ╲
-          ┌──────┘    ┌────┘    ┌────┘───┐
-          │           │         │        │
-    ┌──────────┐ ┌──────────┐ ┌──────┐   │
-    │  wallet  │ │ address  │ │ keys │   │
-    │          │ │          │ │      │   │
-    │ domain/  │ │ domain/  │ │domain│   │
-    │ app/     │ │ app/     │ │data/ │   │
-    │ data/    │ │ data/    │ │      │   │
-    └────┬─────┘ └────┬─────┘ └──▲───┘   │
-         │            │          │        │
-         │   ┌────────┘          │        │
-         ├───┼───────────────────┘        │
-         │   │                            │
-         │   │  implements data sources    │
-         ▼   ▼                            │
-    ┌──────────────┐                      │
-    │ bitcoin_node │──────────────────────┘
-    │              │
-    │ WalletRemote │ → rpc_client
-    │ AddressRemote│
-    │ DataSource   │
-    │ Impl         │
-    └──────────────┘
+                             ┌───────────────┐
+                             │ shared_kernel │
+                             └───────┬───────┘
+          ┌────────────┬─────────────┼─────────────┬───────────────┐
+          ▼            ▼             ▼             ▼               ▼
+       ┌──────┐   ┌─────────┐   ┌────────┐    ┌─────────┐   ┌─────────────┐
+       │ keys │   │ storage │   │ wallet │    │ address │   │ transaction │
+       └───┬──┘   └─────────┘   └────┬───┘    └────┬────┘   └──────┬──────┘
+           │                         │             │               │
+           └─────────────────────────┘             │               │
+                                                   └───────┬───────┘
+                                                           ▼
+        ┌────────────┐                        ┌───────────────────────────┐
+        │ rpc_client │───────────────────────►│      bitcoin_node         │
+        └────────────┘                        │ (consumer of all modules) │
+                                              └───────────────────────────┘
 
-    ─────► depends on (imports)
-    wallet  ──► keys ──► shared_kernel
-    address ──► keys ──► shared_kernel
-    address ──► wallet (for Wallet, WalletType)
-    bitcoin_node ──► wallet (for WalletRemoteDataSource)
-    bitcoin_node ──► address (for AddressRemoteDataSource)
-    bitcoin_node ──► rpc_client
-    bitcoin_node ──► shared_kernel
+ui_kit — no workspace dependencies (Flutter SDK only)
 ```
+
+Arrow direction: A ──► B means A depends on B.
+
+Real edges (derived from `pubspec.yaml`):
+
+| Package | Workspace dependencies |
+|---------|------------------------|
+| `shared_kernel` | — |
+| `rpc_client` | — |
+| `ui_kit` | — |
+| `keys` | `shared_kernel` |
+| `storage` | `shared_kernel` |
+| `wallet` | `keys`, `shared_kernel` |
+| `address` | `keys`, `shared_kernel`, `wallet` |
+| `transaction` | `shared_kernel`, `address` |
+| `bitcoin_node` | `address`, `rpc_client`, `shared_kernel`, `transaction`, `wallet` |
+
+App (`lib/`) depends on all nine workspace packages.
 
 ---
 
@@ -91,7 +88,25 @@ packages/
   ui_kit/                                  ← UI components (placeholder)
   storage/                                 ← SecureStorageImpl (Flutter, flutter_secure_storage)
   rpc_client/                              ← BitcoinRpcClient (JSON-RPC over HTTP)
-  bitcoin_node/                            ← WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl
+
+  bitcoin_node/
+    lib/
+      bitcoin_node.dart                    ← barrel (8 *Impl exports)
+      src/
+        wallet/
+          wallet_remote_data_source_impl.dart
+        address/
+          address_remote_data_source_impl.dart
+          address_type_rpc.dart
+        transaction/
+          broadcast_data_source_impl.dart
+          node_transaction_data_source_impl.dart
+          transaction_remote_data_source_impl.dart
+        utxo/
+          utxo_remote_data_source_impl.dart
+          utxo_scan_data_source_impl.dart
+        block/
+          block_generation_data_source_impl.dart
 
   keys/
     lib/
@@ -131,20 +146,21 @@ packages/
         domain/
           entity/
             wallet.dart
-            wallet_type.dart
           repository/
             wallet_repository.dart
           data_sources/
             wallet_local_data_source.dart
             wallet_remote_data_source.dart  ← ISP interface (createWallet only)
         application/
-          create_node_wallet_use_case.dart
-          create_hd_wallet_use_case.dart
-          restore_hd_wallet_use_case.dart
+          hd/
+            create_hd_wallet_use_case.dart
+            restore_hd_wallet_use_case.dart
+          node/
+            create_node_wallet_use_case.dart
         data/
           wallet_repository_impl.dart
           wallet_local_data_source_impl.dart
-          wallet_serializer.dart
+          wallet_mapper.dart
 
   address/
     lib/
@@ -162,12 +178,48 @@ packages/
         application/
           generate_address_use_case.dart
           address_generation_strategy.dart
-          hd_address_generation_strategy.dart
-          node_address_generation_strategy.dart
+          hd/
+            hd_address_generation_strategy.dart
+          node/
+            node_address_generation_strategy.dart
         data/
           address_repository_impl.dart
           address_local_data_source_impl.dart
-          address_serializer.dart
+          address_mapper.dart
+
+  transaction/
+    lib/
+      transaction.dart                     ← barrel (public API only)
+      transaction_assembly.dart            ← module DI factory
+      src/
+        domain/
+          entity/                          ← transaction entities, UTXO domain types
+          data_sources/
+            hd_address_data_source.dart    ← returns List<Address>; bridges address + transaction
+            transaction_remote_data_source.dart
+            utxo_remote_data_source.dart
+            utxo_scan_data_source.dart
+            broadcast_data_source.dart
+            node_transaction_data_source.dart
+            block_generation_data_source.dart
+          repository/
+          service/
+          value_object/
+        application/
+          hd/
+            prepare_hd_send_use_case.dart
+            send_hd_transaction_use_case.dart
+            hd_send_preparation.dart
+          node/
+            prepare_node_send_use_case.dart
+            send_node_transaction_use_case.dart
+            node_send_preparation.dart
+          broadcast_transaction_use_case.dart
+          get_transaction_detail_use_case.dart
+          get_transactions_use_case.dart
+          get_utxos_use_case.dart
+          scan_utxos_use_case.dart
+        data/
 ```
 
 ---
@@ -178,9 +230,10 @@ packages/
 |--------|------|-------------------|
 | **shared_kernel** | BitcoinNetwork, AddressType, SecureStorage | Everything (shared primitives + contracts) |
 | **keys** | Mnemonic, DerivedAddress, SeedRepository, Bip39Service, KeyDerivationService | All domain types + services |
-| **wallet** | Wallet, WalletType, WalletRepository, WalletLocalDataSource, WalletRemoteDataSource | Entities, repository, use cases |
+| **wallet** | Wallet, HdWallet, NodeWallet, HdWalletRepository, NodeWalletRepository, WalletRemoteDataSource | Entities, repository, use cases |
 | **address** | Address, AddressRepository, AddressLocalDataSource, AddressRemoteDataSource | Entities, repository, use case, strategies |
-| **bitcoin_node** | WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl | DataSource implementations only |
+| **transaction** | HD/Node transaction use cases, UTXO domain types, data-source contracts | TransactionAssembly, use cases, data-source interfaces |
+| **bitcoin_node** | WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl, TransactionRemoteDataSourceImpl, UtxoRemoteDataSourceImpl, UtxoScanDataSourceImpl, BroadcastDataSourceImpl, NodeTransactionDataSourceImpl, BlockGenerationDataSourceImpl | DataSource implementations only |
 | **storage** | SecureStorageImpl | Storage implementation |
 | **rpc_client** | BitcoinRpcClient | RPC client |
 | **ui_kit** | UI components | Shared widgets |
@@ -251,16 +304,35 @@ data/        ← depends on: own domain, shared_kernel (for SecureStorage)
 
 ---
 
+## HD/Node Trust-Model Subfolder Split
+
+`packages/wallet`, `packages/address`, and `packages/transaction` each split their `application/` layer into `hd/` and `node/` subfolders (introduced in Phase 3 of BW-0005).
+
+- Files under `application/hd/` serve HD (non-custodial) wallets; files under `application/node/` serve Node (custodial) wallets.
+- Cross-trust imports within the same package are forbidden: `hd/` files must not import from `node/` and vice versa.
+- Shared orchestrators (e.g. `GenerateAddressUseCase`, `ScanUtxosUseCase`) remain at the `application/` root when they serve both trust models.
+- Rationale and decision record: `docs/project/adr/ADR-002-trust-model-subfolder-split.md`.
+
+---
+
 ## ISP: Interface Segregation for Remote Data Sources
 
-The original monolithic `BitcoinCoreRemoteDataSource` was split into focused interfaces:
+The original monolithic `BitcoinCoreRemoteDataSource` was split into focused, consumer-owned interfaces:
 
-| Interface | Module | Methods |
-|-----------|--------|---------|
-| `WalletRemoteDataSource` | wallet | `createWallet(String walletName)` |
-| `AddressRemoteDataSource` | address | `generateAddress(String walletName, AddressType type)` |
+| Interface | Package |
+|-----------|---------|
+| `WalletRemoteDataSource` | wallet |
+| `AddressRemoteDataSource` | address |
+| `AddressLocalDataSource` | address |
+| `HdAddressDataSource` | transaction (returns `List<Address>` since Phase 2) |
+| `TransactionRemoteDataSource` | transaction |
+| `UtxoRemoteDataSource` | transaction |
+| `UtxoScanDataSource` | transaction |
+| `BroadcastDataSource` | transaction |
+| `NodeTransactionDataSource` | transaction |
+| `BlockGenerationDataSource` | transaction |
 
-Each interface is owned by its consumer module (DIP). The `bitcoin_node` package provides implementations for both.
+Each interface is owned by its consumer module (DIP). The `bitcoin_node` package provides implementations for all of them.
 
 ---
 
@@ -304,6 +376,8 @@ module/data            → other module/data
 module/domain          → feature/*
 module/domain          → other module/data
 shared_kernel          → business modules
+application/hd/        → application/node/ (same package, cross-trust)
+application/node/      → application/hd/  (same package, cross-trust)
 ```
 
 ---
@@ -313,10 +387,15 @@ shared_kernel          → business modules
 Modules form a **DAG**, never a cycle.
 
 ```
+shared_kernel  → (none)
+rpc_client     → (none)
 keys           → shared_kernel
+storage        → shared_kernel
 wallet         → shared_kernel, keys
 address        → shared_kernel, keys, wallet
-bitcoin_node   → wallet, address, rpc_client, shared_kernel
+transaction    → shared_kernel, address
+bitcoin_node   → shared_kernel, rpc_client, wallet, address, transaction
+ui_kit         → (none)
 ```
 
 If a cycle appears (e.g., wallet ↔ address):
@@ -351,7 +430,19 @@ main()
       → AddressRepositoryImpl
       → GenerateAddressUseCase (+ strategies)
 
-    → AppDependencies                 (container: keys, wallet, address assemblies)
+    → TransactionAssembly             (transaction module)
+      → HdAddressDataSourceImpl       (lib/core/adapters/ — bridges address + transaction)
+      → PrepareHdSendUseCase          (application/hd/)
+      → SendHdTransactionUseCase      (application/hd/)
+      → PrepareNodeSendUseCase        (application/node/)
+      → SendNodeTransactionUseCase    (application/node/)
+      → BroadcastTransactionUseCase
+      → GetTransactionsUseCase
+      → GetTransactionDetailUseCase
+      → GetUtxosUseCase
+      → ScanUtxosUseCase
+
+    → AppDependencies                 (container: keys, wallet, address, transaction assemblies)
     → App widget
 ```
 
@@ -376,6 +467,8 @@ Feature Scopes provide BLoC **factory** via static methods + InheritedWidget.
 | Per-flow BLoC, not per-feature | SRP: one BLoC handles one flow. Prevents god-object accumulation |
 | Serializer pattern (single final class) | Replaces abstract Codec/Mapper + Impl hierarchy — simpler, no separate files |
 | Assembly per module | Each module owns its DI, not a monolithic builder |
+| hd/ and node/ subfolders in application/ | Trust boundary enforcement: HD and Node use cases cannot cross-import within the same package |
+| transaction package owns UTXO domain | Single Responsibility: UTXO lifecycle is a transaction concern, not wallet or address |
 | No Event Sourcing / CQRS | Mobile client over Bitcoin Core's ledger — Core already does ES for us |
 
 ---

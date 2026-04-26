@@ -43,15 +43,14 @@ final class SendState {
     int? amountSat,
     String? txid,
     String? errorMessage,
-  }) =>
-      SendState(
-        status: status ?? this.status,
-        strategies: strategies ?? this.strategies,
-        selectedStrategy: selectedStrategy ?? this.selectedStrategy,
-        changeAddress: changeAddress ?? this.changeAddress,
-        recipientAddress: recipientAddress ?? this.recipientAddress,
-        amountSat: amountSat ?? this.amountSat,
-        txid: txid ?? this.txid,
-        errorMessage: errorMessage ?? this.errorMessage,
-      );
+  }) => SendState(
+    status: status ?? this.status,
+    strategies: strategies ?? this.strategies,
+    selectedStrategy: selectedStrategy ?? this.selectedStrategy,
+    changeAddress: changeAddress ?? this.changeAddress,
+    recipientAddress: recipientAddress ?? this.recipientAddress,
+    amountSat: amountSat ?? this.amountSat,
+    txid: txid ?? this.txid,
+    errorMessage: errorMessage ?? this.errorMessage,
+  );
 }

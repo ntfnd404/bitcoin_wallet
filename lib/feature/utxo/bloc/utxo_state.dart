@@ -19,10 +19,9 @@ final class UtxoState {
     FetchStatus? status,
     String? errorMessage,
     bool clearErrorMessage = false,
-  }) =>
-      UtxoState(
-        utxos: utxos ?? this.utxos,
-        status: status ?? this.status,
-        errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
-      );
+  }) => UtxoState(
+    utxos: utxos ?? this.utxos,
+    status: status ?? this.status,
+    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+  );
 }

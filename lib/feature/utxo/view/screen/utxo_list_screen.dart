@@ -72,8 +72,8 @@ class _UtxoListScreenState extends State<UtxoListScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               context.read<UtxoBloc>().add(
-                    UtxoRefreshRequested(wallet: widget.wallet),
-                  );
+                UtxoRefreshRequested(wallet: widget.wallet),
+              );
             },
             child: ListView.builder(
               itemCount: state.utxos.length,

@@ -94,7 +94,7 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
     // BIP32 xpub serialisation
     // Testnet/regtest version: 0x043587CF
     final version = network == BitcoinNetwork.mainnet
-        ? Uint8List.fromList([0x04, 0x88, 0xB2, 0x1E])  // mainnet xpub
+        ? Uint8List.fromList([0x04, 0x88, 0xB2, 0x1E]) // mainnet xpub
         : Uint8List.fromList([0x04, 0x35, 0x87, 0xCF]); // testnet/regtest tpub
 
     final childNumber = Uint8List(4); // account 0' = 0x80000000
@@ -119,8 +119,7 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
     );
   }
 
-  String _accountPathString(AddressType type) =>
-      "m/${_purpose(type)}'/${network.coinType}'/0'";
+  String _accountPathString(AddressType type) => "m/${_purpose(type)}'/${network.coinType}'/0'";
 
   // ---------------------------------------------------------------------------
   // Derivation paths
@@ -145,20 +144,18 @@ final class KeyDerivationServiceImpl implements KeyDerivationService {
     AddressType.taproot => 86,
   };
 
-  String _pathString(AddressType type, int index) =>
-      "m/${_purpose(type)}'/${network.coinType}'/0'/0/$index";
+  String _pathString(AddressType type, int index) => "m/${_purpose(type)}'/${network.coinType}'/0'/0/$index";
 
   // ---------------------------------------------------------------------------
   // Address encoding
   // ---------------------------------------------------------------------------
 
-  String _encodeAddress(AddressType type, Uint8List compressedPubKey) =>
-      switch (type) {
-        AddressType.legacy => _encodeP2pkh(compressedPubKey),
-        AddressType.wrappedSegwit => _encodeP2shP2wpkh(compressedPubKey),
-        AddressType.nativeSegwit => _encodeP2wpkh(compressedPubKey),
-        AddressType.taproot => _encodeP2tr(compressedPubKey),
-      };
+  String _encodeAddress(AddressType type, Uint8List compressedPubKey) => switch (type) {
+    AddressType.legacy => _encodeP2pkh(compressedPubKey),
+    AddressType.wrappedSegwit => _encodeP2shP2wpkh(compressedPubKey),
+    AddressType.nativeSegwit => _encodeP2wpkh(compressedPubKey),
+    AddressType.taproot => _encodeP2tr(compressedPubKey),
+  };
 
   /// P2PKH: Base58Check(0x6F ‖ HASH160(pubkey))
   String _encodeP2pkh(Uint8List pubKey) {
