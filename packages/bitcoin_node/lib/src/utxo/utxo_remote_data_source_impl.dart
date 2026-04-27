@@ -1,4 +1,4 @@
-import 'package:bitcoin_node/src/address_type_rpc_mapper.dart';
+import 'package:bitcoin_node/src/utxo/address_type_rpc_mapper.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
@@ -9,8 +9,7 @@ import 'package:transaction/transaction.dart';
 final class UtxoRemoteDataSourceImpl implements UtxoRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoRemoteDataSourceImpl({required BitcoinRpcClient rpcClient})
-      : _rpcClient = rpcClient;
+  const UtxoRemoteDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<Utxo>> getUtxos(String walletName) async {

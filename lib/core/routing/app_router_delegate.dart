@@ -21,25 +21,23 @@ final class AppRouterDelegate extends RouterDelegate<Object>
 
   @override
   Widget build(BuildContext context) => WalletScope(
-        child: AddressScope(
-          child: TransactionListScope(
-            child: TransactionDetailScope(
-              child: UtxoScope(
-                child: XpubScope(
-                  child: ManualUtxoScope(
-                    child: SendScope(
-                      child: Navigator(
-                        key: navigatorKey,
-                        onGenerateInitialRoutes: (navigator, initialRoute) => [
-                          MaterialPageRoute<void>(
-                            settings: const RouteSettings(name: '/'),
-                            builder: (_) => const WalletListScreen(),
-                          ),
-                        ],
-                        onUnknownRoute: (_) => MaterialPageRoute<void>(
-                          builder: (_) => const WalletListScreen(),
-                        ),
+    child: AddressScope(
+      child: TransactionListScope(
+        child: TransactionDetailScope(
+          child: UtxoScope(
+            child: XpubScope(
+              child: ManualUtxoScope(
+                child: SendScope(
+                  child: Navigator(
+                    key: navigatorKey,
+                    onGenerateInitialRoutes: (navigator, initialRoute) => [
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: '/'),
+                        builder: (_) => const WalletListScreen(),
                       ),
+                    ],
+                    onUnknownRoute: (_) => MaterialPageRoute<void>(
+                      builder: (_) => const WalletListScreen(),
                     ),
                   ),
                 ),
@@ -47,7 +45,9 @@ final class AppRouterDelegate extends RouterDelegate<Object>
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   @override
   Future<void> setNewRoutePath(Object configuration) async {}

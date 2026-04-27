@@ -51,45 +51,47 @@ Regtest only. `txindex=1`. No proxy.
 
 ## Architecture
 
-Feature-first app + business modules as packages + layered modules + hard architecture gate. See [architecture.md](./architecture.md) for full details.
+Packages-first Flutter workspace monorepo with one app first, business ownership
+modeled by packages, layered internals inside each package, and hard import
+guardrails. See [architecture.md](./architecture.md) for the full standard.
 
 ### Layers (Clean + Hexagonal)
 
 ```
-Presentation (features in app/) → Application/Domain (modules in packages/) ← Infrastructure (data/ in modules)
+Presentation (lib/feature/) → Application/Domain (packages/*) ← Infrastructure (adapter packages)
 ```
 
 - **Feature** — Flutter UI + BLoC per flow. `lib/feature/`. Depends on module public API only.
 - **Module domain** — entities + repository/service/data source interfaces. Pure Dart. `packages/<module>/src/domain/`.
 - **Module application** — use cases, query APIs. `packages/<module>/src/application/`.
 - **Module data** — implementations. `packages/<module>/src/data/`.
-- **Infrastructure** — `bitcoin_node`, `platform_storage`, `observability`: each wraps one external system.
-- **Design system** — `design_system`: Flutter-only, no domain knowledge.
+- **Infrastructure** — `bitcoin_node`, `rpc_client`, `storage`: each wraps one external system or platform boundary.
+- **Design system** — `ui_kit`: Flutter-only, no domain knowledge.
 - **Shared kernel** — `shared_kernel`: tiny shared primitives (BitcoinNetwork, Failure, Result).
 
 See [architecture.md — Project Structure](./architecture.md#project-structure) for the full folder tree.
 
 ### Package dependency graph
 
-```
-wallet         → shared_kernel, keys
-address        → shared_kernel, keys
-keys           → shared_kernel
-bitcoin_node   → wallet, address (implements their DataSource interfaces)
-platform_storage → (nothing business)
-observability  → (nothing business)
-design_system  → Flutter SDK
-shared_kernel  → (nothing)
-```
+See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) for the authoritative graph.
 
 ### Package type rules
 
 | Type | Packages | Rule |
 |------|----------|------|
 | **shared** | `shared_kernel` | Tiny shared primitives. Pure Dart. Zero business deps. |
-| **business** | `wallet`, `address`, `keys` | domain/ + application/ + data/. Own entities, use cases, implementations. |
-| **infra** | `bitcoin_node`, `platform_storage`, `observability` | Wraps one external system. No domain knowledge. |
-| **ui** | `design_system` | Design system only. No domain knowledge. |
+| **business** | `wallet`, `address`, `transaction`, `keys` | Own entities, contracts, use cases, and implementations. |
+| **infra** | `bitcoin_node`, `rpc_client`, `storage` | Wrap one external system or platform boundary. No business ownership. |
+| **ui** | `ui_kit` | Design system only. No domain knowledge. |
+
+### Monorepo topology rules
+
+- Default topology is **Scheme A**: one Flutter app at the repo root and reusable code in `packages/`.
+- `packages/` is the correct top-level name for workspace packages. Do not rename it to `components/`.
+- Do not create a top-level `components/` directory for business code.
+- `lib/feature/*` belongs to the app layer only, not to the whole repository.
+- Introduce `apps/` only when a second independently releasable app actually exists.
+- Do not adopt `melos` by default. Add it only when pub workspace + `make` stop being enough operationally.
 
 ### Feature rules
 
@@ -105,6 +107,7 @@ shared_kernel  → (nothing)
   - Router (composition point)
   - UI (view importing another feature's shared/ widget is acceptable)
   - DI (scopes wired in AppRouterDelegate)
+- Shared app-local helpers may live under `lib/common/*`, but `common/` must not become a second unofficial shared platform layer.
 
 ### Ownership rules
 
@@ -118,6 +121,7 @@ shared_kernel  → (nothing)
 - Example: `BitcoinCoreRemoteDataSource` lives in `wallet/domain/data_sources/`, not in `bitcoin_node/`.
 - `bitcoin_node` implements `BitcoinCoreRemoteDataSource`.
 - This is DIP: high-level module defines the contract, low-level module implements it.
+- App code imports package barrels only. `package:<module>/src/*` deep imports from `lib/` or `test/` are forbidden.
 
 ---
 
@@ -196,6 +200,7 @@ BLoC constructors receive **use cases** (from module application layer). When no
   - `AddressLocalDataSource` — in `address/domain/data_sources/`
   - `BitcoinCoreRemoteDataSource` — in `wallet/domain/data_sources/`, implemented in `bitcoin_node/`
 - **Use Cases** — Application layer, live in `packages/<module>/src/application/`. Orchestrate repositories, services, and data sources; produce and return domain entities.
+- Every package exposes one public barrel `package:<module>/<module>.dart` and may expose an optional `package:<module>/<module>_assembly.dart`. Treat everything under `src/` as internal.
 
 ---
 
@@ -232,6 +237,12 @@ See [code-style-guide.md](./code-style-guide.md).
 
 ---
 
+## Process Rules
+
+**README touch rule**: any change to a package's layer structure (subfolder add, remove, or rename under `domain/`, `application/`, or `data/`) must touch that package's `README.md` in the same PR. This is a process rule; no CI check enforces it — reviewer discipline is the barrier.
+
+---
+
 ## Prohibited
 
 These are hard rules. Never violate them.
@@ -254,4 +265,7 @@ These are hard rules. Never violate them.
 - **Never** log or expose mnemonic/seed/private key material in UI, logs, or error messages
 - **Never** import from another feature's bloc or domain — cross-feature only via event bus or router
 - **Never** import module `src/data/*` from features — use public API (barrel) only
+- **Never** deep-import `package:<module>/src/*` from `lib/` or `test/` — use package barrels
+- **Never** import app code from a workspace package
+- **Never** create top-level `components/` for business modules
 - **Never** create god-object BLoCs handling multiple flows — one BLoC per flow

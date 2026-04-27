@@ -25,88 +25,87 @@ class TransactionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<TransactionDetailBloc>(
-        create: (ctx) => TransactionDetailScope.newTransactionDetailBloc(ctx)
-          ..add(TransactionDetailRequested(
-            txid: transaction.txid,
-            walletName: wallet.name,
-          )),
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Transaction Detail')),
-          body: BlocConsumer<TransactionDetailBloc, TransactionDetailState>(
-            listener: (context, state) {
-              if (state.status == FetchStatus.error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.errorMessage ?? 'Unknown error'),
-                  ),
-                );
-              }
-            },
-            builder: (context, state) {
-              final tx = transaction;
-              final amountBtc = tx.amountSat.btcDisplay;
-              final feeBtc = tx.feeSat?.btcDisplay;
-              final isIncoming =
-                  tx.direction == TransactionDirection.incoming;
-
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // ── Basic info (always available) ────────────────────────
-                  DetailSection(
-                    title: 'TXID',
-                    child: CopyableText(text: tx.txid),
-                  ),
-                  const SizedBox(height: 16),
-                  DetailSection(
-                    title: 'Direction',
-                    child: Text(isIncoming ? 'Incoming' : 'Outgoing'),
-                  ),
-                  const SizedBox(height: 16),
-                  DetailSection(
-                    title: 'Amount',
-                    child: Text('$amountBtc BTC'),
-                  ),
-                  if (feeBtc != null) ...[
-                    const SizedBox(height: 16),
-                    DetailSection(
-                      title: 'Fee',
-                      child: Text('$feeBtc BTC'),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  DetailSection(
-                    title: 'Status',
-                    child: Text(
-                      tx.isMempool
-                          ? 'Unconfirmed (in mempool)'
-                          : 'Confirmed (${tx.confirmations} block${tx.confirmations == 1 ? '' : 's'})',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DetailSection(
-                    title: 'Time',
-                    child: Text(
-                      tx.timestamp.toString(),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-
-                  // ── Decoded detail (loaded on demand) ────────────────────
-                  if (state.status == FetchStatus.loading) ...[
-                    const SizedBox(height: 24),
-                    const Center(child: CircularProgressIndicator()),
-                  ],
-
-                  if (state.status == FetchStatus.loaded &&
-                      state.detail != null)
-                    _DetailBody(detail: state.detail!),
-                ],
-              );
-            },
-          ),
+    create: (ctx) => TransactionDetailScope.newTransactionDetailBloc(ctx)
+      ..add(
+        TransactionDetailRequested(
+          txid: transaction.txid,
+          walletName: wallet.name,
         ),
-      );
+      ),
+    child: Scaffold(
+      appBar: AppBar(title: const Text('Transaction Detail')),
+      body: BlocConsumer<TransactionDetailBloc, TransactionDetailState>(
+        listener: (context, state) {
+          if (state.status == FetchStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Unknown error'),
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          final tx = transaction;
+          final amountBtc = tx.amountSat.btcDisplay;
+          final feeBtc = tx.feeSat?.btcDisplay;
+          final isIncoming = tx.direction == TransactionDirection.incoming;
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // ── Basic info (always available) ────────────────────────
+              DetailSection(
+                title: 'TXID',
+                child: CopyableText(text: tx.txid),
+              ),
+              const SizedBox(height: 16),
+              DetailSection(
+                title: 'Direction',
+                child: Text(isIncoming ? 'Incoming' : 'Outgoing'),
+              ),
+              const SizedBox(height: 16),
+              DetailSection(
+                title: 'Amount',
+                child: Text('$amountBtc BTC'),
+              ),
+              if (feeBtc != null) ...[
+                const SizedBox(height: 16),
+                DetailSection(
+                  title: 'Fee',
+                  child: Text('$feeBtc BTC'),
+                ),
+              ],
+              const SizedBox(height: 16),
+              DetailSection(
+                title: 'Status',
+                child: Text(
+                  tx.isMempool
+                      ? 'Unconfirmed (in mempool)'
+                      : 'Confirmed (${tx.confirmations} block${tx.confirmations == 1 ? '' : 's'})',
+                ),
+              ),
+              const SizedBox(height: 16),
+              DetailSection(
+                title: 'Time',
+                child: Text(
+                  tx.timestamp.toString(),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+
+              // ── Decoded detail (loaded on demand) ────────────────────
+              if (state.status == FetchStatus.loading) ...[
+                const SizedBox(height: 24),
+                const Center(child: CircularProgressIndicator()),
+              ],
+
+              if (state.status == FetchStatus.loaded && state.detail != null) _DetailBody(detail: state.detail!),
+            ],
+          );
+        },
+      ),
+    ),
+  );
 }
 
 class _DetailBody extends StatelessWidget {
@@ -138,8 +137,7 @@ class _DetailBody extends StatelessWidget {
           title: 'Inputs (${detail.inputs.length})',
           child: Column(
             children: [
-              for (final input in detail.inputs)
-                _InputTile(input: input, textTheme: textTheme),
+              for (final input in detail.inputs) _InputTile(input: input, textTheme: textTheme),
             ],
           ),
         ),
@@ -148,8 +146,7 @@ class _DetailBody extends StatelessWidget {
           title: 'Outputs (${detail.outputs.length})',
           child: Column(
             children: [
-              for (final output in detail.outputs)
-                _OutputTile(output: output, textTheme: textTheme),
+              for (final output in detail.outputs) _OutputTile(output: output, textTheme: textTheme),
             ],
           ),
         ),
@@ -172,9 +169,7 @@ class _InputTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = input.isCoinbase
-        ? 'Coinbase'
-        : '${input.prevTxid!.substring(0, 8)}…:${input.prevVout}';
+    final label = input.isCoinbase ? 'Coinbase' : '${input.prevTxid!.substring(0, 8)}…:${input.prevVout}';
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),

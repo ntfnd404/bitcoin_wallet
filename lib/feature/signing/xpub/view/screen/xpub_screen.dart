@@ -21,56 +21,51 @@ class XpubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<XpubBloc>(
-        create: (ctx) => XpubScope.newXpubBloc(ctx)
-          ..add(XpubLoadRequested(walletId: wallet.id)),
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Account xpubs')),
-          body: BlocBuilder<XpubBloc, XpubState>(
-            builder: (context, state) {
-              if (state.status == FetchStatus.loading ||
-                  state.status == FetchStatus.initial) {
-                return const Center(child: CircularProgressIndicator());
-              }
+    create: (ctx) => XpubScope.newXpubBloc(ctx)..add(XpubLoadRequested(walletId: wallet.id)),
+    child: Scaffold(
+      appBar: AppBar(title: const Text('Account xpubs')),
+      body: BlocBuilder<XpubBloc, XpubState>(
+        builder: (context, state) {
+          if (state.status == FetchStatus.loading || state.status == FetchStatus.initial) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              if (state.status == FetchStatus.error) {
-                return Center(
-                  child: Text(state.errorMessage ?? 'Unknown error'),
-                );
-              }
+          if (state.status == FetchStatus.error) {
+            return Center(
+              child: Text(state.errorMessage ?? 'Unknown error'),
+            );
+          }
 
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: AddressType.values.map((type) {
-                  final xpub = state.xpubs[type];
-                  if (xpub == null) return const SizedBox.shrink();
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: AddressType.values.map((type) {
+              final xpub = state.xpubs[type];
+              if (xpub == null) return const SizedBox.shrink();
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DetailSection(
-                          title: type.fullLabel,
-                          child: CopyableText(text: xpub.xpub),
-                        ),
-                        const SizedBox(height: 8),
-                        DetailSection(
-                          title: 'Derivation path',
-                          child: Text(
-                            xpub.derivationPath,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(fontFamily: 'monospace'),
-                          ),
-                        ),
-                      ],
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DetailSection(
+                      title: type.fullLabel,
+                      child: CopyableText(text: xpub.xpub),
                     ),
-                  );
-                }).toList(),
+                    const SizedBox(height: 8),
+                    DetailSection(
+                      title: 'Derivation path',
+                      child: Text(
+                        xpub.derivationPath,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                      ),
+                    ),
+                  ],
+                ),
               );
-            },
-          ),
-        ),
-      );
+            }).toList(),
+          );
+        },
+      ),
+    ),
+  );
 }

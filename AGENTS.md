@@ -22,8 +22,8 @@ Demonstrates Bitcoin engineering: HD wallets, BIP39/32/84/86, all address types,
 | Field | Value |
 |-------|-------|
 | **Language** | Dart 3 / Flutter |
-| **State Management** | BLoC (`flutter_bloc`) with `freezed` for immutable states/events |
-| **Architecture** | Clean Architecture (Presentation → Domain → Data), feature-first modules |
+| **State Management** | BLoC (`flutter_bloc`) with hand-written immutable states/events |
+| **Architecture** | Packages-first Flutter workspace monorepo; feature-first app shell + layered module internals |
 | **Bitcoin node** | Bitcoin Core 24.0.1, `regtest`, Docker, RPC on `127.0.0.1:18443` |
 | **Key storage** | `flutter_secure_storage` |
 | **Bitcoin libraries** | `crypto 3.0.7` + `pointycastle 4.0.0` — manual BIP39/32/84/86, all address types |
@@ -42,11 +42,15 @@ bitcoin_wallet/
 │       ├── di/                  # Scoped DI (InheritedWidget + BlocFactory)
 │       └── view/                # screen/, widget/
 ├── packages/
-│   ├── domain/                  # Pure Dart — entities + interfaces (zero deps)
-│   ├── data/                    # Repository + service implementations
-│   ├── rpc/                     # Bitcoin Core JSON-RPC HTTP client
+│   ├── address/                 # Address bounded context
+│   ├── bitcoin_node/            # Bitcoin Core adapter implementations
+│   ├── keys/                    # Mnemonic, seed, derivation, crypto
+│   ├── rpc_client/              # Bitcoin Core JSON-RPC HTTP client
+│   ├── shared_kernel/           # Tiny shared primitives and contracts
 │   ├── storage/                 # flutter_secure_storage adapter
-│   └── ui_kit/                  # Design system — tokens, typography, theme
+│   ├── transaction/             # Transaction + UTXO bounded context
+│   ├── ui_kit/                  # Design system — tokens, typography, theme
+│   └── wallet/                  # Wallet bounded context
 ├── docker/
 │   ├── Dockerfile               # Thin project image on pinned upstream
 │   └── bitcoin.conf             # Tracked node config (baked into image)
@@ -207,9 +211,10 @@ Mandatory `Critical` lane: wallet, seed, keys, auth, crypto, signing, storage mi
 Full rules in [docs/project/conventions.md](docs/project/conventions.md) and [docs/project/code-style-guide.md](docs/project/code-style-guide.md). Key rules:
 
 ### Architecture
-- Clean Architecture + Hexagonal: Presentation → Domain ← Data
-- Workspace monorepo: domain and data in separate packages
+- Clean Architecture + Hexagonal: app presentation → package application/domain ← adapter packages
+- Workspace monorepo: one app first, reusable code in `packages/`
 - Feature-first in app: `lib/feature/<feature>/` — BLoC + DI + View only
+- `packages/` is the canonical top-level name for workspace packages — never `components/`
 - Manual constructor-based DI — no GetIt, no service locator
 - Scope widgets with `InheritedWidget` for feature-scoped DI
 - Two wallet types coexist: Node Wallet (custodial, RPC) + HD Wallet (non-custodial, BIP39)
@@ -217,7 +222,7 @@ Full rules in [docs/project/conventions.md](docs/project/conventions.md) and [do
 ### BLoC
 - BLoC only — no Cubits
 - Events: past-tense nouns (`WalletLoaded`, `BalanceFetched`)
-- State: single `@freezed` class with `enum` status — not multiple factory constructors
+- State: hand-written immutable state classes with explicit status enums
 - All mutable state in State class — no private BLoC fields (except `StreamSubscription`)
 - `abstract interface class` for interfaces, `Impl` suffix for implementations
 

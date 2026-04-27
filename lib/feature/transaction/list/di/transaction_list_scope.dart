@@ -6,8 +6,7 @@ class TransactionListScope extends StatefulWidget {
   const TransactionListScope({super.key, required this.child});
 
   static TransactionBloc newTransactionBloc(BuildContext context) {
-    final scope =
-        context.getInheritedWidgetOfExactType<_InheritedTransactionListScope>();
+    final scope = context.getInheritedWidgetOfExactType<_InheritedTransactionListScope>();
     if (scope == null) {
       throw StateError('TransactionListScope not found in widget tree');
     }
@@ -37,9 +36,9 @@ class _TransactionListScopeState extends State<TransactionListScope> {
 
   @override
   Widget build(BuildContext context) => _InheritedTransactionListScope(
-        newTransactionBloc: _factory,
-        child: widget.child,
-      );
+    newTransactionBloc: _factory,
+    child: widget.child,
+  );
 }
 
 class _InheritedTransactionListScope extends InheritedWidget {

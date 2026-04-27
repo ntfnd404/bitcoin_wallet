@@ -22,8 +22,7 @@ Uint8List ecdsaSign(Uint8List privateKey, Uint8List sighash) {
 
   // Deterministic k: seed Fortuna from sha256(privKey ‖ sighash)
   final seed = sha256.convert([...privateKey, ...sighash]).bytes;
-  final secureRandom = SecureRandom('Fortuna')
-    ..seed(KeyParameter(Uint8List.fromList(seed)));
+  final secureRandom = SecureRandom('Fortuna')..seed(KeyParameter(Uint8List.fromList(seed)));
 
   // null digest → pass sighash directly as the message hash (no re-hashing)
   final signer = ECDSASigner();
@@ -68,7 +67,5 @@ Uint8List _derInt(BigInt value) {
 
   final trimmed = bytes.sublist(start);
 
-  return (trimmed[0] & 0x80 != 0)
-      ? Uint8List.fromList([0x00, ...trimmed])
-      : trimmed;
+  return (trimmed[0] & 0x80 != 0) ? Uint8List.fromList([0x00, ...trimmed]) : trimmed;
 }

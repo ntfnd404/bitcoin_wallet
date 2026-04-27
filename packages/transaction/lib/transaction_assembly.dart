@@ -2,11 +2,11 @@ import 'package:transaction/src/application/broadcast_transaction_use_case.dart'
 import 'package:transaction/src/application/get_transaction_detail_use_case.dart';
 import 'package:transaction/src/application/get_transactions_use_case.dart';
 import 'package:transaction/src/application/get_utxos_use_case.dart';
-import 'package:transaction/src/application/prepare_hd_send_use_case.dart';
-import 'package:transaction/src/application/prepare_node_send_use_case.dart';
+import 'package:transaction/src/application/hd/prepare_hd_send_use_case.dart';
+import 'package:transaction/src/application/hd/send_hd_transaction_use_case.dart';
+import 'package:transaction/src/application/node/prepare_node_send_use_case.dart';
+import 'package:transaction/src/application/node/send_node_transaction_use_case.dart';
 import 'package:transaction/src/application/scan_utxos_use_case.dart';
-import 'package:transaction/src/application/send_hd_transaction_use_case.dart';
-import 'package:transaction/src/application/send_node_transaction_use_case.dart';
 import 'package:transaction/src/data/transaction_repository_impl.dart';
 import 'package:transaction/src/data/utxo_repository_impl.dart';
 import 'package:transaction/src/domain/data_sources/block_generation_data_source.dart';

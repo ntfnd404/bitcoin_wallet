@@ -36,49 +36,47 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
 
   @override
   Widget build(BuildContext context) => BlocProvider<SigningBloc>(
-        create: (ctx) => ManualUtxoScope.newSigningBloc(ctx),
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Sign & Send')),
-          body: BlocConsumer<SigningBloc, SigningState>(
-            listener: (context, state) {
-              if (state.status == SigningStatus.error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.errorMessage ?? 'Unknown error'),
-                  ),
-                );
-              }
-            },
-            builder: (context, state) => SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _UtxoSection(
-                    walletId: widget.wallet.id,
-                    state: state,
-                  ),
-                  if (state.status == SigningStatus.scanned &&
-                      state.utxos.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _SendForm(
-                      formKey: _formKey,
-                      recipientController: _recipientController,
-                      amountController: _amountController,
-                      walletId: widget.wallet.id,
-                    ),
-                  ],
-                  if (state.status == SigningStatus.broadcasted &&
-                      state.txid != null) ...[
-                    const SizedBox(height: 24),
-                    _BroadcastResult(state: state),
-                  ],
-                ],
+    create: (ctx) => ManualUtxoScope.newSigningBloc(ctx),
+    child: Scaffold(
+      appBar: AppBar(title: const Text('Sign & Send')),
+      body: BlocConsumer<SigningBloc, SigningState>(
+        listener: (context, state) {
+          if (state.status == SigningStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Unknown error'),
               ),
-            ),
+            );
+          }
+        },
+        builder: (context, state) => SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _UtxoSection(
+                walletId: widget.wallet.id,
+                state: state,
+              ),
+              if (state.status == SigningStatus.scanned && state.utxos.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _SendForm(
+                  formKey: _formKey,
+                  recipientController: _recipientController,
+                  amountController: _amountController,
+                  walletId: widget.wallet.id,
+                ),
+              ],
+              if (state.status == SigningStatus.broadcasted && state.txid != null) ...[
+                const SizedBox(height: 24),
+                _BroadcastResult(state: state),
+              ],
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -99,11 +97,7 @@ class _UtxoSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton.icon(
-          onPressed: isLoading
-              ? null
-              : () => context
-                  .read<SigningBloc>()
-                  .add(UtxoScanRequested(walletId: walletId)),
+          onPressed: isLoading ? null : () => context.read<SigningBloc>().add(UtxoScanRequested(walletId: walletId)),
           icon: isLoading
               ? const SizedBox(
                   width: 16,
@@ -137,26 +131,25 @@ class _UtxoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        child: ListTile(
-          title: Text(
-            '${utxo.txid.substring(0, 12)}…:${utxo.vout}',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-          ),
-          subtitle: utxo.address != null
-              ? Text(
-                  utxo.address ?? '',
-                  style:
-                      const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null,
-          trailing: Text(
-            '${utxo.amountSat.value} sat',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      );
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    child: ListTile(
+      title: Text(
+        '${utxo.txid.substring(0, 12)}…:${utxo.vout}',
+        style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+      ),
+      subtitle: utxo.address != null
+          ? Text(
+              utxo.address ?? '',
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
+      trailing: Text(
+        '${utxo.amountSat.value} sat',
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ),
+  );
 }
 
 class _SendForm extends StatelessWidget {
@@ -178,18 +171,19 @@ class _SendForm extends StatelessWidget {
     final amount = int.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) return;
 
-    context.read<SigningBloc>().add(SignAndBroadcastRequested(
-          walletId: walletId,
-          recipientAddress: recipientController.text.trim(),
-          amountSat: amount,
-          bech32Hrp: AppConstants.network.bech32Hrp,
-        ));
+    context.read<SigningBloc>().add(
+      SignAndBroadcastRequested(
+        walletId: walletId,
+        recipientAddress: recipientController.text.trim(),
+        amountSat: amount,
+        bech32Hrp: AppConstants.network.bech32Hrp,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSigning =
-        context.watch<SigningBloc>().state.status == SigningStatus.signing;
+    final isSigning = context.watch<SigningBloc>().state.status == SigningStatus.signing;
 
     return Form(
       key: formKey,
@@ -205,8 +199,7 @@ class _SendForm extends StatelessWidget {
               hintText: 'bcrt1q…',
               border: OutlineInputBorder(),
             ),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Required' : null,
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -248,27 +241,24 @@ class _BroadcastResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Broadcasted',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: Colors.green),
-          ),
-          const SizedBox(height: 12),
-          DetailSection(
-            title: 'TXID',
-            child: CopyableText(text: state.txid ?? ''),
-          ),
-          if (state.broadcastedTx case final tx?) ...[
-            const SizedBox(height: 12),
-            DetailSection(
-              title: 'Confirmations',
-              child: Text('${tx.confirmations}'),
-            ),
-          ],
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Broadcasted',
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.green),
+      ),
+      const SizedBox(height: 12),
+      DetailSection(
+        title: 'TXID',
+        child: CopyableText(text: state.txid ?? ''),
+      ),
+      if (state.broadcastedTx case final tx?) ...[
+        const SizedBox(height: 12),
+        DetailSection(
+          title: 'Confirmations',
+          child: Text('${tx.confirmations}'),
+        ),
+      ],
+    ],
+  );
 }

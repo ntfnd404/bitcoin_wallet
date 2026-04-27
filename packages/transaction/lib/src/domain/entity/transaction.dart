@@ -40,6 +40,5 @@ final class Transaction with Confirmable {
   });
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is Transaction && txid == other.txid;
+  bool operator ==(Object other) => identical(this, other) || other is Transaction && txid == other.txid;
 }

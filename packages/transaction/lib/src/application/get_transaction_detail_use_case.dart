@@ -8,9 +8,7 @@ import 'package:transaction/src/domain/repository/transaction_repository.dart';
 final class GetTransactionDetailUseCase {
   final TransactionRepository _repository;
 
-  const GetTransactionDetailUseCase({required TransactionRepository repository})
-      : _repository = repository;
+  const GetTransactionDetailUseCase({required TransactionRepository repository}) : _repository = repository;
 
-  Future<TransactionDetail> call(String txid, String walletName) =>
-      _repository.getTransactionDetail(txid, walletName);
+  Future<TransactionDetail> call(String txid, String walletName) => _repository.getTransactionDetail(txid, walletName);
 }

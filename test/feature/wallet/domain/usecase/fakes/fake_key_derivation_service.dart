@@ -14,18 +14,14 @@ final class FakeKeyDerivationService implements KeyDerivationService {
     Mnemonic mnemonic,
     AddressType type,
     int index,
-  ) =>
-      derivedAddress;
+  ) => derivedAddress;
 
   @override
-  Uint8List derivePrivateKey(Mnemonic mnemonic, AddressType type, int index) =>
-      Uint8List(32);
+  Uint8List derivePrivateKey(Mnemonic mnemonic, AddressType type, int index) => Uint8List(32);
 
   @override
-  Uint8List derivePublicKey(Mnemonic mnemonic, AddressType type, int index) =>
-      Uint8List(33);
+  Uint8List derivePublicKey(Mnemonic mnemonic, AddressType type, int index) => Uint8List(33);
 
   @override
-  AccountXpub deriveAccountXpub(Mnemonic mnemonic, AddressType type) =>
-      const AccountXpub(xpub: '', derivationPath: '');
+  AccountXpub deriveAccountXpub(Mnemonic mnemonic, AddressType type) => const AccountXpub(xpub: '', derivationPath: '');
 }

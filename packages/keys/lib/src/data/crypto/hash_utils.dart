@@ -43,8 +43,7 @@ Uint8List bigIntToBytes(BigInt value, int length) {
 }
 
 /// Converts a byte list to a lowercase hex string.
-String bytesToHex(Uint8List bytes) =>
-    bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+String bytesToHex(Uint8List bytes) => bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
 /// Converts a hex string to a byte list.
 Uint8List hexToBytes(String hex) {

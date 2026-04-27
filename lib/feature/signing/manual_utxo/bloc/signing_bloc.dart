@@ -27,11 +27,11 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     required ScanUtxosUseCase scanUtxos,
     required SignTransactionUseCase signTransaction,
     required BroadcastTransactionUseCase broadcastTransaction,
-  })  : _addressRepository = addressRepository,
-        _scanUtxos = scanUtxos,
-        _signTransaction = signTransaction,
-        _broadcastTransaction = broadcastTransaction,
-        super(const SigningState()) {
+  }) : _addressRepository = addressRepository,
+       _scanUtxos = scanUtxos,
+       _signTransaction = signTransaction,
+       _broadcastTransaction = broadcastTransaction,
+       super(const SigningState()) {
     on<UtxoScanRequested>(_onScanRequested);
     on<SignAndBroadcastRequested>(_onSignAndBroadcast);
   }
@@ -43,16 +43,15 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     emit(const SigningState(status: SigningStatus.scanning));
     try {
       final addresses = await _addressRepository.getAddresses(event.walletId);
-      final segwit = addresses
-          .where((a) => a.type == AddressType.nativeSegwit)
-          .toList();
+      final segwit = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
 
       if (segwit.isEmpty) {
-        emit(const SigningState(
-          status: SigningStatus.error,
-          errorMessage:
-              'No native SegWit addresses found. Generate some first.',
-        ));
+        emit(
+          const SigningState(
+            status: SigningStatus.error,
+            errorMessage: 'No native SegWit addresses found. Generate some first.',
+          ),
+        );
 
         return;
       }
@@ -68,10 +67,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     } catch (e) {
       if (isClosed) return;
 
-      emit(SigningState(
-        status: SigningStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        SigningState(
+          status: SigningStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -81,10 +82,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
   ) async {
     final utxos = state.utxos;
     if (utxos.isEmpty) {
-      emit(state.copyWith(
-        status: SigningStatus.error,
-        errorMessage: 'No UTXOs to spend. Scan first.',
-      ));
+      emit(
+        state.copyWith(
+          status: SigningStatus.error,
+          errorMessage: 'No UTXOs to spend. Scan first.',
+        ),
+      );
 
       return;
     }
@@ -128,18 +131,22 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       final broadcastedTx = await _broadcastTransaction.getTransaction(txid);
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: SigningStatus.broadcasted,
-        txid: txid,
-        broadcastedTx: broadcastedTx,
-      ));
+      emit(
+        state.copyWith(
+          status: SigningStatus.broadcasted,
+          txid: txid,
+          broadcastedTx: broadcastedTx,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(
-        status: SigningStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: SigningStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

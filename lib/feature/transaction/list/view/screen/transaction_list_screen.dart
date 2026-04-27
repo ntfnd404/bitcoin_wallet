@@ -21,52 +21,48 @@ class TransactionListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<TransactionBloc>(
-        create: (ctx) => TransactionListScope.newTransactionBloc(ctx)
-          ..add(TransactionListRequested(wallet: wallet)),
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Transactions')),
-          body: BlocConsumer<TransactionBloc, TransactionState>(
-            listener: (context, state) {
-              if (state.status == FetchStatus.error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.errorMessage ?? 'Unknown error'),
-                  ),
+    create: (ctx) => TransactionListScope.newTransactionBloc(ctx)..add(TransactionListRequested(wallet: wallet)),
+    child: Scaffold(
+      appBar: AppBar(title: const Text('Transactions')),
+      body: BlocConsumer<TransactionBloc, TransactionState>(
+        listener: (context, state) {
+          if (state.status == FetchStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Unknown error'),
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state.status == FetchStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.transactions.isEmpty) {
+            return const Center(child: Text('No transactions yet'));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<TransactionBloc>().add(TransactionRefreshRequested(wallet: wallet));
+            },
+            child: ListView.builder(
+              itemCount: state.transactions.length,
+              itemBuilder: (context, index) {
+                final tx = state.transactions[index];
+
+                return _TransactionTile(
+                  transaction: tx,
+                  onTap: () => AppRouter.toTransactionDetail(context, tx, wallet),
                 );
-              }
-            },
-            builder: (context, state) {
-              if (state.status == FetchStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (state.transactions.isEmpty) {
-                return const Center(child: Text('No transactions yet'));
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  context
-                      .read<TransactionBloc>()
-                      .add(TransactionRefreshRequested(wallet: wallet));
-                },
-                child: ListView.builder(
-                  itemCount: state.transactions.length,
-                  itemBuilder: (context, index) {
-                    final tx = state.transactions[index];
-
-                    return _TransactionTile(
-                      transaction: tx,
-                      onTap: () =>
-                          AppRouter.toTransactionDetail(context, tx, wallet),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      );
+              },
+            ),
+          );
+        },
+      ),
+    ),
+  );
 }
 
 class _TransactionTile extends StatelessWidget {

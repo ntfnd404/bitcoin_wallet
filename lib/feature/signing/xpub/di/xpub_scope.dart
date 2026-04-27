@@ -6,8 +6,7 @@ class XpubScope extends StatefulWidget {
   const XpubScope({super.key, required this.child});
 
   static XpubBloc newXpubBloc(BuildContext context) {
-    final scope =
-        context.getInheritedWidgetOfExactType<_InheritedXpubScope>();
+    final scope = context.getInheritedWidgetOfExactType<_InheritedXpubScope>();
     if (scope == null) throw StateError('XpubScope not found in widget tree');
 
     return scope.newXpubBloc();
@@ -35,9 +34,9 @@ class _XpubScopeState extends State<XpubScope> {
 
   @override
   Widget build(BuildContext context) => _InheritedXpubScope(
-        newXpubBloc: _factory,
-        child: widget.child,
-      );
+    newXpubBloc: _factory,
+    child: widget.child,
+  );
 }
 
 class _InheritedXpubScope extends InheritedWidget {

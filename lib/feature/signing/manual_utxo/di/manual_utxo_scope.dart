@@ -6,8 +6,7 @@ class ManualUtxoScope extends StatefulWidget {
   const ManualUtxoScope({super.key, required this.child});
 
   static SigningBloc newSigningBloc(BuildContext context) {
-    final scope =
-        context.getInheritedWidgetOfExactType<_InheritedManualUtxoScope>();
+    final scope = context.getInheritedWidgetOfExactType<_InheritedManualUtxoScope>();
     if (scope == null) {
       throw StateError('ManualUtxoScope not found in widget tree');
     }
@@ -33,18 +32,18 @@ class _ManualUtxoScopeState extends State<ManualUtxoScope> {
 
     final deps = AppScope.of(context);
     _factory = () => SigningBloc(
-          addressRepository: deps.address.addressRepository,
-          scanUtxos: deps.transaction.scanUtxos,
-          signTransaction: deps.keys.signTransaction,
-          broadcastTransaction: deps.transaction.broadcastTransaction,
-        );
+      addressRepository: deps.address.addressRepository,
+      scanUtxos: deps.transaction.scanUtxos,
+      signTransaction: deps.keys.signTransaction,
+      broadcastTransaction: deps.transaction.broadcastTransaction,
+    );
   }
 
   @override
   Widget build(BuildContext context) => _InheritedManualUtxoScope(
-        newSigningBloc: _factory,
-        child: widget.child,
-      );
+    newSigningBloc: _factory,
+    child: widget.child,
+  );
 }
 
 class _InheritedManualUtxoScope extends InheritedWidget {

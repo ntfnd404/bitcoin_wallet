@@ -8,6 +8,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  address:
+    path: ../address
   shared_kernel:
     path: ../shared_kernel
 

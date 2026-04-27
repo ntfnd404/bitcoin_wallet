@@ -59,9 +59,9 @@ class _SendScopeState extends State<SendScope> {
 
   @override
   Widget build(BuildContext context) => _InheritedSendScope(
-        newSendBloc: _factory,
-        child: widget.child,
-      );
+    newSendBloc: _factory,
+    child: widget.child,
+  );
 }
 
 class _InheritedSendScope extends InheritedWidget {

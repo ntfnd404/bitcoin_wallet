@@ -16,7 +16,11 @@ Flutter wallet app + Bitcoin Core `regtest` node in Docker.
 - **Node Wallet** — custodial, Bitcoin Core owns keys
 - **HD Wallet** — non-custodial, app owns mnemonic and derivation
 
-Workspace packages: `domain`, `data`, `rpc_client`, `storage`, `ui_kit`.
+Architecture standard: one app at the repo root, reusable code in `packages/`,
+and business ownership modeled by workspace packages.
+
+Workspace packages: `address`, `bitcoin_node`, `keys`, `rpc_client`,
+`shared_kernel`, `storage`, `transaction`, `ui_kit`, `wallet`.
 
 ---
 

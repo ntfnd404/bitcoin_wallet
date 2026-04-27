@@ -17,11 +17,9 @@ final class TransactionState {
     FetchStatus? status,
     String? errorMessage,
     bool clearErrorMessage = false,
-  }) =>
-      TransactionState(
-        transactions: transactions ?? this.transactions,
-        status: status ?? this.status,
-        errorMessage:
-            clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
-      );
+  }) => TransactionState(
+    transactions: transactions ?? this.transactions,
+    status: status ?? this.status,
+    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+  );
 }

@@ -1,8 +1,8 @@
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:wallet/src/application/create_hd_wallet_use_case.dart';
-import 'package:wallet/src/application/create_node_wallet_use_case.dart';
-import 'package:wallet/src/application/restore_hd_wallet_use_case.dart';
+import 'package:wallet/src/application/hd/create_hd_wallet_use_case.dart';
+import 'package:wallet/src/application/hd/restore_hd_wallet_use_case.dart';
+import 'package:wallet/src/application/node/create_node_wallet_use_case.dart';
 import 'package:wallet/src/data/wallet_local_data_source_impl.dart';
 import 'package:wallet/src/data/wallet_mapper.dart';
 import 'package:wallet/src/data/wallet_repository_impl.dart';
