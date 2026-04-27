@@ -24,6 +24,7 @@ Runtime source of truth for the workflow:
 
 | Path | Purpose |
 |------|---------|
+| `architecture.md` | Canonical monorepo topology, package taxonomy, and dependency rules |
 | `conventions.md` | Architecture and non-negotiable code rules |
 | `workflow.md` | Claude-Native Enterprise AIDD v3 operating model |
 | `guidelines.md` | Flutter/Dart interaction guidance |

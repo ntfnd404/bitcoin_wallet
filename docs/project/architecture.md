@@ -1,354 +1,305 @@
 # Architecture
 
-Feature-first app + business modules as packages + layered modules + hard architecture gate.
+Packages-first Flutter workspace monorepo. One app first, explicit module ownership,
+layered internals, and lightweight guardrails around imports and topology.
 
 ---
 
 ## Philosophy
 
-This is a hybrid approach, not a single pattern:
+This repository uses a hybrid architecture:
 
-- **Feature Architecture** — UI/flow ownership per screen
-- **Clean Architecture** — dependency rule (always inward)
-- **DDD** — bounded context ownership, ubiquitous language
-- **Hexagonal** — ports owned by consumers, adapters implement
-- **Modular** — package isolation, explicit public APIs
-- **Hard gate** — architecture lint, import policy enforcement
+- **Feature-first app** — UI flows live under `lib/feature/`
+- **Modular monolith** — business and infrastructure are split into workspace packages
+- **Clean Architecture** — dependencies point inward
+- **DDD / bounded contexts** — each business package owns its model and use cases
+- **Hexagonal** — consumer modules own ports, adapters implement them
+- **Hard guardrails** — architecture docs + validator checks + import policy
+
+The main design goal is not “maximum modularity.” The goal is **predictable
+growth**: medium and large codebases should gain new capabilities without
+collapsing into a shared `domain/` or `data/` dumping ground.
 
 ---
 
-## Dependency Graph
+## Topology Standard
 
-```
-                             ┌───────────────┐
-                             │ shared_kernel │
-                             └───────┬───────┘
-          ┌────────────┬─────────────┼─────────────┬───────────────┐
-          ▼            ▼             ▼             ▼               ▼
-       ┌──────┐   ┌─────────┐   ┌────────┐    ┌─────────┐   ┌─────────────┐
-       │ keys │   │ storage │   │ wallet │    │ address │   │ transaction │
-       └───┬──┘   └─────────┘   └────┬───┘    └────┬────┘   └──────┬──────┘
-           │                         │             │               │
-           └─────────────────────────┘             │               │
-                                                   └───────┬───────┘
-                                                           ▼
-        ┌────────────┐                        ┌───────────────────────────┐
-        │ rpc_client │───────────────────────►│      bitcoin_node         │
-        └────────────┘                        │ (consumer of all modules) │
-                                              └───────────────────────────┘
+Durable decision record: [ADR-003](./adr/ADR-003-monorepo-topology-standard.md).
 
-ui_kit — no workspace dependencies (Flutter SDK only)
+### Scheme A — default
+
+Use this topology by default:
+
+```text
+/
+  lib/                      # single Flutter app (presentation only)
+    core/
+    common/
+    feature/
+  packages/                 # reusable Dart/Flutter packages
+  docs/
+  test/
+  pubspec.yaml              # app + workspace root
 ```
 
-Arrow direction: A ──► B means A depends on B.
+Rules:
 
-Real edges (derived from `pubspec.yaml`):
+- Start with **one app in the repository root**
+- Put reusable business and infrastructure code in **`packages/`**
+- Keep `lib/feature/*` app-specific unless a flow becomes truly reusable
+- Do **not** introduce top-level `components/` for business code
+- Do **not** introduce `apps/` until a second releasable client exists
 
-| Package | Workspace dependencies |
-|---------|------------------------|
-| `shared_kernel` | — |
-| `rpc_client` | — |
-| `ui_kit` | — |
-| `keys` | `shared_kernel` |
-| `storage` | `shared_kernel` |
-| `wallet` | `keys`, `shared_kernel` |
-| `address` | `keys`, `shared_kernel`, `wallet` |
-| `transaction` | `shared_kernel`, `address` |
-| `bitcoin_node` | `address`, `rpc_client`, `shared_kernel`, `transaction`, `wallet` |
+### Scheme B — escalation path
 
-App (`lib/`) depends on all nine workspace packages.
+Move to this only when the repository actually contains multiple products:
+
+```text
+/
+  apps/
+    main_app/
+    admin_app/
+  packages/
+    ...
+```
+
+Use `apps/` only when at least one is true:
+
+- there is a second independently releasable Flutter app
+- branding / permissions / startup / routing diverge materially
+- one app must physically exclude modules that another app includes
+- separate teams need isolated app entrypoints and CI lanes
+
+Even after the switch, shared code still belongs in `packages/*`, not in a
+shared top-level `features/` folder.
 
 ---
 
 ## Project Structure
 
+This repository currently and intentionally stays on **Scheme A**.
+
+```text
+bitcoin_wallet/
+├── lib/
+│   ├── core/
+│   ├── common/
+│   └── feature/
+├── packages/
+│   ├── address/
+│   ├── bitcoin_node/
+│   ├── keys/
+│   ├── rpc_client/
+│   ├── shared_kernel/
+│   ├── storage/
+│   ├── transaction/
+│   ├── ui_kit/
+│   └── wallet/
+├── docs/
+├── test/
+└── pubspec.yaml
 ```
-app/
-  lib/
-    app.dart                               ← App widget
-    core/
-      constants/                           ← AppConstants (network, host, port)
-      di/                                  ← AppDependencies, AppDependenciesBuilder, AppScope
-      routing/                             ← AppRouterDelegate, AppRouter
-    feature/
-      wallet/
-        di/                                ← WalletScope
-        bloc/                              ← WalletBloc, WalletEvent, WalletState
-        view/screen/
-          list/                            ← WalletListScreen
-          setup/                           ← CreateWalletScreen, SeedPhraseScreen, RestoreWalletScreen
-          detail/                          ← WalletDetailScreen
-      address/
-        di/                                ← AddressScope
-        bloc/                              ← AddressBloc, AddressEvent, AddressState
-        view/widget/                       ← AddressScreen, AddressTypeSection
 
-packages/
-  shared_kernel/                           ← BitcoinNetwork, AddressType, SecureStorage
-  ui_kit/                                  ← UI components (placeholder)
-  storage/                                 ← SecureStorageImpl (Flutter, flutter_secure_storage)
-  rpc_client/                              ← BitcoinRpcClient (JSON-RPC over HTTP)
-
-  bitcoin_node/
-    lib/
-      bitcoin_node.dart                    ← barrel (8 *Impl exports)
-      src/
-        wallet/
-          wallet_remote_data_source_impl.dart
-        address/
-          address_remote_data_source_impl.dart
-          address_type_rpc.dart
-        transaction/
-          broadcast_data_source_impl.dart
-          node_transaction_data_source_impl.dart
-          transaction_remote_data_source_impl.dart
-        utxo/
-          utxo_remote_data_source_impl.dart
-          utxo_scan_data_source_impl.dart
-        block/
-          block_generation_data_source_impl.dart
-
-  keys/
-    lib/
-      keys.dart                            ← barrel (public API only)
-      keys_assembly.dart                   ← module DI factory
-      src/
-        domain/
-          entity/
-            mnemonic.dart
-            derived_address.dart            ← value object (breaks keys↔address cycle)
-          repository/
-            seed_repository.dart
-          service/
-            bip39_service.dart
-            key_derivation_service.dart
-        data/
-          bip39_service_impl.dart
-          bip39_wordlist.dart
-          key_derivation_service_impl.dart
-          seed_repository_impl.dart
-          crypto/
-            base58.dart
-            bech32.dart
-            bip32.dart
-            extended_key.dart
-            hash_utils.dart
-    test/
-      bip39_service_impl_test.dart
-      key_derivation_service_impl_test.dart
-      seed_repository_impl_test.dart
-
-  wallet/
-    lib/
-      wallet.dart                          ← barrel (public API only)
-      wallet_assembly.dart                 ← module DI factory
-      src/
-        domain/
-          entity/
-            wallet.dart
-          repository/
-            wallet_repository.dart
-          data_sources/
-            wallet_local_data_source.dart
-            wallet_remote_data_source.dart  ← ISP interface (createWallet only)
-        application/
-          hd/
-            create_hd_wallet_use_case.dart
-            restore_hd_wallet_use_case.dart
-          node/
-            create_node_wallet_use_case.dart
-        data/
-          wallet_repository_impl.dart
-          wallet_local_data_source_impl.dart
-          wallet_mapper.dart
-
-  address/
-    lib/
-      address.dart                         ← barrel (public API only)
-      address_assembly.dart                ← module DI factory
-      src/
-        domain/
-          entity/
-            address.dart
-          repository/
-            address_repository.dart
-          data_sources/
-            address_local_data_source.dart
-            address_remote_data_source.dart ← ISP interface (generateAddress only)
-        application/
-          generate_address_use_case.dart
-          address_generation_strategy.dart
-          hd/
-            hd_address_generation_strategy.dart
-          node/
-            node_address_generation_strategy.dart
-        data/
-          address_repository_impl.dart
-          address_local_data_source_impl.dart
-          address_mapper.dart
-
-  transaction/
-    lib/
-      transaction.dart                     ← barrel (public API only)
-      transaction_assembly.dart            ← module DI factory
-      src/
-        domain/
-          entity/                          ← transaction entities, UTXO domain types
-          data_sources/
-            hd_address_data_source.dart    ← returns List<Address>; bridges address + transaction
-            transaction_remote_data_source.dart
-            utxo_remote_data_source.dart
-            utxo_scan_data_source.dart
-            broadcast_data_source.dart
-            node_transaction_data_source.dart
-            block_generation_data_source.dart
-          repository/
-          service/
-          value_object/
-        application/
-          hd/
-            prepare_hd_send_use_case.dart
-            send_hd_transaction_use_case.dart
-            hd_send_preparation.dart
-          node/
-            prepare_node_send_use_case.dart
-            send_node_transaction_use_case.dart
-            node_send_preparation.dart
-          broadcast_transaction_use_case.dart
-          get_transaction_detail_use_case.dart
-          get_transactions_use_case.dart
-          get_utxos_use_case.dart
-          scan_utxos_use_case.dart
-        data/
-```
+The app at the root is the only client. HD and Node wallets are **trust-model
+variants inside the product**, not separate products.
 
 ---
 
-## Ownership Table
+## Dependency Graph
 
-| Module | Owns | Exposes to Others |
-|--------|------|-------------------|
-| **shared_kernel** | BitcoinNetwork, AddressType, SecureStorage | Everything (shared primitives + contracts) |
-| **keys** | Mnemonic, DerivedAddress, SeedRepository, Bip39Service, KeyDerivationService | All domain types + services |
-| **wallet** | Wallet, HdWallet, NodeWallet, HdWalletRepository, NodeWalletRepository, WalletRemoteDataSource | Entities, repository, use cases |
-| **address** | Address, AddressRepository, AddressLocalDataSource, AddressRemoteDataSource | Entities, repository, use case, strategies |
-| **transaction** | HD/Node transaction use cases, UTXO domain types, data-source contracts | TransactionAssembly, use cases, data-source interfaces |
-| **bitcoin_node** | WalletRemoteDataSourceImpl, AddressRemoteDataSourceImpl, TransactionRemoteDataSourceImpl, UtxoRemoteDataSourceImpl, UtxoScanDataSourceImpl, BroadcastDataSourceImpl, NodeTransactionDataSourceImpl, BlockGenerationDataSourceImpl | DataSource implementations only |
-| **storage** | SecureStorageImpl | Storage implementation |
-| **rpc_client** | BitcoinRpcClient | RPC client |
-| **ui_kit** | UI components | Shared widgets |
+Arrow direction: `A -> B` means A depends on B.
 
-### Ownership rules
+```text
+shared_kernel -> (none)
+rpc_client    -> (none)
+ui_kit        -> (none)
 
-- Each entity has **one owner** — no shared ownership
-- Other modules use: Id, small value objects, public query APIs
-- If module A needs entity from module B → import B's public lightweight type, not the full entity or repository
+keys          -> shared_kernel
+storage       -> shared_kernel
+wallet        -> shared_kernel, keys
+address       -> shared_kernel, keys, wallet
+transaction   -> shared_kernel, address
+bitcoin_node  -> shared_kernel, rpc_client, wallet, address, transaction
 
----
-
-## What Lives Where
-
-### app/lib/feature/*
-
-- Screens, widgets
-- BLoC / state / events (per-flow)
-- Scopes (DI composition root per flow)
-- Navigation
-- Feature-local orchestration (optional application/ layer when composing multiple module APIs for one screen)
-
-### packages/\<module\>/src/domain/
-
-- Entities, value objects
-- Policies, invariants
-- Repository contracts (interfaces)
-- DataSource contracts (interfaces, owned by this module)
-- Domain services (pure, no IO)
-
-### packages/\<module\>/src/application/
-
-- Shared use cases of this module
-- Orchestration not tied to a single screen
-
-### packages/\<module\>/src/data/
-
-- Repository implementations
-- Remote/local datasource implementations
-- Serializers (encode/decode between entity and Map)
-- DataSource implementations (bitcoin_node implements consumer-owned DataSource interfaces)
-
----
-
-## Module Internal Structure
-
-Each business module follows identical layered structure:
-
+app (lib/)    -> all public package APIs as needed
 ```
+
+This must remain a **DAG**. If a cycle appears:
+
+1. move only the minimum shared primitive lower,
+2. introduce a lightweight value object at the lower layer,
+3. or replace the direct dependency with an ID/reference.
+
+Do not solve cycles by creating a generic mega-package.
+
+---
+
+## Package Taxonomy
+
+### Shared kernel
+
+- `shared_kernel`
+- tiny primitives and cross-cutting contracts only
+- examples: network enum, address type, secure storage interface
+
+Never put large entities, repositories, or use cases here.
+
+### Business packages
+
+- `wallet`
+- `address`
+- `transaction`
+- `keys`
+
+Each business package owns:
+
+- domain entities and value objects
+- repository contracts
+- data-source contracts owned by the consumer
+- application use cases
+- internal implementations
+
+### Infrastructure packages
+
+- `bitcoin_node`
+- `rpc_client`
+- `storage`
+
+Each infrastructure package wraps one external boundary:
+
+- Bitcoin Core RPC
+- HTTP transport
+- platform secure storage
+
+Infrastructure packages implement ports. They do not own business contracts.
+
+### UI package
+
+- `ui_kit`
+
+`ui_kit` owns design tokens, theme, and generic reusable UI only. It does not
+own product workflows or business logic.
+
+---
+
+## Module Ownership
+
+| Package | Owns |
+|--------|------|
+| `shared_kernel` | tiny shared primitives and contracts |
+| `keys` | mnemonic, seed access, derivation services, crypto helpers |
+| `wallet` | wallet entities, wallet repositories, create/restore wallet use cases |
+| `address` | address entity, address repository, address generation |
+| `transaction` | transaction and UTXO domain, send/prepare/scan flows |
+| `bitcoin_node` | implementations of remote data-source interfaces |
+| `storage` | Flutter secure storage implementation |
+| `rpc_client` | JSON-RPC transport |
+| `ui_kit` | shared UI building blocks |
+
+Ownership rule: every non-trivial concept has **one home package**. Other
+packages consume its public API; they do not re-own the same concept.
+
+---
+
+## Public API Standard
+
+Every package should expose:
+
+- one public barrel: `package:<module>/<module>.dart`
+- optional DI entry point: `package:<module>/<module>_assembly.dart`
+
+Everything under `src/` is private implementation detail.
+
+Rules:
+
+- app code imports package barrels, never `package:<module>/src/*`
+- packages may use `src/` imports **inside the same package**
+- cross-package deep imports are forbidden
+
+---
+
+## Internal Package Structure
+
+Each business package follows this internal shape:
+
+```text
 packages/<module>/
 ├── lib/
-│   ├── <module>.dart            ← barrel: public API only
-│   ├── <module>_assembly.dart   ← module DI factory
+│   ├── <module>.dart
+│   ├── <module>_assembly.dart
 │   └── src/
-│       ├── domain/              ← PURE: no IO, no frameworks
-│       ├── application/         ← ORCHESTRATION: uses domain + ports
-│       └── data/                ← INFRASTRUCTURE: implements domain interfaces
+│       ├── domain/
+│       ├── application/
+│       └── data/
 └── test/
 ```
 
-Layer rules within a module:
+Layer responsibilities:
 
-```
-domain/      ← depends on: shared_kernel ONLY
-application/ ← depends on: own domain, other modules' public API (lightweight types only, rare)
-data/        ← depends on: own domain, shared_kernel (for SecureStorage)
-```
+- `domain/` — entities, value objects, contracts, pure policies
+- `application/` — use cases and orchestration
+- `data/` — implementations, mappers, serializers, adapters internal to the module
 
----
+Package boundaries answer “who owns this capability?”
+Layer boundaries answer “what kind of code is this?”
 
-## HD/Node Trust-Model Subfolder Split
-
-`packages/wallet`, `packages/address`, and `packages/transaction` each split their `application/` layer into `hd/` and `node/` subfolders (introduced in Phase 3 of BW-0005).
-
-- Files under `application/hd/` serve HD (non-custodial) wallets; files under `application/node/` serve Node (custodial) wallets.
-- Cross-trust imports within the same package are forbidden: `hd/` files must not import from `node/` and vice versa.
-- Shared orchestrators (e.g. `GenerateAddressUseCase`, `ScanUtxosUseCase`) remain at the `application/` root when they serve both trust models.
-- Rationale and decision record: `docs/project/adr/ADR-002-trust-model-subfolder-split.md`.
+This is why the repository uses multiple business packages instead of only two
+top-level packages called `domain` and `data`.
 
 ---
 
-## ISP: Interface Segregation for Remote Data Sources
+## App Layer Rules
 
-The original monolithic `BitcoinCoreRemoteDataSource` was split into focused, consumer-owned interfaces:
+`lib/` is the single app shell on Scheme A.
 
-| Interface | Package |
-|-----------|---------|
-| `WalletRemoteDataSource` | wallet |
-| `AddressRemoteDataSource` | address |
-| `AddressLocalDataSource` | address |
-| `HdAddressDataSource` | transaction (returns `List<Address>` since Phase 2) |
-| `TransactionRemoteDataSource` | transaction |
-| `UtxoRemoteDataSource` | transaction |
-| `UtxoScanDataSource` | transaction |
-| `BroadcastDataSource` | transaction |
-| `NodeTransactionDataSource` | transaction |
-| `BlockGenerationDataSource` | transaction |
+### `lib/feature/*`
 
-Each interface is owned by its consumer module (DIP). The `bitcoin_node` package provides implementations for all of them.
+Contains:
+
+- screens and widgets
+- BLoC/state/event types
+- per-flow DI scopes
+- screen-local orchestration when it is still app-specific
+
+Must not contain:
+
+- repository implementations
+- domain entities
+- cross-package deep imports
+
+### `lib/common/*`
+
+App-local shared helpers only:
+
+- widgets
+- extensions
+- small utilities
+
+`common/` must not become an unofficial platform shared layer. If a type or UI
+primitive is reusable beyond this app shell, promote it into a package.
+
+### `lib/core/*`
+
+Composition root, routing, constants, app-wide adapters, and global concerns
+owned by the app shell.
 
 ---
 
-## DerivedAddress: Breaking the keys↔address Cycle
+## Trust-Model Split
 
-`keys` cannot depend on `address` (would create a cycle). `KeyDerivationService.deriveAddress()` returns `DerivedAddress` — a lightweight value object in keys:
+HD and Node wallet behavior stays **inside the relevant business packages**.
 
-```dart
-final class DerivedAddress {
-  final String value;
-  final AddressType type;
-  final String derivationPath;
-}
-```
+Current rule:
 
-`HdAddressGenerationStrategy` (in address package) constructs the full `Address` entity from `DerivedAddress` + wallet context.
+- shared domain types stay shared when the difference is representational
+- trust-specific orchestration lives under `application/hd/` and `application/node/`
+- trust-specific implementations live under `data/hd/` and `data/node/` when needed
+- cross-trust imports inside the same package are forbidden
+
+Do **not** split HD and Node into separate apps or separate workspace packages
+unless they become separate products with separate release needs.
+
+See [ADR-002](./adr/ADR-002-trust-model-subfolder-split.md).
 
 ---
 
@@ -356,131 +307,91 @@ final class DerivedAddress {
 
 ### Allowed
 
-```
-feature/*              → module public API (barrel)
-feature/*              → ui_kit
-feature/*              → core/*
-module/application     → own domain
-module/data            → own domain
-module/data            → shared_kernel (for SecureStorage)
-module/application     → other module public API (lightweight types only, rare)
-bitcoin_node           → module/domain (DataSource interfaces to implement)
+```text
+lib/feature/*            -> package public barrels
+lib/feature/*            -> ui_kit
+lib/*                    -> lib/core/* and lib/common/*
+module/application       -> own domain
+module/data              -> own domain
+module/data              -> other packages' public APIs when needed
+infra package            -> consumer-owned domain contracts it implements
 ```
 
 ### Forbidden
 
-```
-feature/*              → module/src/* (deep import)
-feature/*              → other feature/bloc or feature/domain
-module/data            → other module/data
-module/domain          → feature/*
-module/domain          → other module/data
-shared_kernel          → business modules
-application/hd/        → application/node/ (same package, cross-trust)
-application/node/      → application/hd/  (same package, cross-trust)
+```text
+lib/*                    -> package:<module>/src/*
+package A                -> package B/src/*
+packages/*               -> app code in lib/*
+feature X                -> feature Y bloc/domain internals
+shared_kernel            -> business package code
+application/hd/          -> application/node/
+application/node/        -> application/hd/
 ```
 
 ---
 
-## Avoiding Cycles Between Modules
+## Decision Triggers
 
-Modules form a **DAG**, never a cycle.
+### When to create a new package
 
-```
-shared_kernel  → (none)
-rpc_client     → (none)
-keys           → shared_kernel
-storage        → shared_kernel
-wallet         → shared_kernel, keys
-address        → shared_kernel, keys, wallet
-transaction    → shared_kernel, address
-bitcoin_node   → shared_kernel, rpc_client, wallet, address, transaction
-ui_kit         → (none)
-```
+Create a package only when the code has at least one of these properties:
 
-If a cycle appears (e.g., wallet ↔ address):
-- Extract shared contract into shared_kernel
-- Or create a lightweight value object (like DerivedAddress) in the lower-level module
-- Or replace direct dependency with id reference
+- clear ownership boundary
+- reusable business capability
+- isolated external adapter
+- separate dependency profile
+- meaningful test surface that benefits from modular isolation
 
----
+Do not create a package for a couple of helpers.
 
-## DI / Bootstrap Graph
+### When to move code from `lib/feature/*` to `packages/*`
 
-```
-main()
-  → AppDependenciesBuilder.build()
-    → BitcoinRpcClient               (rpc_client)
-    → SecureStorageImpl               (storage)
+Promote it when it becomes:
 
-    → KeysAssembly                    (keys module)
-      → Bip39ServiceImpl
-      → KeyDerivationServiceImpl
-      → SeedRepositoryImpl
+- reusable across multiple screens or flows,
+- business-oriented rather than purely presentational,
+- or a likely future cross-app capability.
 
-    → WalletRemoteDataSourceImpl      (bitcoin_node)
-    → WalletAssembly                  (wallet module)
-      → WalletRepositoryImpl
-      → CreateNodeWalletUseCase
-      → CreateHdWalletUseCase
-      → RestoreHdWalletUseCase
+### When to introduce `apps/`
 
-    → AddressRemoteDataSourceImpl     (bitcoin_node)
-    → AddressAssembly                 (address module)
-      → AddressRepositoryImpl
-      → GenerateAddressUseCase (+ strategies)
+Only when Scheme B conditions are actually met.
 
-    → TransactionAssembly             (transaction module)
-      → HdAddressDataSourceImpl       (lib/core/adapters/ — bridges address + transaction)
-      → PrepareHdSendUseCase          (application/hd/)
-      → SendHdTransactionUseCase      (application/hd/)
-      → PrepareNodeSendUseCase        (application/node/)
-      → SendNodeTransactionUseCase    (application/node/)
-      → BroadcastTransactionUseCase
-      → GetTransactionsUseCase
-      → GetTransactionDetailUseCase
-      → GetUtxosUseCase
-      → ScanUtxosUseCase
+### When to adopt `melos`
 
-    → AppDependencies                 (container: keys, wallet, address, transaction assemblies)
-    → App widget
-```
+Not by default.
 
-Each Assembly creates: data/ implementations, application/ services, public module API.
+Add `melos` only when native pub workspace + `make` become insufficient for:
 
-Feature Scopes provide BLoC **factory** via static methods + InheritedWidget.
+- filtered multi-package command execution
+- shared workspace scripts
+- coordinated versioning or publishing
+- complex monorepo CI orchestration
+
+Until then, use:
+
+- pub workspace resolution
+- package-local tests
+- `make`
+- validator checks
 
 ---
 
-## Key Architectural Decisions
+## Guardrails
 
-| Decision | Rationale |
-|----------|-----------|
-| DataSource interfaces owned by consumers, not adapter | DIP: high-level defines contract, low-level implements. ISP: each module gets exactly the interface it needs |
-| ISP split of remote data sources | Single Responsibility: each interface has one reason to change |
-| Mnemonic in keys, not wallet | Information Expert: crypto/key-management context owns crypto primitives |
-| DerivedAddress in keys | Avoids keys→address cycle; keys returns lightweight VO, address builds full entity |
-| AddressType in shared_kernel | Used by both keys and address — shared primitive, not owned by either |
-| SecureStorage interface in shared_kernel | Allows pure Dart packages (keys, wallet, address) to depend on the interface without pulling Flutter |
-| SecureStorageImpl in storage (Flutter) | Only the app layer and composition root need the Flutter implementation |
-| Strategies in application, not domain | Strategies do IO (call services, repositories) — domain must stay pure |
-| Per-flow BLoC, not per-feature | SRP: one BLoC handles one flow. Prevents god-object accumulation |
-| Serializer pattern (single final class) | Replaces abstract Codec/Mapper + Impl hierarchy — simpler, no separate files |
-| Assembly per module | Each module owns its DI, not a monolithic builder |
-| hd/ and node/ subfolders in application/ | Trust boundary enforcement: HD and Node use cases cannot cross-import within the same package |
-| transaction package owns UTXO domain | Single Responsibility: UTXO lifecycle is a transaction concern, not wallet or address |
-| No Event Sourcing / CQRS | Mobile client over Bitcoin Core's ledger — Core already does ES for us |
+This standard is enforced by:
 
----
+- `docs/project/conventions.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `.claude/bin/aidd_validate.sh`
 
-## What Goes in shared_kernel
+The validator checks at minimum:
 
-Only very small shared primitives and contracts:
+- workspace package declarations exist
+- each workspace package exposes a public barrel
+- app and test code do not deep-import `package:<module>/src/*`
+- packages do not import app code
+- top-level `components/` is not introduced
 
-- BitcoinNetwork
-- AddressType
-- SecureStorage (interface)
-- Failure / Result (future)
-- Amount / Money (future)
-
-**Never** put in shared_kernel: large entities, module repositories, use cases, "everything shared just in case."
+That keeps the monorepo standard executable instead of purely aspirational.
