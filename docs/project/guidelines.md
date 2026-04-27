@@ -28,7 +28,7 @@ are in `conventions.md`. Formatting rules are in `code-style-guide.md`.
 
 ## Testing
 
-- Mirror source structure: `packages/data/lib/src/foo.dart` → `packages/data/test/foo_test.dart`
+- Mirror source structure: `packages/<module>/lib/src/foo.dart` → `packages/<module>/test/foo_test.dart`
 - Use real storage in integration tests — no mocks for persistence layers
 
 ---
