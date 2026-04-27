@@ -31,7 +31,10 @@ class _TransactionListScopeState extends State<TransactionListScope> {
     _initialized = true;
 
     final deps = AppScope.of(context);
-    _factory = () => TransactionBloc(getTransactions: deps.transaction.getTransactions);
+    _factory = () => TransactionBloc(
+      getTransactions: deps.transaction.getTransactions,
+      eventBus: deps.eventBus,
+    );
   }
 
   @override

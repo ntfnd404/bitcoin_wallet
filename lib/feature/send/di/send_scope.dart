@@ -39,6 +39,7 @@ class _SendScopeState extends State<SendScope> {
     final deps = AppScope.of(context);
     final tx = deps.transaction;
     final bech32Hrp = AppConstants.network.bech32Hrp;
+    final eventBus = deps.eventBus;
 
     _factory = (wallet) => wallet is NodeWallet
         ? SendBloc(
@@ -47,6 +48,7 @@ class _SendScopeState extends State<SendScope> {
             sendNode: tx.sendNodeTransaction,
             blockGeneration: tx.blockGeneration,
             bech32Hrp: bech32Hrp,
+            eventBus: eventBus,
           )
         : SendBloc(
             wallet: wallet,
@@ -54,6 +56,7 @@ class _SendScopeState extends State<SendScope> {
             sendHd: tx.sendHdTransaction,
             blockGeneration: tx.blockGeneration,
             bech32Hrp: bech32Hrp,
+            eventBus: eventBus,
           );
   }
 

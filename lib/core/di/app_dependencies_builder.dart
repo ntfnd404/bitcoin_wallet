@@ -4,6 +4,7 @@ import 'package:bitcoin_wallet/core/adapters/hd_address_data_source_impl.dart';
 import 'package:bitcoin_wallet/core/adapters/hd_transaction_signer.dart';
 import 'package:bitcoin_wallet/core/constants/app_constants.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
+import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:keys/keys_assembly.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:storage/storage.dart';
@@ -99,6 +100,7 @@ final class AppDependenciesBuilder {
         wallet: wallet,
         address: address,
         transaction: transaction,
+        eventBus: AppEventBus(),
       );
 
       _builder(dependencies);

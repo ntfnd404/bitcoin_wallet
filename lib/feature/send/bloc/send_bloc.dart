@@ -1,3 +1,5 @@
+import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
@@ -24,6 +26,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
   // Shared
   final BlockGenerationDataSource _blockGeneration;
   final String _bech32Hrp;
+  final AppEventBus _eventBus;
 
   // Internal — holds the preparation DTO between prepare and confirm steps.
   NodeSendPreparation? _nodePrep;
@@ -37,6 +40,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     SendHdTransactionUseCase? sendHd,
     required BlockGenerationDataSource blockGeneration,
     required String bech32Hrp,
+    required AppEventBus eventBus,
   }) : _wallet = wallet,
        _prepareNode = prepareNode,
        _sendNode = sendNode,
@@ -44,6 +48,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
        _sendHd = sendHd,
        _blockGeneration = blockGeneration,
        _bech32Hrp = bech32Hrp,
+       _eventBus = eventBus,
        super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
@@ -155,6 +160,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       }
 
       emit(state.copyWith(status: SendStatus.sent, txid: txid));
+      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _wallet.id));
     } catch (e) {
       emit(
         state.copyWith(
@@ -174,6 +180,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     try {
       await _blockGeneration.generateToAddress(1, event.toAddress);
       emit(state.copyWith(status: SendStatus.mined));
+      _eventBus.emit(BlockMined(walletId: _wallet.id));
     } catch (e) {
       emit(
         state.copyWith(

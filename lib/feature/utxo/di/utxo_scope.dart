@@ -45,6 +45,7 @@ class _UtxoScopeState extends State<UtxoScope> {
 
     _blocFactory = () => UtxoBloc(
       getUtxos: transactionAssembly.getUtxos,
+      eventBus: deps.eventBus,
     );
   }
 

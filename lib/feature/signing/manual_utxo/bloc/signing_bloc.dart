@@ -1,4 +1,6 @@
 import 'package:address/address.dart';
+import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +19,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
   final ScanUtxosUseCase _scanUtxos;
   final SignTransactionUseCase _signTransaction;
   final BroadcastTransactionUseCase _broadcastTransaction;
+  final AppEventBus _eventBus;
 
   /// Maps native SegWit address string → derivation index.
   /// Populated during [UtxoScanRequested], consumed during [SignAndBroadcastRequested].
@@ -27,10 +30,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     required ScanUtxosUseCase scanUtxos,
     required SignTransactionUseCase signTransaction,
     required BroadcastTransactionUseCase broadcastTransaction,
+    required AppEventBus eventBus,
   }) : _addressRepository = addressRepository,
        _scanUtxos = scanUtxos,
        _signTransaction = signTransaction,
        _broadcastTransaction = broadcastTransaction,
+       _eventBus = eventBus,
        super(const SigningState()) {
     on<UtxoScanRequested>(_onScanRequested);
     on<SignAndBroadcastRequested>(_onSignAndBroadcast);
@@ -138,6 +143,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
           broadcastedTx: broadcastedTx,
         ),
       );
+      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
     } catch (e) {
       if (isClosed) return;
 

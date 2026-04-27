@@ -36,6 +36,7 @@ class _ManualUtxoScopeState extends State<ManualUtxoScope> {
       scanUtxos: deps.transaction.scanUtxos,
       signTransaction: deps.keys.signTransaction,
       broadcastTransaction: deps.transaction.broadcastTransaction,
+      eventBus: deps.eventBus,
     );
   }
 
