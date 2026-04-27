@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 
 .claude
+
+# Branch-local AIDD ticket workspaces — local only, never committed
+docs/BW-*/
