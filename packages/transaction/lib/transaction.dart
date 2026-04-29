@@ -25,6 +25,7 @@ export 'src/domain/entity/transaction_input.dart';
 export 'src/domain/entity/transaction_output.dart';
 export 'src/domain/entity/utxo.dart';
 export 'src/domain/exception/insufficient_funds_exception.dart';
+export 'src/domain/exception/transaction_exception.dart';
 export 'src/domain/repository/transaction_repository.dart';
 export 'src/domain/repository/utxo_repository.dart';
 export 'src/domain/service/coin_selector.dart';

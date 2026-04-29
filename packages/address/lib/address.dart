@@ -5,4 +5,5 @@ export 'src/application/node/node_address_generation_strategy.dart';
 export 'src/domain/data_sources/address_local_data_source.dart';
 export 'src/domain/data_sources/address_remote_data_source.dart';
 export 'src/domain/entity/address.dart';
+export 'src/domain/exception/address_exception.dart';
 export 'src/domain/repository/address_repository.dart';
