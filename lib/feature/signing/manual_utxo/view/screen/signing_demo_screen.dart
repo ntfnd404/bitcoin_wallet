@@ -1,5 +1,5 @@
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
-import 'package:bitcoin_wallet/core/constants/app_constants.dart';
+import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_bloc.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
@@ -176,7 +176,7 @@ class _SendForm extends StatelessWidget {
         walletId: walletId,
         recipientAddress: recipientController.text.trim(),
         amountSat: amount,
-        bech32Hrp: AppConstants.network.bech32Hrp,
+        bech32Hrp: AppScope.of(context).network.bech32Hrp,
       ),
     );
   }

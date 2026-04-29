@@ -1,5 +1,6 @@
 export 'src/application/get_xpub_use_case.dart';
 export 'src/application/sign_transaction_use_case.dart';
+export 'src/domain/derivation_paths.dart';
 export 'src/domain/entity/account_xpub.dart';
 export 'src/domain/entity/derived_address.dart';
 export 'src/domain/entity/mnemonic.dart';

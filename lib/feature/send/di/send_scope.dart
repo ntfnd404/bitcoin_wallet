@@ -1,4 +1,3 @@
-import 'package:bitcoin_wallet/core/constants/app_constants.dart';
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:flutter/widgets.dart';
@@ -38,7 +37,7 @@ class _SendScopeState extends State<SendScope> {
 
     final deps = AppScope.of(context);
     final tx = deps.transaction;
-    final bech32Hrp = AppConstants.network.bech32Hrp;
+    final bech32Hrp = deps.network.bech32Hrp;
     final eventBus = deps.eventBus;
 
     _factory = (wallet) => wallet is NodeWallet
