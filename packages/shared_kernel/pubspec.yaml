@@ -5,7 +5,4 @@ publish_to: none
 environment:
   sdk: ^3.11.3
 
-dev_dependencies:
-  test: 1.30.0
-
 resolution: workspace
