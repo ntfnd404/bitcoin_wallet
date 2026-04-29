@@ -22,6 +22,17 @@ The local node is intended for development, wallet experiments, and reproducible
 5. Run `make btc-mine` to mine 101 blocks and fund the wallet.
 6. Run `make btc-balance` or `make btc-utxos` to inspect wallet funds.
 
+## App configuration
+
+The app reads Bitcoin RPC settings from Dart defines. The tracked local
+development config lives in `config/dev.env`.
+
+- VS Code launch configs already pass `--dart-define-from-file=config/dev.env`.
+- Run from CLI with `flutter run --dart-define-from-file=config/dev.env`.
+- Run tests with `flutter test --dart-define-from-file=config/test.env`.
+- If you start the app without the define file, startup fails fast with a
+  configuration error.
+
 ## Demo workflow
 
 Typical local flow:
