@@ -2,6 +2,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
+import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/repository/utxo_repository.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
@@ -33,40 +34,46 @@ final class PrepareNodeSendUseCase {
     required Satoshi targetSat,
     required int feeRateSatPerVbyte,
   }) async {
-    final utxos = await _utxoRepository.getUtxos(walletName);
+    try {
+      final utxos = await _utxoRepository.getUtxos(walletName);
 
-    final candidates = utxos
-        .map(
-          (u) => CoinCandidate(
-            txid: u.txid,
-            vout: u.vout,
-            amountSat: u.amountSat,
-            age: u.confirmations,
-          ),
-        )
-        .toList();
+      final candidates = utxos
+          .map(
+            (u) => CoinCandidate(
+              txid: u.txid,
+              vout: u.vout,
+              amountSat: u.amountSat,
+              age: u.confirmations,
+            ),
+          )
+          .toList();
 
-    final changeAddress = await _nodeDataSource.getNewAddress(walletName);
+      final changeAddress = await _nodeDataSource.getNewAddress(walletName);
 
-    final strategies = <String, CoinSelectionResult>{};
-    for (final selector in _selectors) {
-      try {
-        strategies[selector.name] = selector.select(
-          candidates: candidates,
-          targetSat: targetSat,
-          feeEstimator: _feeEstimator,
-          feeRateSatPerVbyte: feeRateSatPerVbyte,
-          dustThreshold: 546,
-        );
-      } on InsufficientFundsException {
-        // Strategy could not cover the amount — omit from comparison table.
+      final strategies = <String, CoinSelectionResult>{};
+      for (final selector in _selectors) {
+        try {
+          strategies[selector.name] = selector.select(
+            candidates: candidates,
+            targetSat: targetSat,
+            feeEstimator: _feeEstimator,
+            feeRateSatPerVbyte: feeRateSatPerVbyte,
+            dustThreshold: 546,
+          );
+        } on InsufficientFundsException {
+          // Strategy could not cover the amount — omit from comparison table.
+        }
       }
-    }
 
-    return NodeSendPreparation(
-      candidates: candidates,
-      strategies: Map.unmodifiable(strategies),
-      changeAddress: changeAddress,
-    );
+      return NodeSendPreparation(
+        candidates: candidates,
+        strategies: Map.unmodifiable(strategies),
+        changeAddress: changeAddress,
+      );
+    } on InsufficientFundsException {
+      rethrow;
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const TransactionPreparationException(), stack);
+    }
   }
 }

@@ -44,7 +44,7 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
           if (state.status == SigningStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Unknown error'),
+                content: Text(state.exception?.toString() ?? 'Unknown error'),
               ),
             );
           }

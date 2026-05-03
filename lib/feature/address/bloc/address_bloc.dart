@@ -21,7 +21,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     AddressListRequested event,
     Emitter<AddressState> emit,
   ) async {
-    emit(state.copyWith(status: AddressStatus.loading, clearErrorMessage: true));
+    emit(state.copyWith(status: AddressStatus.loading, clearException: true));
     try {
       final addresses = await _addressRepository.getAddresses(event.wallet.id);
       if (isClosed) return;
@@ -30,7 +30,12 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     } catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(
+          status: AddressStatus.error,
+          exception: e is Exception ? e : Exception(e.toString()),
+        ),
+      );
     }
   }
 
@@ -39,7 +44,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     if (state.status == AddressStatus.generating) return;
-    emit(state.copyWith(status: AddressStatus.generating, clearErrorMessage: true));
+    emit(state.copyWith(status: AddressStatus.generating, clearException: true));
     try {
       final address = await _generateAddress(event.wallet, event.type);
       if (isClosed) return;
@@ -51,10 +56,12 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
           lastGenerated: address,
         ),
       );
-    } catch (e) {
+    } on AddressException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(status: AddressStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

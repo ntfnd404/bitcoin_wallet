@@ -2,11 +2,15 @@ import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
 import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
+import 'package:transaction/src/domain/exception/transaction_exception.dart';
 
 /// Builds, signs (via Bitcoin Core), and broadcasts a Node-wallet transaction.
 ///
 /// Requires a [NodeSendPreparation] produced by [PrepareNodeSendUseCase].
 /// The caller selects the coin-selection strategy by [strategyName].
+///
+/// Throws [TransactionPreparationException] if [strategyName] is not found.
+/// Throws [TransactionBroadcastException] if the RPC or broadcast call fails.
 final class SendNodeTransactionUseCase {
   final NodeTransactionDataSource _nodeDataSource;
   final BroadcastDataSource _broadcastDataSource;
@@ -27,29 +31,33 @@ final class SendNodeTransactionUseCase {
   }) async {
     final result = preparation.strategies[strategyName];
     if (result == null) {
-      throw ArgumentError('Strategy "$strategyName" not found in preparation');
+      throw const TransactionPreparationException();
     }
 
-    final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();
+    try {
+      final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();
 
-    final outputs = <String, double>{
-      recipientAddress: amountSat.value / 100000000,
-    };
+      final outputs = <String, double>{
+        recipientAddress: amountSat.value / 100000000,
+      };
 
-    if (result.changeSat.value > 0) {
-      outputs[preparation.changeAddress] = result.changeSat.value / 100000000;
+      if (result.changeSat.value > 0) {
+        outputs[preparation.changeAddress] = result.changeSat.value / 100000000;
+      }
+
+      final hexUnsigned = await _nodeDataSource.createRawTransaction(
+        inputs: inputs,
+        outputs: outputs,
+      );
+
+      final hexSigned = await _nodeDataSource.signRawTransactionWithWallet(
+        walletName,
+        hexUnsigned,
+      );
+
+      return _broadcastDataSource.broadcast(hexSigned);
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }
-
-    final hexUnsigned = await _nodeDataSource.createRawTransaction(
-      inputs: inputs,
-      outputs: outputs,
-    );
-
-    final hexSigned = await _nodeDataSource.signRawTransactionWithWallet(
-      walletName,
-      hexUnsigned,
-    );
-
-    return _broadcastDataSource.broadcast(hexSigned);
   }
 }

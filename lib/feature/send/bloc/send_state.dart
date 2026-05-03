@@ -21,7 +21,7 @@ final class SendState {
   /// Txid of the broadcast transaction.
   final String? txid;
 
-  final String? errorMessage;
+  final Exception? exception;
 
   const SendState({
     this.status = SendStatus.initial,
@@ -31,7 +31,7 @@ final class SendState {
     this.recipientAddress,
     this.amountSat,
     this.txid,
-    this.errorMessage,
+    this.exception,
   });
 
   SendState copyWith({
@@ -42,7 +42,7 @@ final class SendState {
     String? recipientAddress,
     int? amountSat,
     String? txid,
-    String? errorMessage,
+    Exception? exception,
   }) => SendState(
     status: status ?? this.status,
     strategies: strategies ?? this.strategies,
@@ -51,6 +51,6 @@ final class SendState {
     recipientAddress: recipientAddress ?? this.recipientAddress,
     amountSat: amountSat ?? this.amountSat,
     txid: txid ?? this.txid,
-    errorMessage: errorMessage ?? this.errorMessage,
+    exception: exception ?? this.exception,
   );
 }

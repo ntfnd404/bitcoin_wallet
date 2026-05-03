@@ -21,21 +21,18 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
     TransactionDetailRequested event,
     Emitter<TransactionDetailState> emit,
   ) async {
-    emit(state.copyWith(status: FetchStatus.loading, clearErrorMessage: true));
+    emit(state.copyWith(status: FetchStatus.loading, clearException: true));
     try {
       final detail = await _getDetail(event.txid, event.walletName);
       if (isClosed) return;
 
       emit(state.copyWith(status: FetchStatus.loaded, detail: detail));
-    } catch (e) {
+    } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          status: FetchStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      emit(state.copyWith(status: FetchStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

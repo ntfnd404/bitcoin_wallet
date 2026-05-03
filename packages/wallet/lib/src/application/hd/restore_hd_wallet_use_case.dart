@@ -1,11 +1,13 @@
 import 'package:keys/keys.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
+import 'package:wallet/src/domain/exception/wallet_exception.dart';
 import 'package:wallet/src/domain/repository/hd_wallet_repository.dart';
 
 /// Restores an HD wallet from an existing BIP39 mnemonic.
 ///
-/// Throws [ArgumentError] if [mnemonic] fails BIP39 checksum validation.
+/// Throws [WalletInvalidMnemonicException] if [mnemonic] fails BIP39 validation.
+/// Throws [WalletStorageException] if the seed or wallet cannot be persisted.
 final class RestoreHdWalletUseCase {
   final Bip39Service _bip39;
   final SeedRepository _seedRepository;
@@ -21,16 +23,20 @@ final class RestoreHdWalletUseCase {
 
   Future<HdWallet> call(String name, Mnemonic mnemonic) async {
     if (!_bip39.validateMnemonic(mnemonic)) {
-      throw ArgumentError('Invalid BIP39 mnemonic');
+      throw const WalletInvalidMnemonicException();
     }
-    final wallet = HdWallet(
-      id: const Uuid().v4(),
-      name: name,
-      createdAt: DateTime.now().toUtc(),
-    );
-    await _seedRepository.storeSeed(wallet.id, mnemonic);
-    await _hdWalletRepository.saveWallet(wallet);
+    try {
+      final wallet = HdWallet(
+        id: const Uuid().v4(),
+        name: name,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await _seedRepository.storeSeed(wallet.id, mnemonic);
+      await _hdWalletRepository.saveWallet(wallet);
 
-    return wallet;
+      return wallet;
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const WalletStorageException(), stack);
+    }
   }
 }

@@ -50,7 +50,7 @@ class WalletDetailScreen extends StatelessWidget {
         listener: (context, state) {
           if (state.status == WalletStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
+              SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
             );
           }
           if (state.status == WalletStatus.awaitingSeedConfirmation) {
@@ -64,7 +64,7 @@ class WalletDetailScreen extends StatelessWidget {
           listener: (context, state) {
             if (state.status == AddressStatus.error) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
+                SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
               );
             }
           },

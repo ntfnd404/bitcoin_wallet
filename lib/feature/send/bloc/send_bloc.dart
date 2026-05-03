@@ -89,7 +89,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
         emit(
           state.copyWith(
             status: SendStatus.error,
-            errorMessage: 'Insufficient funds for any strategy',
+            exception: Exception('Insufficient funds for any strategy'),
           ),
         );
 
@@ -106,13 +106,11 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
           amountSat: event.amountSat,
         ),
       );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -159,15 +157,14 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
         );
       }
 
+      if (isClosed) return;
       emit(state.copyWith(status: SendStatus.sent, txid: txid));
       _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _wallet.id));
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -185,7 +182,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       emit(
         state.copyWith(
           status: SendStatus.error,
-          errorMessage: e.toString(),
+          exception: e is Exception ? e : Exception(e.toString()),
         ),
       );
     }

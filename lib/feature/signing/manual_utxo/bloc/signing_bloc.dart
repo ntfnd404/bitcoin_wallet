@@ -52,9 +52,9 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
 
       if (segwit.isEmpty) {
         emit(
-          const SigningState(
+          SigningState(
             status: SigningStatus.error,
-            errorMessage: 'No native SegWit addresses found. Generate some first.',
+            exception: Exception('No native SegWit addresses found. Generate some first.'),
           ),
         );
 
@@ -69,15 +69,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       if (isClosed) return;
 
       emit(SigningState(status: SigningStatus.scanned, utxos: utxos));
-    } catch (e) {
+    } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(
-        SigningState(
-          status: SigningStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      emit(SigningState(status: SigningStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -90,7 +87,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       emit(
         state.copyWith(
           status: SigningStatus.error,
-          errorMessage: 'No UTXOs to spend. Scan first.',
+          exception: Exception('No UTXOs to spend. Scan first.'),
         ),
       );
 
@@ -103,9 +100,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
         final address = utxo.address;
         final index = address != null ? _addressIndexMap[address] : null;
         if (index == null) {
-          throw StateError(
-            'Cannot resolve derivation index for UTXO ${utxo.txid}:${utxo.vout}',
-          );
+          throw const TransactionSigningException();
         }
 
         return SigningInputParam(
@@ -133,6 +128,8 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       if (isClosed) return;
 
       final txid = await _broadcastTransaction.broadcast(rawHex);
+      if (isClosed) return;
+
       final broadcastedTx = await _broadcastTransaction.getTransaction(txid);
       if (isClosed) return;
 
@@ -144,15 +141,16 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
         ),
       );
       _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
-    } catch (e) {
+    } on KeysException catch (e) {
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          status: SigningStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      emit(state.copyWith(status: SigningStatus.error, exception: e));
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+
+      emit(state.copyWith(status: SigningStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

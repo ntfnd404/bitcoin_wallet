@@ -1,4 +1,5 @@
 import 'package:transaction/src/domain/entity/transaction_detail.dart';
+import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/repository/transaction_repository.dart';
 
 /// Fetches full detail for a single transaction from Bitcoin Core.
@@ -10,5 +11,11 @@ final class GetTransactionDetailUseCase {
 
   const GetTransactionDetailUseCase({required TransactionRepository repository}) : _repository = repository;
 
-  Future<TransactionDetail> call(String txid, String walletName) => _repository.getTransactionDetail(txid, walletName);
+  Future<TransactionDetail> call(String txid, String walletName) async {
+    try {
+      return await _repository.getTransactionDetail(txid, walletName);
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const TransactionFetchException(), stack);
+    }
+  }
 }
