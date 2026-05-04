@@ -164,7 +164,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
         emit(
           state.copyWith(
             status: WalletStatus.error,
-            exception: Exception('Wallet seed not found'),
+            exception: const KeysSeedNotFoundException(),
           ),
         );
 

@@ -33,3 +33,15 @@ final class KeysSigningException extends KeysException {
   @override
   String toString() => 'Transaction signing failed';
 }
+
+/// A storage operation for keys/seed material failed.
+///
+/// Security: zero-arg, fixed message. Carries no walletId, no key material,
+/// no platform-error details. Use [Error.throwWithStackTrace] to preserve
+/// the original stack trace.
+final class KeysStorageException extends KeysException {
+  const KeysStorageException();
+
+  @override
+  String toString() => 'Keys storage error';
+}

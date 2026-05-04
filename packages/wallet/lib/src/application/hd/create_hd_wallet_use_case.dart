@@ -35,8 +35,14 @@ final class CreateHdWalletUseCase {
       await _hdWalletRepository.saveWallet(wallet);
 
       return (wallet, mnemonic);
-    } catch (e, stack) {
+    } on KeysStorageException catch (_, stack) {
+      // Translate keys-bounded-context language to wallet's.
       Error.throwWithStackTrace(const WalletStorageException(), stack);
+    } on WalletException {
+      // Already in wallet's language — pass through unchanged.
+      rethrow;
     }
+    // Programmer errors (TypeError, RangeError, etc.) propagate naturally
+    // to the zone error handler — they must NOT be masked as storage errors.
   }
 }
