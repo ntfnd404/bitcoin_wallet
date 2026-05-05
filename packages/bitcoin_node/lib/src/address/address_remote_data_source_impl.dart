@@ -4,6 +4,8 @@ import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 
 /// [AddressRemoteDataSource] backed by [BitcoinRpcClient].
+///
+/// Wraps RPC / network / parse failures as [AddressGenerationException].
 final class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
 
@@ -11,12 +13,16 @@ final class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
 
   @override
   Future<String> generateAddress(String walletName, AddressType type) async {
-    final result = await _rpcClient.call(
-      'getnewaddress',
-      ['', type.rpcAddressTypeParam],
-      walletName,
-    );
+    try {
+      final result = await _rpcClient.call(
+        'getnewaddress',
+        ['', type.rpcAddressTypeParam],
+        walletName,
+      );
 
-    return result as String;
+      return result as String;
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const AddressGenerationException(), stack);
+    }
   }
 }

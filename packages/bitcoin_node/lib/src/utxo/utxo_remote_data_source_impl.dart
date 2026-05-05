@@ -6,6 +6,7 @@ import 'package:transaction/transaction.dart';
 /// Fetches unspent transaction outputs (UTXOs) from Bitcoin Core.
 ///
 /// Calls `listunspent` and maps responses to [Utxo] entities.
+/// Wraps RPC / network / parse failures as [TransactionFetchException].
 final class UtxoRemoteDataSourceImpl implements UtxoRemoteDataSource {
   final BitcoinRpcClient _rpcClient;
 
@@ -13,16 +14,20 @@ final class UtxoRemoteDataSourceImpl implements UtxoRemoteDataSource {
 
   @override
   Future<List<Utxo>> getUtxos(String walletName) async {
-    // minconf=0 to include mempool UTXOs
-    final result = await _rpcClient.call(
-      'listunspent',
-      [0],
-      walletName,
-    );
+    try {
+      // minconf=0 to include mempool UTXOs
+      final result = await _rpcClient.call(
+        'listunspent',
+        [0],
+        walletName,
+      );
 
-    final list = result as List<Object?>;
+      final list = result as List<Object?>;
 
-    return list.cast<Map<String, Object?>>().map(_mapUtxo).toList();
+      return list.cast<Map<String, Object?>>().map(_mapUtxo).toList();
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionFetchException(), stack);
+    }
   }
 
   Utxo _mapUtxo(Map<String, Object?> raw) {

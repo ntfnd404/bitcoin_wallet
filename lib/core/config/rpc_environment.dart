@@ -1,10 +1,10 @@
 import 'package:bitcoin_wallet/core/config/configuration_error.dart';
 
 final class RpcEnvironment {
-  static const String schemeKey   = 'BTC_RPC_SCHEME';
-  static const String hostKey     = 'BTC_RPC_HOST';
-  static const String portKey     = 'BTC_RPC_PORT';
-  static const String userKey     = 'BTC_RPC_USER';
+  static const String schemeKey = 'BTC_RPC_SCHEME';
+  static const String hostKey = 'BTC_RPC_HOST';
+  static const String portKey = 'BTC_RPC_PORT';
+  static const String userKey = 'BTC_RPC_USER';
   static const String passwordKey = 'BTC_RPC_PASSWORD';
 
   final String scheme;
@@ -15,10 +15,10 @@ final class RpcEnvironment {
 
   // Compile-time dart-define values. All String.fromEnvironment calls live
   // here so they are evaluated at compile time.
-  static const String _schemeRaw   = String.fromEnvironment(schemeKey);
-  static const String _hostRaw     = String.fromEnvironment(hostKey);
-  static const String _portRaw     = String.fromEnvironment(portKey);
-  static const String _userRaw     = String.fromEnvironment(userKey);
+  static const String _schemeRaw = String.fromEnvironment(schemeKey);
+  static const String _hostRaw = String.fromEnvironment(hostKey);
+  static const String _portRaw = String.fromEnvironment(portKey);
+  static const String _userRaw = String.fromEnvironment(userKey);
   static const String _passwordRaw = String.fromEnvironment(passwordKey);
 
   String get url => '$scheme://$host:$port';
@@ -35,17 +35,17 @@ final class RpcEnvironment {
   });
 
   static RpcEnvironment fromDartDefines() {
-    final scheme   = _normalize(_schemeRaw);
-    final host     = _normalize(_hostRaw);
-    final portStr  = _normalize(_portRaw);
-    final user     = _normalize(_userRaw);
+    final scheme = _normalize(_schemeRaw);
+    final host = _normalize(_hostRaw);
+    final portStr = _normalize(_portRaw);
+    final user = _normalize(_userRaw);
     final password = _normalize(_passwordRaw);
 
     final missing = [
-      if (scheme   == null) schemeKey,
-      if (host     == null) hostKey,
-      if (portStr  == null) portKey,
-      if (user     == null) userKey,
+      if (scheme == null) schemeKey,
+      if (host == null) hostKey,
+      if (portStr == null) portKey,
+      if (user == null) userKey,
       if (password == null) passwordKey,
     ];
     if (missing.isNotEmpty) {
@@ -65,10 +65,10 @@ final class RpcEnvironment {
     }
 
     return RpcEnvironment(
-      scheme:   scheme!,
-      host:     host!,
-      port:     port,
-      user:     user!,
+      scheme: scheme!,
+      host: host!,
+      port: port,
+      user: user!,
       password: password!,
     );
   }
@@ -76,10 +76,10 @@ final class RpcEnvironment {
   @override
   bool operator ==(Object other) =>
       other is RpcEnvironment &&
-      other.scheme   == scheme &&
-      other.host     == host &&
-      other.port     == port &&
-      other.user     == user &&
+      other.scheme == scheme &&
+      other.host == host &&
+      other.port == port &&
+      other.user == user &&
       other.password == password;
 
   static String? _normalize(String? v) {

@@ -25,8 +25,5 @@ final class AppEnvironment {
   };
 
   @override
-  bool operator ==(Object other) =>
-      other is AppEnvironment &&
-      other.rpc     == rpc &&
-      other.network == network;
+  bool operator ==(Object other) => other is AppEnvironment && other.rpc == rpc && other.network == network;
 }

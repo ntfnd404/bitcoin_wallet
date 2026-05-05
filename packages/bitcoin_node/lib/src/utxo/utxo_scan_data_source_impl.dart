@@ -5,6 +5,8 @@ import 'package:transaction/transaction.dart';
 /// Scans the UTXO set for UTXOs belonging to a list of addresses.
 ///
 /// Uses `scantxoutset "start" [...]` — no wallet required.
+/// Wraps RPC / network / parse failures (and the "scan unsuccessful"
+/// signal) as [TransactionUtxoScanException].
 final class UtxoScanDataSourceImpl implements UtxoScanDataSource {
   final BitcoinRpcClient _rpcClient;
 
@@ -14,18 +16,25 @@ final class UtxoScanDataSourceImpl implements UtxoScanDataSource {
   Future<List<ScannedUtxo>> scanForAddresses(List<String> addresses) async {
     if (addresses.isEmpty) return [];
 
-    final descriptors = addresses.map((addr) => {'desc': 'addr($addr)'}).toList();
+    try {
+      final descriptors = addresses.map((addr) => {'desc': 'addr($addr)'}).toList();
 
-    final result = await _rpcClient.call('scantxoutset', ['start', descriptors]);
-    final map = result as Map<String, Object?>;
+      final result = await _rpcClient.call('scantxoutset', ['start', descriptors]);
+      final map = result as Map<String, Object?>;
 
-    if (map['success'] != true) {
-      throw StateError('scantxoutset failed');
+      if (map['success'] != true) {
+        throw const TransactionUtxoScanException();
+      }
+
+      final unspents = (map['unspents'] as List<Object?>? ?? []).cast<Map<String, Object?>>();
+
+      return unspents.map(_mapScannedUtxo).toList();
+    } on TransactionUtxoScanException {
+      // Local "success: false" throw — preserve type, do not re-wrap.
+      rethrow;
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionUtxoScanException(), stack);
     }
-
-    final unspents = (map['unspents'] as List<Object?>? ?? []).cast<Map<String, Object?>>();
-
-    return unspents.map(_mapScannedUtxo).toList();
   }
 
   ScannedUtxo _mapScannedUtxo(Map<String, Object?> raw) {

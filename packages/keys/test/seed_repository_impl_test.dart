@@ -1,8 +1,24 @@
 import 'package:keys/src/data/seed_repository_impl.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
+import 'package:keys/src/domain/exception/keys_exception.dart';
+import 'package:shared_kernel/shared_kernel.dart';
 import 'package:test/test.dart';
 
 import 'fake_secure_storage.dart';
+
+/// Fake that throws [SecureStorageException] on every call.
+final class _ThrowingSecureStorage implements SecureStorage {
+  const _ThrowingSecureStorage();
+
+  @override
+  Future<String?> getString(String key) async => throw const SecureStorageException();
+
+  @override
+  Future<void> setString(String key, String value) async => throw const SecureStorageException();
+
+  @override
+  Future<void> remove(String key) async => throw const SecureStorageException();
+}
 
 void main() {
   late FakeSecureStorage storage;
@@ -84,6 +100,31 @@ void main() {
         await expectLater(
           repository.deleteSeed('nonexistent'),
           completes,
+        );
+      });
+    });
+
+    group('error wrapping (Phase 3 Phase 3)', () {
+      const throwing = SeedRepositoryImpl(storage: _ThrowingSecureStorage());
+
+      test('storeSeed wraps storage failure as KeysStorageException', () async {
+        await expectLater(
+          () => throwing.storeSeed(walletId, mnemonic),
+          throwsA(isA<KeysStorageException>()),
+        );
+      });
+
+      test('getSeed wraps storage failure as KeysStorageException', () async {
+        await expectLater(
+          () => throwing.getSeed(walletId),
+          throwsA(isA<KeysStorageException>()),
+        );
+      });
+
+      test('deleteSeed wraps storage failure as KeysStorageException', () async {
+        await expectLater(
+          () => throwing.deleteSeed(walletId),
+          throwsA(isA<KeysStorageException>()),
         );
       });
     });
