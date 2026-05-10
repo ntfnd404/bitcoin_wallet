@@ -25,6 +25,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: 9.1.1
+  nested: 1.0.0
   keys:
     path: packages/keys
   rpc_client:
