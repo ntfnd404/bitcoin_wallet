@@ -132,9 +132,10 @@ dcm:
           - public-static-methods
           - private-static-methods
 
-          # instance fields
+          # instance fields (final → late-final → late → initialized → nullable → var)
           - final-public-fields
-          # - final-private-fields
+          - public-fields
+          - final-private-fields
           - late-final-public-fields
           - late-final-private-fields
           - late-public-fields
@@ -145,6 +146,7 @@ dcm:
           - private-initialized-fields
           - public-nullable-fields
           - private-nullable-fields
+          - private-fields
 
           # getters and setters
           - getters-setters
@@ -160,18 +162,22 @@ dcm:
 
         widgets-order:
           - const-fields
-          - final-fields
           - constructors
           - named-constructors
+          - factory-constructors
+          - final-fields
           - var-fields
+          - late-public-fields
+          - late-private-fields
 
           # lifecycle
+          - overridden-methods
           - init-state-method
           - did-change-dependencies-method
           - did-update-widget-method
           - build-method
           - dispose-method
-          
+
           # other methods
           - public-methods
           - private-methods

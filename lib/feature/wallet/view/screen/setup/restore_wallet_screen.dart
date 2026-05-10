@@ -70,7 +70,7 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
           AppRouter.toWalletDetail(context, wallet);
         } else if (state.status == WalletStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
+            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
           );
         }
       },

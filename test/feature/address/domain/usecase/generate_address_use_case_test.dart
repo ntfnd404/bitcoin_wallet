@@ -66,13 +66,13 @@ void main() {
       verifyNever(() => hdStrategy.generate(any(), any()));
     });
 
-    test('throws StateError when no strategy supports the wallet type', () {
+    test('throws AddressNoStrategyException when no strategy supports the wallet type', () {
       const noStrategyUseCase = GenerateAddressUseCase(strategies: []);
       final wallet = _hdWallet();
 
       expect(
         () => noStrategyUseCase(wallet, AddressType.nativeSegwit),
-        throwsA(isA<StateError>()),
+        throwsA(isA<AddressNoStrategyException>()),
       );
     });
 

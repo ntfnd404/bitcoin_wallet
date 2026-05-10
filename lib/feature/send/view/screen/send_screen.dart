@@ -45,7 +45,7 @@ class _SendScreenState extends State<SendScreen> {
           if (state.status == SendStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Unknown error'),
+                content: Text(state.exception?.toString() ?? 'Unknown error'),
               ),
             );
           }

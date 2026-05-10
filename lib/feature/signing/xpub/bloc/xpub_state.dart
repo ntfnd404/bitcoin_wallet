@@ -5,21 +5,21 @@ import 'package:shared_kernel/shared_kernel.dart';
 final class XpubState {
   final FetchStatus status;
   final Map<AddressType, AccountXpub> xpubs;
-  final String? errorMessage;
+  final Exception? exception;
 
   const XpubState({
     this.status = FetchStatus.initial,
     this.xpubs = const {},
-    this.errorMessage,
+    this.exception,
   });
 
   XpubState copyWith({
     FetchStatus? status,
     Map<AddressType, AccountXpub>? xpubs,
-    String? errorMessage,
+    Exception? exception,
   }) => XpubState(
     status: status ?? this.status,
     xpubs: xpubs ?? this.xpubs,
-    errorMessage: errorMessage ?? this.errorMessage,
+    exception: exception ?? this.exception,
   );
 }

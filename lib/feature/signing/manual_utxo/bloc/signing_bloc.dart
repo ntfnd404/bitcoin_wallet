@@ -1,4 +1,6 @@
 import 'package:address/address.dart';
+import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +19,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
   final ScanUtxosUseCase _scanUtxos;
   final SignTransactionUseCase _signTransaction;
   final BroadcastTransactionUseCase _broadcastTransaction;
+  final AppEventBus _eventBus;
 
   /// Maps native SegWit address string → derivation index.
   /// Populated during [UtxoScanRequested], consumed during [SignAndBroadcastRequested].
@@ -27,10 +30,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     required ScanUtxosUseCase scanUtxos,
     required SignTransactionUseCase signTransaction,
     required BroadcastTransactionUseCase broadcastTransaction,
+    required AppEventBus eventBus,
   }) : _addressRepository = addressRepository,
        _scanUtxos = scanUtxos,
        _signTransaction = signTransaction,
        _broadcastTransaction = broadcastTransaction,
+       _eventBus = eventBus,
        super(const SigningState()) {
     on<UtxoScanRequested>(_onScanRequested);
     on<SignAndBroadcastRequested>(_onSignAndBroadcast);
@@ -47,9 +52,9 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
 
       if (segwit.isEmpty) {
         emit(
-          const SigningState(
+          SigningState(
             status: SigningStatus.error,
-            errorMessage: 'No native SegWit addresses found. Generate some first.',
+            exception: Exception('No native SegWit addresses found. Generate some first.'),
           ),
         );
 
@@ -64,15 +69,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       if (isClosed) return;
 
       emit(SigningState(status: SigningStatus.scanned, utxos: utxos));
-    } catch (e) {
+    } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(
-        SigningState(
-          status: SigningStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      emit(SigningState(status: SigningStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -85,7 +87,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       emit(
         state.copyWith(
           status: SigningStatus.error,
-          errorMessage: 'No UTXOs to spend. Scan first.',
+          exception: Exception('No UTXOs to spend. Scan first.'),
         ),
       );
 
@@ -98,9 +100,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
         final address = utxo.address;
         final index = address != null ? _addressIndexMap[address] : null;
         if (index == null) {
-          throw StateError(
-            'Cannot resolve derivation index for UTXO ${utxo.txid}:${utxo.vout}',
-          );
+          throw const TransactionSigningException();
         }
 
         return SigningInputParam(
@@ -128,6 +128,8 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
       if (isClosed) return;
 
       final txid = await _broadcastTransaction.broadcast(rawHex);
+      if (isClosed) return;
+
       final broadcastedTx = await _broadcastTransaction.getTransaction(txid);
       if (isClosed) return;
 
@@ -138,15 +140,17 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
           broadcastedTx: broadcastedTx,
         ),
       );
-    } catch (e) {
+      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
+    } on KeysException catch (e) {
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          status: SigningStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      emit(state.copyWith(status: SigningStatus.error, exception: e));
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+
+      emit(state.copyWith(status: SigningStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

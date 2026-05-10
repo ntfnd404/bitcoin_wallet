@@ -1,21 +1,22 @@
+import 'package:address/address.dart';
 import 'package:transaction/src/application/broadcast_transaction_use_case.dart';
 import 'package:transaction/src/application/get_transaction_detail_use_case.dart';
 import 'package:transaction/src/application/get_transactions_use_case.dart';
 import 'package:transaction/src/application/get_utxos_use_case.dart';
 import 'package:transaction/src/application/hd/prepare_hd_send_use_case.dart';
 import 'package:transaction/src/application/hd/send_hd_transaction_use_case.dart';
+import 'package:transaction/src/application/mine_block_use_case.dart';
 import 'package:transaction/src/application/node/prepare_node_send_use_case.dart';
 import 'package:transaction/src/application/node/send_node_transaction_use_case.dart';
 import 'package:transaction/src/application/scan_utxos_use_case.dart';
 import 'package:transaction/src/data/transaction_repository_impl.dart';
 import 'package:transaction/src/data/utxo_repository_impl.dart';
-import 'package:transaction/src/domain/data_sources/block_generation_data_source.dart';
-import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
-import 'package:transaction/src/domain/data_sources/hd_address_data_source.dart';
-import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
-import 'package:transaction/src/domain/data_sources/transaction_remote_data_source.dart';
-import 'package:transaction/src/domain/data_sources/utxo_remote_data_source.dart';
-import 'package:transaction/src/domain/data_sources/utxo_scan_data_source.dart';
+import 'package:transaction/src/domain/gateway/block_generation_gateway.dart';
+import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
+import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
+import 'package:transaction/src/domain/gateway/transaction_history_gateway.dart';
+import 'package:transaction/src/domain/gateway/utxo_gateway.dart';
+import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/service/transaction_signer.dart';
@@ -33,16 +34,16 @@ final class TransactionAssembly {
   final PrepareHdSendUseCase prepareHdSend;
   final SendNodeTransactionUseCase sendNodeTransaction;
   final SendHdTransactionUseCase sendHdTransaction;
-  final BlockGenerationDataSource blockGeneration;
+  final MineBlockUseCase mineBlock;
 
   factory TransactionAssembly({
-    required TransactionRemoteDataSource transactionRemoteDataSource,
-    required UtxoRemoteDataSource utxoRemoteDataSource,
-    required UtxoScanDataSource utxoScanDataSource,
-    required BroadcastDataSource broadcastDataSource,
-    required NodeTransactionDataSource nodeTransactionDataSource,
-    required BlockGenerationDataSource blockGenerationDataSource,
-    required HdAddressDataSource hdAddressDataSource,
+    required TransactionHistoryGateway transactionRemoteDataSource,
+    required UtxoGateway utxoRemoteDataSource,
+    required UtxoScanGateway utxoScanDataSource,
+    required BroadcastGateway broadcastDataSource,
+    required NodeTransactionGateway nodeTransactionDataSource,
+    required BlockGenerationGateway blockGenerationDataSource,
+    required AddressRepository addressRepository,
     required List<CoinSelector> coinSelectors,
     required FeeEstimator feeEstimator,
     required TransactionSigner hdSigner,
@@ -69,7 +70,7 @@ final class TransactionAssembly {
         feeEstimator: feeEstimator,
       ),
       prepareHdSend: PrepareHdSendUseCase(
-        addressDataSource: hdAddressDataSource,
+        addressRepository: addressRepository,
         utxoScanDataSource: utxoScanDataSource,
         selectors: coinSelectors,
         feeEstimator: feeEstimator,
@@ -82,7 +83,7 @@ final class TransactionAssembly {
         signer: hdSigner,
         broadcastDataSource: broadcastDataSource,
       ),
-      blockGeneration: blockGenerationDataSource,
+      mineBlock: MineBlockUseCase(dataSource: blockGenerationDataSource),
     );
   }
 
@@ -96,6 +97,6 @@ final class TransactionAssembly {
     required this.prepareHdSend,
     required this.sendNodeTransaction,
     required this.sendHdTransaction,
-    required this.blockGeneration,
+    required this.mineBlock,
   });
 }

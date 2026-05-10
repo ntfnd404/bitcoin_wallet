@@ -1,0 +1,93 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "bitcoin_wallet (debug)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define-from-file=config/dev.env"
+            ]
+        },
+        {
+            "name": "bitcoin_wallet (profile)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "args": [
+                "--dart-define-from-file=config/dev.env"
+            ]
+        },
+        {
+            "name": "bitcoin_wallet (release)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "args": [
+                "--dart-define-from-file=config/dev.env"
+            ]
+        },
+        {
+            "name": "Tests",
+            "request": "launch",
+            "type": "dart",
+            "codeLens": {
+                "for": [
+                    "run-test",
+                    "run-test-file",
+                    "debug-test",
+                    "debug-test-file"
+                ]
+            },
+            "args": [
+                "--dart-define-from-file=config/test.env"
+            ]
+        },
+        {
+            "name": "rpc_client",
+            "cwd": "packages/rpc_client",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "storage",
+            "cwd": "packages/storage",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "storage (profile mode)",
+            "cwd": "packages/storage",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "storage (release mode)",
+            "cwd": "packages/storage",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "ui_kit",
+            "cwd": "packages/ui_kit",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "ui_kit (profile mode)",
+            "cwd": "packages/ui_kit",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "ui_kit (release mode)",
+            "cwd": "packages/ui_kit",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

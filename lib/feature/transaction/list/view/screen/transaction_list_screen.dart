@@ -29,7 +29,7 @@ class TransactionListScreen extends StatelessWidget {
           if (state.status == FetchStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Unknown error'),
+                content: Text(state.exception?.toString() ?? 'Unknown error'),
               ),
             );
           }

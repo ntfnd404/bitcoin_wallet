@@ -57,12 +57,12 @@ void main() {
       expect(walletRepo.saved.first.id, wallet.id);
     });
 
-    test('throws ArgumentError for invalid mnemonic', () async {
+    test('throws WalletInvalidMnemonicException for invalid mnemonic', () async {
       bip39.isValid = false;
 
       expect(
         () => useCase('Bad', kTestMnemonic),
-        throwsA(isA<ArgumentError>()),
+        throwsA(isA<WalletInvalidMnemonicException>()),
       );
     });
 
@@ -71,7 +71,7 @@ void main() {
 
       await expectLater(
         () => useCase('Bad', kTestMnemonic),
-        throwsA(isA<ArgumentError>()),
+        throwsA(isA<WalletInvalidMnemonicException>()),
       );
 
       expect(seedRepo.seeds, isEmpty);

@@ -34,7 +34,7 @@ class _WalletScopeState extends State<WalletScope> {
       final deps = AppScope.of(context);
       _walletBloc = WalletBloc(
         walletRepository: deps.wallet.walletRepository,
-        seedRepository: deps.keys.seedRepository,
+        getSeed: deps.keys.getSeed,
         createNodeWallet: deps.wallet.createNodeWallet,
         createHdWallet: deps.wallet.createHdWallet,
         restoreHdWallet: deps.wallet.restoreHdWallet,
