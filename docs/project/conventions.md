@@ -115,13 +115,33 @@ See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) f
 - Other modules use: Id, small value objects, public query APIs (ReadApi).
 - See [architecture.md](./architecture.md) for full ownership table.
 
-### DataSource ownership
+### Gateway and Repository ownership
 
-- DataSource interfaces (contracts for storage and external systems) are **owned by the consumer module**, not the adapter.
-- Example: `BitcoinCoreRemoteDataSource` lives in `wallet/domain/data_sources/`, not in `bitcoin_node/`.
-- `bitcoin_node` implements `BitcoinCoreRemoteDataSource`.
-- This is DIP: high-level module defines the contract, low-level module implements it.
+- **Repository** (`*Repository`) — domain contract for accessing aggregates/entities. Lives in `domain/repository/`.
+- **Gateway** (`*Gateway`) — outbound port to an external system (Bitcoin Core RPC, network). Lives in `domain/gateway/`. Owned by the consumer module, not the adapter.
+  - Example: `NodeAddressGateway` lives in `address/domain/gateway/`, `bitcoin_node` implements it.
+  - This is DIP: high-level module defines the contract, low-level module implements it.
+- **DataSource** (`*DataSource`) — infrastructure detail (raw storage, HTTP client). Lives in `data/` as an internal detail of a repository or gateway implementation. Never in `domain/`.
 - App code imports package barrels only. `package:<module>/src/*` deep imports from `lib/` or `test/` are forbidden.
+
+### `lib/core/` mandate
+
+`lib/core/` contains **only**:
+
+| Folder | Contents |
+|---|---|
+| `di/` | Composition root: `AppDependencies`, `AppScope`, `AppDependenciesBuilder` |
+| `routing/` | `AppRouter`, `AppRouterDelegate` |
+| `event_bus/` | `AppEventBus` and event hierarchy |
+| `adapters/` | App-layer composition adapters (bridge between packages that cannot depend on each other directly, and only when a thin passthrough is not enough — adapter must add logic or resolve a dependency cycle) |
+| `config/` | `AppEnvironment`, `RpcEnvironment`, `EnvironmentLoader` |
+| `error/` | Presentation failure mapper |
+
+**Not allowed in `lib/core/`:**
+- UI theme, tokens, fonts → `ui_kit`
+- Extensions without architectural role → `lib/common/`
+- Domain logic → `packages/*`
+- Feature state → `lib/feature/*`
 
 ---
 
