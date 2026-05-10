@@ -1,16 +1,16 @@
-import 'package:transaction/src/domain/data_sources/transaction_remote_data_source.dart';
 import 'package:transaction/src/domain/entity/transaction.dart';
 import 'package:transaction/src/domain/entity/transaction_detail.dart';
+import 'package:transaction/src/domain/gateway/transaction_history_gateway.dart';
 import 'package:transaction/src/domain/repository/transaction_repository.dart';
 
-/// [TransactionRepository] backed by [TransactionRemoteDataSource].
+/// [TransactionRepository] backed by [TransactionHistoryGateway].
 ///
 /// Transactions are never cached locally — always fresh from the node.
 final class TransactionRepositoryImpl implements TransactionRepository {
-  final TransactionRemoteDataSource _remoteDataSource;
+  final TransactionHistoryGateway _remoteDataSource;
 
   const TransactionRepositoryImpl({
-    required TransactionRemoteDataSource remoteDataSource,
+    required TransactionHistoryGateway remoteDataSource,
   }) : _remoteDataSource = remoteDataSource;
 
   @override

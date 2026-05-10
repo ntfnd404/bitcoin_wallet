@@ -1,8 +1,8 @@
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/node/node_send_preparation.dart';
-import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
+import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
 import 'package:transaction/src/domain/repository/utxo_repository.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
@@ -15,13 +15,13 @@ import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
 /// Does not broadcast — call [SendNodeTransactionUseCase] after confirmation.
 final class PrepareNodeSendUseCase {
   final UtxoRepository _utxoRepository;
-  final NodeTransactionDataSource _nodeDataSource;
+  final NodeTransactionGateway _nodeDataSource;
   final List<CoinSelector> _selectors;
   final FeeEstimator _feeEstimator;
 
   const PrepareNodeSendUseCase({
     required UtxoRepository utxoRepository,
-    required NodeTransactionDataSource nodeDataSource,
+    required NodeTransactionGateway nodeDataSource,
     required List<CoinSelector> selectors,
     required FeeEstimator feeEstimator,
   }) : _utxoRepository = utxoRepository,

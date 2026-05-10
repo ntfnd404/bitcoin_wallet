@@ -27,15 +27,12 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
       if (isClosed) return;
 
       emit(state.copyWith(status: AddressStatus.loaded, addresses: addresses));
-    } catch (e) {
+    } on AddressException catch (e) {
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          status: AddressStatus.error,
-          exception: e is Exception ? e : Exception(e.toString()),
-        ),
-      );
+      emit(state.copyWith(status: AddressStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 

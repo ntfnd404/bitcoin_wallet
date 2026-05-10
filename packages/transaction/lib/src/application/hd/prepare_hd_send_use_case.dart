@@ -1,9 +1,9 @@
+import 'package:address/address.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/hd/hd_send_preparation.dart';
-import 'package:transaction/src/domain/data_sources/hd_address_data_source.dart';
-import 'package:transaction/src/domain/data_sources/utxo_scan_data_source.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
+import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
@@ -16,17 +16,17 @@ import 'package:transaction/src/domain/value_object/signing_input.dart';
 /// Does not sign or broadcast — call [SendHdTransactionUseCase] after the user
 /// confirms the send.
 final class PrepareHdSendUseCase {
-  final HdAddressDataSource _addressDataSource;
-  final UtxoScanDataSource _utxoScanDataSource;
+  final AddressRepository _addressRepository;
+  final UtxoScanGateway _utxoScanDataSource;
   final List<CoinSelector> _selectors;
   final FeeEstimator _feeEstimator;
 
   const PrepareHdSendUseCase({
-    required HdAddressDataSource addressDataSource,
-    required UtxoScanDataSource utxoScanDataSource,
+    required AddressRepository addressRepository,
+    required UtxoScanGateway utxoScanDataSource,
     required List<CoinSelector> selectors,
     required FeeEstimator feeEstimator,
-  }) : _addressDataSource = addressDataSource,
+  }) : _addressRepository = addressRepository,
        _utxoScanDataSource = utxoScanDataSource,
        _selectors = selectors,
        _feeEstimator = feeEstimator;
@@ -38,7 +38,7 @@ final class PrepareHdSendUseCase {
   }) async {
     try {
       // 1. Load all stored HD-wallet addresses with derivation metadata.
-      final entries = await _addressDataSource.getAddressesForWallet(walletId);
+      final entries = await _addressRepository.getAddresses(walletId);
       final nativeSegwit = entries.where((e) => e.type == AddressType.nativeSegwit).toList();
 
       // 2. Scan the UTXO set for outputs at those addresses.

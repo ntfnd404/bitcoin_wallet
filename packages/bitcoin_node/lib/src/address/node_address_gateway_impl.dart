@@ -3,13 +3,13 @@ import 'package:bitcoin_node/src/address/address_type_rpc.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 
-/// [AddressRemoteDataSource] backed by [BitcoinRpcClient].
+/// [NodeAddressGateway] backed by [BitcoinRpcClient].
 ///
 /// Wraps RPC / network / parse failures as [AddressGenerationException].
-final class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
+final class NodeAddressGatewayImpl implements NodeAddressGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const AddressRemoteDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const NodeAddressGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<String> generateAddress(String walletName, AddressType type) async {

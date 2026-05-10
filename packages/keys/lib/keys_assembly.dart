@@ -9,6 +9,7 @@ final class KeysAssembly {
   final Bip39Service bip39Service;
   final KeyDerivationService keyDerivationService;
   final SeedRepository seedRepository;
+  final GetSeedUseCase getSeed;
   final GetXpubUseCase getXpub;
   final SignTransactionUseCase signTransaction;
 
@@ -24,6 +25,7 @@ final class KeysAssembly {
       bip39Service: const Bip39ServiceImpl(),
       keyDerivationService: derivation,
       seedRepository: seeds,
+      getSeed: GetSeedUseCase(repository: seeds),
       getXpub: GetXpubUseCase(
         seedRepository: seeds,
         derivation: derivation,
@@ -40,6 +42,7 @@ final class KeysAssembly {
     required this.bip39Service,
     required this.keyDerivationService,
     required this.seedRepository,
+    required this.getSeed,
     required this.getXpub,
     required this.signTransaction,
   });

@@ -45,7 +45,7 @@ class _SendScopeState extends State<SendScope> {
             wallet: wallet,
             prepareNode: tx.prepareNodeSend,
             sendNode: tx.sendNodeTransaction,
-            blockGeneration: tx.blockGeneration,
+            mineBlock: tx.mineBlock,
             bech32Hrp: bech32Hrp,
             eventBus: eventBus,
           )
@@ -53,7 +53,7 @@ class _SendScopeState extends State<SendScope> {
             wallet: wallet,
             prepareHd: tx.prepareHdSend,
             sendHd: tx.sendHdTransaction,
-            blockGeneration: tx.blockGeneration,
+            mineBlock: tx.mineBlock,
             bech32Hrp: bech32Hrp,
             eventBus: eventBus,
           );

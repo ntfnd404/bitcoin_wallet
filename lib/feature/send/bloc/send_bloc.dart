@@ -24,7 +24,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
   final SendHdTransactionUseCase? _sendHd;
 
   // Shared
-  final BlockGenerationDataSource _blockGeneration;
+  final MineBlockUseCase _mineBlock;
   final String _bech32Hrp;
   final AppEventBus _eventBus;
 
@@ -38,7 +38,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     SendNodeTransactionUseCase? sendNode,
     PrepareHdSendUseCase? prepareHd,
     SendHdTransactionUseCase? sendHd,
-    required BlockGenerationDataSource blockGeneration,
+    required MineBlockUseCase mineBlock,
     required String bech32Hrp,
     required AppEventBus eventBus,
   }) : _wallet = wallet,
@@ -46,7 +46,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
        _sendNode = sendNode,
        _prepareHd = prepareHd,
        _sendHd = sendHd,
-       _blockGeneration = blockGeneration,
+       _mineBlock = mineBlock,
        _bech32Hrp = bech32Hrp,
        _eventBus = eventBus,
        super(const SendState()) {
@@ -173,18 +173,16 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     Emitter<SendState> emit,
   ) async {
     emit(state.copyWith(status: SendStatus.mining));
-
     try {
-      await _blockGeneration.generateToAddress(1, event.toAddress);
+      await _mineBlock(event.toAddress);
+      if (isClosed) return;
       emit(state.copyWith(status: SendStatus.mined));
       _eventBus.emit(BlockMined(walletId: _wallet.id));
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          exception: e is Exception ? e : Exception(e.toString()),
-        ),
-      );
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

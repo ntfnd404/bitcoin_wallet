@@ -7,10 +7,10 @@ import 'package:transaction/transaction.dart';
 /// Uses `scantxoutset "start" [...]` — no wallet required.
 /// Wraps RPC / network / parse failures (and the "scan unsuccessful"
 /// signal) as [TransactionUtxoScanException].
-final class UtxoScanDataSourceImpl implements UtxoScanDataSource {
+final class UtxoScanGatewayImpl implements UtxoScanGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoScanDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const UtxoScanGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<ScannedUtxo>> scanForAddresses(List<String> addresses) async {

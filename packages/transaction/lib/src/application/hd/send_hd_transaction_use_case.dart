@@ -1,7 +1,7 @@
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/hd/hd_send_preparation.dart';
-import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
+import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
 import 'package:transaction/src/domain/service/transaction_signer.dart';
 
 /// Signs and broadcasts an HD-wallet transaction.
@@ -14,11 +14,11 @@ import 'package:transaction/src/domain/service/transaction_signer.dart';
 /// Throws [TransactionBroadcastException] if broadcast fails.
 final class SendHdTransactionUseCase {
   final TransactionSigner _signer;
-  final BroadcastDataSource _broadcastDataSource;
+  final BroadcastGateway _broadcastDataSource;
 
   const SendHdTransactionUseCase({
     required TransactionSigner signer,
-    required BroadcastDataSource broadcastDataSource,
+    required BroadcastGateway broadcastDataSource,
   }) : _signer = signer,
        _broadcastDataSource = broadcastDataSource;
 

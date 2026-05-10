@@ -40,3 +40,11 @@ final class WalletStorageException extends WalletException {
   @override
   String toString() => 'Wallet storage error';
 }
+
+/// A Bitcoin Core node operation failed (RPC or network error).
+final class WalletNodeException extends WalletException {
+  const WalletNodeException();
+
+  @override
+  String toString() => 'Bitcoin Core node error';
+}

@@ -1,8 +1,8 @@
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/node/node_send_preparation.dart';
-import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
-import 'package:transaction/src/domain/data_sources/node_transaction_data_source.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
+import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
+import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
 
 /// Builds, signs (via Bitcoin Core), and broadcasts a Node-wallet transaction.
 ///
@@ -12,12 +12,12 @@ import 'package:transaction/src/domain/exception/transaction_exception.dart';
 /// Throws [TransactionPreparationException] if [strategyName] is not found.
 /// Throws [TransactionBroadcastException] if the RPC or broadcast call fails.
 final class SendNodeTransactionUseCase {
-  final NodeTransactionDataSource _nodeDataSource;
-  final BroadcastDataSource _broadcastDataSource;
+  final NodeTransactionGateway _nodeDataSource;
+  final BroadcastGateway _broadcastDataSource;
 
   const SendNodeTransactionUseCase({
-    required NodeTransactionDataSource nodeDataSource,
-    required BroadcastDataSource broadcastDataSource,
+    required NodeTransactionGateway nodeDataSource,
+    required BroadcastGateway broadcastDataSource,
   }) : _nodeDataSource = nodeDataSource,
        _broadcastDataSource = broadcastDataSource;
 

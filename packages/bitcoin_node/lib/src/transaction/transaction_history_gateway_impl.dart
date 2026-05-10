@@ -8,10 +8,10 @@ import 'package:transaction/transaction.dart';
 /// Calls `listtransactions` for list and `gettransaction` for detail.
 /// Wraps RPC / network / parse failures as [TransactionFetchException]
 /// so callers see only the transaction bounded-context language.
-final class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
+final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const TransactionRemoteDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const TransactionHistoryGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<Transaction>> getTransactions(String walletName) async {

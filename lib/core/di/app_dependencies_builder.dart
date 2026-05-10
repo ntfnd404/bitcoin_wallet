@@ -1,6 +1,5 @@
 import 'package:address/address_assembly.dart';
 import 'package:bitcoin_node/bitcoin_node.dart';
-import 'package:bitcoin_wallet/core/adapters/hd_address_data_source_impl.dart';
 import 'package:bitcoin_wallet/core/adapters/hd_transaction_signer.dart';
 import 'package:bitcoin_wallet/core/config/config.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
@@ -70,8 +69,8 @@ final class AppDependenciesBuilder {
         network: _environment.network,
       );
 
-      final walletRemoteDataSource = WalletRemoteDataSourceImpl(rpcClient: rpcClient);
-      final addressRemoteDataSource = AddressRemoteDataSourceImpl(rpcClient: rpcClient);
+      final walletRemoteDataSource = NodeWalletGatewayImpl(rpcClient: rpcClient);
+      final addressRemoteDataSource = NodeAddressGatewayImpl(rpcClient: rpcClient);
 
       final wallet = WalletAssembly(
         storage: secureStorage,
@@ -87,24 +86,21 @@ final class AppDependenciesBuilder {
         keyDerivationService: keys.keyDerivationService,
       );
 
-      final nodeTxDataSource = NodeTransactionDataSourceImpl(rpcClient: rpcClient);
-      final blockGenDataSource = BlockGenerationDataSourceImpl(rpcClient: rpcClient);
-      final broadcastDataSource = BroadcastDataSourceImpl(rpcClient: rpcClient);
-      final hdAddressDataSource = HdAddressDataSourceImpl(
-        repository: address.addressRepository,
-      );
+      final nodeTxDataSource = NodeTransactionGatewayImpl(rpcClient: rpcClient);
+      final blockGenDataSource = BlockGenerationGatewayImpl(rpcClient: rpcClient);
+      final broadcastDataSource = BroadcastGatewayImpl(rpcClient: rpcClient);
       final hdSigner = HdTransactionSigner(
         signTransaction: keys.signTransaction,
       );
 
       final transaction = TransactionAssembly(
-        transactionRemoteDataSource: TransactionRemoteDataSourceImpl(rpcClient: rpcClient),
-        utxoRemoteDataSource: UtxoRemoteDataSourceImpl(rpcClient: rpcClient),
-        utxoScanDataSource: UtxoScanDataSourceImpl(rpcClient: rpcClient),
+        transactionRemoteDataSource: TransactionHistoryGatewayImpl(rpcClient: rpcClient),
+        utxoRemoteDataSource: UtxoGatewayImpl(rpcClient: rpcClient),
+        utxoScanDataSource: UtxoScanGatewayImpl(rpcClient: rpcClient),
         broadcastDataSource: broadcastDataSource,
         nodeTransactionDataSource: nodeTxDataSource,
         blockGenerationDataSource: blockGenDataSource,
-        hdAddressDataSource: hdAddressDataSource,
+        addressRepository: address.addressRepository,
         coinSelectors: const [
           FifoCoinSelector(),
           LifoCoinSelector(),

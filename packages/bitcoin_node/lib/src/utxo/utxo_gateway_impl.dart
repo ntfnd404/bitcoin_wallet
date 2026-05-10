@@ -7,10 +7,10 @@ import 'package:transaction/transaction.dart';
 ///
 /// Calls `listunspent` and maps responses to [Utxo] entities.
 /// Wraps RPC / network / parse failures as [TransactionFetchException].
-final class UtxoRemoteDataSourceImpl implements UtxoRemoteDataSource {
+final class UtxoGatewayImpl implements UtxoGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoRemoteDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const UtxoGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<List<Utxo>> getUtxos(String walletName) async {

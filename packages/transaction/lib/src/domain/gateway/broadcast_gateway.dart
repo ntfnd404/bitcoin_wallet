@@ -1,10 +1,8 @@
 import 'package:transaction/src/domain/entity/broadcasted_tx.dart';
 
-/// ISP interface for broadcasting and verifying raw transactions.
-abstract interface class BroadcastDataSource {
+/// Outbound port for broadcasting and verifying raw transactions on Bitcoin Core.
+abstract interface class BroadcastGateway {
   /// Broadcasts [rawHex] via `sendrawtransaction`.
-  ///
-  /// Returns the txid on success, throws [RpcException] on failure.
   Future<String> broadcast(String rawHex);
 
   /// Fetches transaction info via `getrawtransaction <txid> 1`.

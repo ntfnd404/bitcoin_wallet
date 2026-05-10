@@ -160,16 +160,11 @@ class _MineBlockTileState extends State<_MineBlockTile> {
 
     try {
       final deps = AppScope.of(context);
-      final blockGen = deps.transaction.blockGeneration;
 
       // Resolve target address.
       final String toAddress;
       if (widget.wallet is NodeWallet) {
         toAddress = await deps.transaction.prepareNodeSend
-            // Reuse NodeTransactionDataSource.getNewAddress via the assembly.
-            // We call it through the existing PrepareNodeSendUseCase's data source
-            // by generating one address. Since we can't access the data source
-            // directly, we use the address assembly instead.
             .call(
               walletName: widget.wallet.name,
               targetSat: const Satoshi(1),
@@ -188,7 +183,7 @@ class _MineBlockTileState extends State<_MineBlockTile> {
         return;
       }
 
-      await blockGen.generateToAddress(1, toAddress);
+      await deps.transaction.mineBlock(toAddress);
       _showSnack('Block mined!');
     } catch (e) {
       _showSnack('Error: $e');

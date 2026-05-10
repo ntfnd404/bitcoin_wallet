@@ -7,10 +7,10 @@ import 'package:transaction/transaction.dart';
 /// Wraps RPC / network / parse failures: broadcast failures →
 /// [TransactionBroadcastException]; transaction-fetch failures →
 /// [TransactionFetchException].
-final class BroadcastDataSourceImpl implements BroadcastDataSource {
+final class BroadcastGatewayImpl implements BroadcastGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const BroadcastDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const BroadcastGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   @override
   Future<String> broadcast(String rawHex) async {

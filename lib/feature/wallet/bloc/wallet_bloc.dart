@@ -6,19 +6,19 @@ import 'package:wallet/wallet.dart';
 
 final class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository _walletRepository;
-  final SeedRepository _seedRepository;
+  final GetSeedUseCase _getSeed;
   final CreateNodeWalletUseCase _createNodeWallet;
   final CreateHdWalletUseCase _createHdWallet;
   final RestoreHdWalletUseCase _restoreHdWallet;
 
   WalletBloc({
     required WalletRepository walletRepository,
-    required SeedRepository seedRepository,
+    required GetSeedUseCase getSeed,
     required CreateNodeWalletUseCase createNodeWallet,
     required CreateHdWalletUseCase createHdWallet,
     required RestoreHdWalletUseCase restoreHdWallet,
   }) : _walletRepository = walletRepository,
-       _seedRepository = seedRepository,
+       _getSeed = getSeed,
        _createNodeWallet = createNodeWallet,
        _createHdWallet = createHdWallet,
        _restoreHdWallet = restoreHdWallet,
@@ -46,14 +46,11 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
           clearException: true,
         ),
       );
-    } catch (e) {
+    } on WalletException catch (e) {
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.error,
-          exception: e is Exception ? e : Exception(e.toString()),
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -158,32 +155,20 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     Emitter<WalletState> emit,
   ) async {
     try {
-      final mnemonic = await _seedRepository.getSeed(event.walletId);
+      final mnemonic = await _getSeed(event.walletId);
       if (isClosed) return;
-      if (mnemonic == null) {
-        emit(
-          state.copyWith(
-            status: WalletStatus.error,
-            exception: const KeysSeedNotFoundException(),
-          ),
-        );
-
-        return;
-      }
       emit(
         state.copyWith(
           status: WalletStatus.awaitingSeedConfirmation,
           pendingMnemonic: mnemonic,
+          clearException: true,
         ),
       );
-    } catch (e) {
+    } on KeysException catch (e) {
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.error,
-          exception: e is Exception ? e : Exception(e.toString()),
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

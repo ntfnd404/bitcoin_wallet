@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/src/data/wallet_local_data_source.dart';
 import 'package:wallet/src/data/wallet_mapper.dart';
-import 'package:wallet/src/domain/data_sources/wallet_local_data_source.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
 import 'package:wallet/src/domain/exception/wallet_exception.dart';
 

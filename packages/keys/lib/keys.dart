@@ -1,3 +1,4 @@
+export 'src/application/get_seed_use_case.dart';
 export 'src/application/get_xpub_use_case.dart';
 export 'src/application/sign_transaction_use_case.dart';
 export 'src/domain/derivation_paths.dart';

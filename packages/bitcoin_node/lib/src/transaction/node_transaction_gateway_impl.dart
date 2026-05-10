@@ -4,14 +4,14 @@ import 'package:transaction/transaction.dart';
 /// Node-wallet transaction operations: address generation, raw transaction
 /// construction, and Core-side signing.
 ///
-/// Broadcasting is delegated to [BroadcastDataSourceImpl].
+/// Broadcasting is delegated to [BroadcastGatewayImpl].
 ///
 /// Wraps RPC / network / parse failures in the appropriate
 /// [TransactionException] subtype per method.
-final class NodeTransactionDataSourceImpl implements NodeTransactionDataSource {
+final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const NodeTransactionDataSourceImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const NodeTransactionGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
 
   /// Generates a new bech32 (P2WPKH) address in [walletName].
   @override
