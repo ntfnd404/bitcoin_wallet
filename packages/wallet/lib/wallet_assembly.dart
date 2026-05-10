@@ -6,7 +6,7 @@ import 'package:wallet/src/application/node/create_node_wallet_use_case.dart';
 import 'package:wallet/src/data/wallet_local_data_source_impl.dart';
 import 'package:wallet/src/data/wallet_mapper.dart';
 import 'package:wallet/src/data/wallet_repository_impl.dart';
-import 'package:wallet/src/domain/data_sources/wallet_remote_data_source.dart';
+import 'package:wallet/src/domain/gateway/node_wallet_gateway.dart';
 import 'package:wallet/src/domain/repository/wallet_repository.dart';
 
 final class WalletAssembly {
@@ -17,7 +17,7 @@ final class WalletAssembly {
 
   factory WalletAssembly({
     required SecureStorage storage,
-    required WalletRemoteDataSource remoteDataSource,
+    required NodeWalletGateway remoteDataSource,
     required Bip39Service bip39Service,
     required SeedRepository seedRepository,
   }) {

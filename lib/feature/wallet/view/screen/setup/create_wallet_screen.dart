@@ -69,7 +69,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
           }
         } else if (state.status == WalletStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
+            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
           );
         }
       },

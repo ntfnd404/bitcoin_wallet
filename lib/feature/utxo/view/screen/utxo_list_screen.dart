@@ -56,7 +56,7 @@ class _UtxoListScreenState extends State<UtxoListScreen> {
         listener: (context, state) {
           if (state.status == FetchStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Unknown error')),
+              SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
             );
           }
         },

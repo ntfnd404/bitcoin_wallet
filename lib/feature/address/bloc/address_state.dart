@@ -4,27 +4,27 @@ final class AddressState {
   final List<Address> addresses;
   final AddressStatus status;
   final Address? lastGenerated;
-  final String? errorMessage;
+  final Exception? exception;
 
   const AddressState({
     this.addresses = const [],
     this.status = AddressStatus.initial,
     this.lastGenerated,
-    this.errorMessage,
+    this.exception,
   });
 
   AddressState copyWith({
     List<Address>? addresses,
     AddressStatus? status,
     Address? lastGenerated,
-    String? errorMessage,
+    Exception? exception,
     bool clearLastGenerated = false,
-    bool clearErrorMessage = false,
+    bool clearException = false,
   }) => AddressState(
     addresses: addresses ?? this.addresses,
     status: status ?? this.status,
     lastGenerated: clearLastGenerated ? null : (lastGenerated ?? this.lastGenerated),
-    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+    exception: clearException ? null : (exception ?? this.exception),
   );
 }
 

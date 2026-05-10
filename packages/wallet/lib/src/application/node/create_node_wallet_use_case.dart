@@ -3,7 +3,10 @@ import 'package:wallet/src/domain/repository/node_wallet_repository.dart';
 
 /// Creates a new Node wallet in Bitcoin Core and persists the metadata locally.
 ///
-/// Delegates entirely to [NodeWalletRepository.createNodeWallet].
+/// This use case is pure delegation — the repository already speaks wallet's
+/// language (throws `WalletException` subtypes after Phase 3 boundary
+/// wrapping). No try/catch is needed because there is no language to translate
+/// and no recovery to perform here.
 final class CreateNodeWalletUseCase {
   final NodeWalletRepository _nodeWalletRepository;
 

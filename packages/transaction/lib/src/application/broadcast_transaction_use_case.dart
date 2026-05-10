@@ -1,15 +1,28 @@
-import 'package:transaction/src/domain/data_sources/broadcast_data_source.dart';
 import 'package:transaction/src/domain/entity/broadcasted_tx.dart';
+import 'package:transaction/src/domain/exception/transaction_exception.dart';
+import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
 
 /// Broadcasts a raw signed transaction and fetches its confirmation status.
 final class BroadcastTransactionUseCase {
-  final BroadcastDataSource _dataSource;
+  final BroadcastGateway _dataSource;
 
-  const BroadcastTransactionUseCase({required BroadcastDataSource dataSource}) : _dataSource = dataSource;
+  const BroadcastTransactionUseCase({required BroadcastGateway dataSource}) : _dataSource = dataSource;
 
   /// Broadcasts [rawHex] and returns the resulting txid.
-  Future<String> broadcast(String rawHex) => _dataSource.broadcast(rawHex);
+  Future<String> broadcast(String rawHex) async {
+    try {
+      return await _dataSource.broadcast(rawHex);
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
+    }
+  }
 
   /// Fetches transaction info for verification via `getrawtransaction`.
-  Future<BroadcastedTx> getTransaction(String txid) => _dataSource.getTransaction(txid);
+  Future<BroadcastedTx> getTransaction(String txid) async {
+    try {
+      return await _dataSource.getTransaction(txid);
+    } catch (e, stack) {
+      Error.throwWithStackTrace(const TransactionFetchException(), stack);
+    }
+  }
 }

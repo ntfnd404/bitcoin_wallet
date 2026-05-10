@@ -1,14 +1,18 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/src/data/wallet_local_data_source.dart';
 import 'package:wallet/src/data/wallet_mapper.dart';
-import 'package:wallet/src/domain/data_sources/wallet_local_data_source.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
+import 'package:wallet/src/domain/exception/wallet_exception.dart';
 
 /// Persists wallet metadata in [SecureStorage].
 ///
 /// All wallets are stored as a JSON array under a single key [_key].
 /// Follows the same storage pattern as [AddressLocalDataSourceImpl].
+///
+/// Wraps storage / decode / cast failures as [WalletStorageException]
+/// so callers see only the wallet bounded-context language.
 final class WalletLocalDataSourceImpl implements WalletLocalDataSource {
   static const String _key = 'wallets';
 
@@ -23,31 +27,39 @@ final class WalletLocalDataSourceImpl implements WalletLocalDataSource {
 
   @override
   Future<List<Wallet>> getWallets() async {
-    final raw = await _storage.getString(_key);
-    if (raw == null) return const [];
+    try {
+      final raw = await _storage.getString(_key);
+      if (raw == null) return const [];
 
-    final jsonList = jsonDecode(raw) as List<Object?>;
+      final jsonList = jsonDecode(raw) as List<Object?>;
 
-    return jsonList.cast<Map<String, Object?>>().map<Wallet>(_mapper.decode).toList();
+      return jsonList.cast<Map<String, Object?>>().map<Wallet>(_mapper.decode).toList();
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const WalletStorageException(), stack);
+    }
   }
 
   @override
   Future<void> saveWallet(Wallet wallet) async {
-    final raw = await _storage.getString(_key);
+    try {
+      final raw = await _storage.getString(_key);
 
-    final List<Map<String, Object?>> list = raw == null
-        ? <Map<String, Object?>>[]
-        : (jsonDecode(raw) as List).cast<Map<String, Object?>>();
+      final List<Map<String, Object?>> list = raw == null
+          ? <Map<String, Object?>>[]
+          : (jsonDecode(raw) as List).cast<Map<String, Object?>>();
 
-    final index = list.indexWhere((m) => m['id'] == wallet.id);
-    final encoded = _mapper.encode(wallet);
+      final index = list.indexWhere((m) => m['id'] == wallet.id);
+      final encoded = _mapper.encode(wallet);
 
-    if (index == -1) {
-      list.add(encoded);
-    } else {
-      list[index] = encoded;
+      if (index == -1) {
+        list.add(encoded);
+      } else {
+        list[index] = encoded;
+      }
+
+      await _storage.setString(_key, jsonEncode(list));
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const WalletStorageException(), stack);
     }
-
-    await _storage.setString(_key, jsonEncode(list));
   }
 }

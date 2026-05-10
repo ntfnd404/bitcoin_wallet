@@ -1,8 +1,8 @@
-export 'src/address/address_remote_data_source_impl.dart';
-export 'src/block/block_generation_data_source_impl.dart';
-export 'src/transaction/broadcast_data_source_impl.dart';
-export 'src/transaction/node_transaction_data_source_impl.dart';
-export 'src/transaction/transaction_remote_data_source_impl.dart';
-export 'src/utxo/utxo_remote_data_source_impl.dart';
-export 'src/utxo/utxo_scan_data_source_impl.dart';
-export 'src/wallet/wallet_remote_data_source_impl.dart';
+export 'src/address/node_address_gateway_impl.dart';
+export 'src/block/block_generation_gateway_impl.dart';
+export 'src/transaction/broadcast_gateway_impl.dart';
+export 'src/transaction/node_transaction_gateway_impl.dart';
+export 'src/transaction/transaction_history_gateway_impl.dart';
+export 'src/utxo/utxo_gateway_impl.dart';
+export 'src/utxo/utxo_scan_gateway_impl.dart';
+export 'src/wallet/node_wallet_gateway_impl.dart';

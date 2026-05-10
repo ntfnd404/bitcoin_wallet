@@ -18,15 +18,15 @@ final class WalletState {
   /// Cleared after confirmation or error.
   final Mnemonic? pendingMnemonic;
 
-  /// Error message from the last failed operation.
-  final String? errorMessage;
+  /// Exception from the last failed operation.
+  final Exception? exception;
 
   const WalletState({
     this.wallets = const [],
     this.status = WalletStatus.initial,
     this.pendingWallet,
     this.pendingMnemonic,
-    this.errorMessage,
+    this.exception,
   });
 
   WalletState copyWith({
@@ -34,16 +34,16 @@ final class WalletState {
     WalletStatus? status,
     Wallet? pendingWallet,
     Mnemonic? pendingMnemonic,
-    String? errorMessage,
+    Exception? exception,
     bool clearPendingWallet = false,
     bool clearPendingMnemonic = false,
-    bool clearErrorMessage = false,
+    bool clearException = false,
   }) => WalletState(
     wallets: wallets ?? this.wallets,
     status: status ?? this.status,
     pendingWallet: clearPendingWallet ? null : (pendingWallet ?? this.pendingWallet),
     pendingMnemonic: clearPendingMnemonic ? null : (pendingMnemonic ?? this.pendingMnemonic),
-    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+    exception: clearException ? null : (exception ?? this.exception),
   );
 }
 

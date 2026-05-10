@@ -8,14 +8,14 @@ final class SigningState {
   final List<ScannedUtxo> utxos;
   final String? txid;
   final BroadcastedTx? broadcastedTx;
-  final String? errorMessage;
+  final Exception? exception;
 
   const SigningState({
     this.status = SigningStatus.initial,
     this.utxos = const [],
     this.txid,
     this.broadcastedTx,
-    this.errorMessage,
+    this.exception,
   });
 
   SigningState copyWith({
@@ -23,12 +23,12 @@ final class SigningState {
     List<ScannedUtxo>? utxos,
     String? txid,
     BroadcastedTx? broadcastedTx,
-    String? errorMessage,
+    Exception? exception,
   }) => SigningState(
     status: status ?? this.status,
     utxos: utxos ?? this.utxos,
     txid: txid ?? this.txid,
     broadcastedTx: broadcastedTx ?? this.broadcastedTx,
-    errorMessage: errorMessage ?? this.errorMessage,
+    exception: exception ?? this.exception,
   );
 }

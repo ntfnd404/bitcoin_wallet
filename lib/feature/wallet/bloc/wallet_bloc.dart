@@ -6,19 +6,19 @@ import 'package:wallet/wallet.dart';
 
 final class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository _walletRepository;
-  final SeedRepository _seedRepository;
+  final GetSeedUseCase _getSeed;
   final CreateNodeWalletUseCase _createNodeWallet;
   final CreateHdWalletUseCase _createHdWallet;
   final RestoreHdWalletUseCase _restoreHdWallet;
 
   WalletBloc({
     required WalletRepository walletRepository,
-    required SeedRepository seedRepository,
+    required GetSeedUseCase getSeed,
     required CreateNodeWalletUseCase createNodeWallet,
     required CreateHdWalletUseCase createHdWallet,
     required RestoreHdWalletUseCase restoreHdWallet,
   }) : _walletRepository = walletRepository,
-       _seedRepository = seedRepository,
+       _getSeed = getSeed,
        _createNodeWallet = createNodeWallet,
        _createHdWallet = createHdWallet,
        _restoreHdWallet = restoreHdWallet,
@@ -35,7 +35,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletListRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.loading, clearErrorMessage: true));
+    emit(state.copyWith(status: WalletStatus.loading, clearException: true));
     try {
       final wallets = await _walletRepository.getWallets();
       if (isClosed) return;
@@ -43,12 +43,14 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
         state.copyWith(
           status: WalletStatus.loaded,
           wallets: wallets,
-          clearErrorMessage: true,
+          clearException: true,
         ),
       );
-    } catch (e) {
+    } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -56,7 +58,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     NodeWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearErrorMessage: true));
+    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
     try {
       final wallet = await _createNodeWallet(event.name);
       if (isClosed) return;
@@ -68,9 +70,11 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
           pendingWallet: wallet,
         ),
       );
-    } catch (e) {
+    } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -78,7 +82,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     HdWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearErrorMessage: true));
+    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
     try {
       final (wallet, mnemonic) = await _createHdWallet(
         event.name,
@@ -92,16 +96,18 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
           pendingMnemonic: mnemonic,
         ),
       );
-    } catch (e) {
+    } on WalletException catch (e) {
       if (isClosed) return;
       emit(
         state.copyWith(
           status: WalletStatus.error,
-          errorMessage: e.toString(),
+          exception: e,
           clearPendingWallet: true,
           clearPendingMnemonic: true,
         ),
       );
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -109,7 +115,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletRestoreRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearErrorMessage: true));
+    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
     try {
       final wallet = await _restoreHdWallet(event.name, event.mnemonic);
       if (isClosed) return;
@@ -119,9 +125,11 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
           wallets: [...state.wallets, wallet],
         ),
       );
-    } catch (e) {
+    } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -147,27 +155,20 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     Emitter<WalletState> emit,
   ) async {
     try {
-      final mnemonic = await _seedRepository.getSeed(event.walletId);
+      final mnemonic = await _getSeed(event.walletId);
       if (isClosed) return;
-      if (mnemonic == null) {
-        emit(
-          state.copyWith(
-            status: WalletStatus.error,
-            errorMessage: 'Seed not found for wallet ${event.walletId}',
-          ),
-        );
-
-        return;
-      }
       emit(
         state.copyWith(
           status: WalletStatus.awaitingSeedConfirmation,
           pendingMnemonic: mnemonic,
+          clearException: true,
         ),
       );
-    } catch (e) {
+    } on KeysException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(status: WalletStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

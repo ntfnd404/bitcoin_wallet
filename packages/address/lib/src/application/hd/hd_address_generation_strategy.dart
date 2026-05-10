@@ -1,5 +1,6 @@
 import 'package:address/src/application/address_generation_strategy.dart';
 import 'package:address/src/domain/entity/address.dart';
+import 'package:address/src/domain/exception/address_exception.dart';
 import 'package:address/src/domain/repository/address_repository.dart';
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
@@ -28,7 +29,7 @@ final class HdAddressGenerationStrategy implements AddressGenerationStrategy {
   Future<Address> generate(Wallet wallet, AddressType addressType) async {
     final mnemonic = await _seedRepository.getSeed(wallet.id);
     if (mnemonic == null) {
-      throw StateError('No seed found for wallet ${wallet.id}');
+      throw const AddressGenerationException();
     }
     final index = await _addressRepository.nextAddressIndex(wallet.id);
     final derived = _keyDerivationService.deriveAddress(

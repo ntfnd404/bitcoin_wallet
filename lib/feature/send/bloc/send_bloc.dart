@@ -1,3 +1,5 @@
+import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
@@ -22,8 +24,9 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
   final SendHdTransactionUseCase? _sendHd;
 
   // Shared
-  final BlockGenerationDataSource _blockGeneration;
+  final MineBlockUseCase _mineBlock;
   final String _bech32Hrp;
+  final AppEventBus _eventBus;
 
   // Internal — holds the preparation DTO between prepare and confirm steps.
   NodeSendPreparation? _nodePrep;
@@ -35,15 +38,17 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     SendNodeTransactionUseCase? sendNode,
     PrepareHdSendUseCase? prepareHd,
     SendHdTransactionUseCase? sendHd,
-    required BlockGenerationDataSource blockGeneration,
+    required MineBlockUseCase mineBlock,
     required String bech32Hrp,
+    required AppEventBus eventBus,
   }) : _wallet = wallet,
        _prepareNode = prepareNode,
        _sendNode = sendNode,
        _prepareHd = prepareHd,
        _sendHd = sendHd,
-       _blockGeneration = blockGeneration,
+       _mineBlock = mineBlock,
        _bech32Hrp = bech32Hrp,
+       _eventBus = eventBus,
        super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
@@ -84,7 +89,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
         emit(
           state.copyWith(
             status: SendStatus.error,
-            errorMessage: 'Insufficient funds for any strategy',
+            exception: Exception('Insufficient funds for any strategy'),
           ),
         );
 
@@ -101,13 +106,11 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
           amountSat: event.amountSat,
         ),
       );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -154,14 +157,14 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
         );
       }
 
+      if (isClosed) return;
       emit(state.copyWith(status: SendStatus.sent, txid: txid));
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _wallet.id));
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 
@@ -170,17 +173,16 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
     Emitter<SendState> emit,
   ) async {
     emit(state.copyWith(status: SendStatus.mining));
-
     try {
-      await _blockGeneration.generateToAddress(1, event.toAddress);
+      await _mineBlock(event.toAddress);
+      if (isClosed) return;
       emit(state.copyWith(status: SendStatus.mined));
-    } catch (e) {
-      emit(
-        state.copyWith(
-          status: SendStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      _eventBus.emit(BlockMined(walletId: _wallet.id));
+    } on TransactionException catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error, exception: e));
+    } catch (e, stack) {
+      Error.throwWithStackTrace(e, stack);
     }
   }
 }

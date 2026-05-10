@@ -4,22 +4,22 @@ import 'package:transaction/transaction.dart';
 final class TransactionDetailState {
   final FetchStatus status;
   final TransactionDetail? detail;
-  final String? errorMessage;
+  final Exception? exception;
 
   const TransactionDetailState({
     this.status = FetchStatus.initial,
     this.detail,
-    this.errorMessage,
+    this.exception,
   });
 
   TransactionDetailState copyWith({
     FetchStatus? status,
     TransactionDetail? detail,
-    String? errorMessage,
-    bool clearErrorMessage = false,
+    Exception? exception,
+    bool clearException = false,
   }) => TransactionDetailState(
     status: status ?? this.status,
     detail: detail ?? this.detail,
-    errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+    exception: clearException ? null : (exception ?? this.exception),
   );
 }
