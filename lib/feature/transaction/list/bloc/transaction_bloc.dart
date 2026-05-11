@@ -1,20 +1,18 @@
 import 'dart:async';
 
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart' as bus;
+import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
-/// BLoC for transaction list state management.
-///
-/// Fetches transaction history from the domain layer and exposes it as state.
-/// Subscribes to [AppEventBus] to auto-refresh when a transaction is
-/// broadcast or a block is mined from another feature.
-final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
+final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
+    with ActionBlocMixin<TransactionState, TransactionAction> {
   final GetTransactionsUseCase _getTransactions;
   late final StreamSubscription<Object> _eventSub;
   Wallet? _currentWallet;
@@ -49,7 +47,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     _currentWallet = event.wallet;
-    emit(state.copyWith(status: FetchStatus.loading, clearException: true));
+    emit(state.copyWith(status: FetchStatus.loading));
     try {
       final transactions = await _getTransactions(event.wallet.name);
       if (isClosed) return;
@@ -58,13 +56,13 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         state.copyWith(
           transactions: transactions,
           status: FetchStatus.loaded,
-          clearException: true,
         ),
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emitAction(TransactionErrorOccurred(exception: e));
+      emit(state.copyWith(status: FetchStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -82,13 +80,13 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         state.copyWith(
           transactions: transactions,
           status: FetchStatus.loaded,
-          clearException: true,
         ),
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emitAction(TransactionErrorOccurred(exception: e));
+      emit(state.copyWith(status: FetchStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

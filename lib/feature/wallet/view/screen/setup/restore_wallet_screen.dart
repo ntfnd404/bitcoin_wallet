@@ -1,5 +1,7 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
@@ -60,18 +62,17 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Restore Wallet')),
-    body: BlocConsumer<WalletBloc, WalletState>(
-      listenWhen: (previous, current) =>
-          (current.status == WalletStatus.loaded && previous.status == WalletStatus.creating) ||
-          current.status == WalletStatus.error,
-      listener: (context, state) {
-        if (state.status == WalletStatus.loaded) {
-          final wallet = state.wallets.last;
-          AppRouter.toWalletDetail(context, wallet);
-        } else if (state.status == WalletStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-          );
+    body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
+      listener: (context, action) {
+        switch (action) {
+          case WalletRestored(:final wallet):
+            AppRouter.toWalletDetail(context, wallet);
+          case WalletErrorOccurred(:final exception):
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(exception.toString())),
+            );
+          case _:
+            break;
         }
       },
       builder: (context, state) {

@@ -1,10 +1,13 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/address/bloc/address_action.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_bloc.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
 import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
 import 'package:bitcoin_wallet/feature/address/view/widget/address_type_section.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
@@ -46,92 +49,98 @@ class WalletDetailScreen extends StatelessWidget {
             ),
         ],
       ),
-      body: BlocListener<WalletBloc, WalletState>(
-        listener: (context, state) {
-          if (state.status == WalletStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-            );
-          }
-          if (state.status == WalletStatus.awaitingSeedConfirmation) {
-            final mnemonic = state.pendingMnemonic;
-            if (mnemonic != null) {
+      body: ActionBlocListener<WalletBloc, WalletState, WalletAction>(
+        listener: (context, action) {
+          switch (action) {
+            case WalletSeedReady(:final mnemonic):
               AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
-            }
+            case WalletErrorOccurred(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
+            case WalletSeedFailed(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
+            case _:
+              break;
           }
         },
-        child: BlocConsumer<AddressBloc, AddressState>(
-          listener: (context, state) {
-            if (state.status == AddressStatus.error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-              );
+        child: ActionBlocListener<AddressBloc, AddressState, AddressAction>(
+          listener: (context, action) {
+            switch (action) {
+              case AddressErrorOccurred(:final exception):
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(exception.toString())),
+                );
             }
           },
-          builder: (context, state) {
-            if (state.status == AddressStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+          child: BlocBuilder<AddressBloc, AddressState>(
+            builder: (context, state) {
+              if (state.status == AddressStatus.loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            final isGenerating = state.status == AddressStatus.generating;
+              final isGenerating = state.status == AddressStatus.generating;
 
-            return ListView(
-              children: [
-                ListTile(
-                  title: const Text('Transaction History'),
-                  leading: const Icon(Icons.history),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toTransactionList(context, wallet),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Unspent Outputs'),
-                  leading: const Icon(Icons.account_balance_wallet_outlined),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toUtxoList(context, wallet),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Send'),
-                  leading: const Icon(Icons.send),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => AppRouter.toSend(context, wallet),
-                ),
-                const Divider(height: 1),
-                _MineBlockTile(wallet: wallet),
-                const Divider(height: 1),
-                if (wallet is HdWallet) ...[
+              return ListView(
+                children: [
                   ListTile(
-                    title: const Text('Account xpubs'),
-                    leading: const Icon(Icons.key_outlined),
+                    title: const Text('Transaction History'),
+                    leading: const Icon(Icons.history),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => AppRouter.toXpub(context, wallet),
+                    onTap: () => AppRouter.toTransactionList(context, wallet),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    title: const Text('Sign & Send (demo)'),
-                    leading: const Icon(Icons.send_outlined),
+                    title: const Text('Unspent Outputs'),
+                    leading: const Icon(Icons.account_balance_wallet_outlined),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => AppRouter.toSigningDemo(context, wallet),
+                    onTap: () => AppRouter.toUtxoList(context, wallet),
                   ),
                   const Divider(height: 1),
-                ],
-                ...AddressType.values.map((type) {
-                  final filtered = state.addresses.where((a) => a.type == type).toList();
-
-                  return AddressTypeSection(
-                    type: type,
-                    addresses: filtered,
-                    isGenerating: isGenerating,
-                    onGenerate: () => context.read<AddressBloc>().add(
-                      AddressGenerateRequested(wallet: wallet, type: type),
+                  ListTile(
+                    title: const Text('Send'),
+                    leading: const Icon(Icons.send),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => AppRouter.toSend(context, wallet),
+                  ),
+                  const Divider(height: 1),
+                  _MineBlockTile(wallet: wallet),
+                  const Divider(height: 1),
+                  if (wallet is HdWallet) ...[
+                    ListTile(
+                      title: const Text('Account xpubs'),
+                      leading: const Icon(Icons.key_outlined),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => AppRouter.toXpub(context, wallet),
                     ),
-                    onAddressSelected: (addr) => AppRouter.toAddress(context, addr),
-                  );
-                }),
-              ],
-            );
-          },
+                    const Divider(height: 1),
+                    ListTile(
+                      title: const Text('Sign & Send (demo)'),
+                      leading: const Icon(Icons.send_outlined),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => AppRouter.toSigningDemo(context, wallet),
+                    ),
+                    const Divider(height: 1),
+                  ],
+                  ...AddressType.values.map((type) {
+                    final filtered = state.addresses.where((a) => a.type == type).toList();
+
+                    return AddressTypeSection(
+                      type: type,
+                      addresses: filtered,
+                      isGenerating: isGenerating,
+                      onGenerate: () => context.read<AddressBloc>().add(
+                        AddressGenerateRequested(wallet: wallet, type: type),
+                      ),
+                      onAddressSelected: (addr) => AppRouter.toAddress(context, addr),
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
         ),
       ),
     ),

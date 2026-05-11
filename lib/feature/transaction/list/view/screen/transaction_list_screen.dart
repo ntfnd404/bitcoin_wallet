@@ -1,5 +1,7 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_bloc.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_state.dart';
@@ -24,14 +26,13 @@ class TransactionListScreen extends StatelessWidget {
     create: (ctx) => TransactionListScope.newTransactionBloc(ctx)..add(TransactionListRequested(wallet: wallet)),
     child: Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
-      body: BlocConsumer<TransactionBloc, TransactionState>(
-        listener: (context, state) {
-          if (state.status == FetchStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.exception?.toString() ?? 'Unknown error'),
-              ),
-            );
+      body: ActionBlocConsumer<TransactionBloc, TransactionState, TransactionAction>(
+        listener: (context, action) {
+          switch (action) {
+            case TransactionErrorOccurred(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
           }
         },
         builder: (context, state) {

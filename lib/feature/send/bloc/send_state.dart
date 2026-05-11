@@ -3,25 +3,12 @@ import 'package:transaction/transaction.dart';
 
 final class SendState {
   final SendStatus status;
-
-  /// All strategy results for the comparison table.
-  /// Available after [SendStatus.awaitingConfirmation].
   final Map<String, CoinSelectionResult>? strategies;
-
-  /// Currently selected strategy name.
   final String? selectedStrategy;
-
-  /// Change address used in the prepared transaction.
   final String? changeAddress;
-
-  /// Cached form values — needed when [SendConfirmed] fires.
   final String? recipientAddress;
   final int? amountSat;
-
-  /// Txid of the broadcast transaction.
   final String? txid;
-
-  final Exception? exception;
 
   const SendState({
     this.status = SendStatus.initial,
@@ -31,7 +18,6 @@ final class SendState {
     this.recipientAddress,
     this.amountSat,
     this.txid,
-    this.exception,
   });
 
   SendState copyWith({
@@ -42,7 +28,6 @@ final class SendState {
     String? recipientAddress,
     int? amountSat,
     String? txid,
-    Exception? exception,
   }) => SendState(
     status: status ?? this.status,
     strategies: strategies ?? this.strategies,
@@ -51,6 +36,5 @@ final class SendState {
     recipientAddress: recipientAddress ?? this.recipientAddress,
     amountSat: amountSat ?? this.amountSat,
     txid: txid ?? this.txid,
-    exception: exception ?? this.exception,
   );
 }

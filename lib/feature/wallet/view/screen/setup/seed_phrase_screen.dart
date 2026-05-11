@@ -1,3 +1,5 @@
+import 'package:action_bloc/action_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
@@ -17,11 +19,7 @@ class SeedPhraseScreen extends StatefulWidget {
 
   /// Mnemonic to display. Passed explicitly — never read from BLoC state at build time.
   final Mnemonic mnemonic;
-
-  /// The pending wallet id used in [SeedConfirmed].
   final String walletId;
-
-  /// Called after [SeedConfirmed] is dispatched and BLoC emits [loaded].
   final VoidCallback onConfirmed;
 
   @override
@@ -34,12 +32,19 @@ class _SeedPhraseScreenState extends State<SeedPhraseScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Seed Phrase')),
-    body: BlocListener<WalletBloc, WalletState>(
-      listener: (context, state) {
-        if (state.status == WalletStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-          );
+    body: ActionBlocListener<WalletBloc, WalletState, WalletAction>(
+      listener: (context, action) {
+        switch (action) {
+          case WalletErrorOccurred(:final exception):
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(exception.toString())),
+            );
+          case WalletSeedFailed(:final exception):
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(exception.toString())),
+            );
+          case _:
+            break;
         }
       },
       child: Padding(

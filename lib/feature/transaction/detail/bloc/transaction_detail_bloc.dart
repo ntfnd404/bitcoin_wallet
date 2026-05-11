@@ -1,14 +1,13 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
+import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
 
-/// BLoC for fetching full transaction detail on demand.
-///
-/// Handles [TransactionDetailRequested] to fetch [TransactionDetail]
-/// for a given txid and wallet name.
-final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, TransactionDetailState> {
+final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, TransactionDetailState>
+    with ActionBlocMixin<TransactionDetailState, TransactionDetailAction> {
   final GetTransactionDetailUseCase _getDetail;
 
   TransactionDetailBloc({required GetTransactionDetailUseCase getDetail})
@@ -21,7 +20,7 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
     TransactionDetailRequested event,
     Emitter<TransactionDetailState> emit,
   ) async {
-    emit(state.copyWith(status: FetchStatus.loading, clearException: true));
+    emit(state.copyWith(status: FetchStatus.loading));
     try {
       final detail = await _getDetail(event.txid, event.walletName);
       if (isClosed) return;
@@ -30,7 +29,8 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emitAction(TransactionDetailErrorOccurred(exception: e));
+      emit(state.copyWith(status: FetchStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

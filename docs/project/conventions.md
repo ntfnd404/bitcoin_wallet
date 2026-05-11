@@ -210,6 +210,24 @@ BLoC constructors receive **use cases** (from module application layer). When no
 
 ---
 
+## Side-Effect Channels
+
+Two distinct channels for effects that don't belong in state:
+
+| Channel | API | Use when |
+|---|---|---|
+| **Action stream** | `emitAction(XxxAction(...))` in BLoC, `ActionBlocConsumer`/`ActionBlocListener` in UI | One-shot UI effects for the **same** feature: SnackBar, navigation, focus, clipboard, dialog |
+| **Event bus** | `_eventBus.emit(XxxEvent(...))` in BLoC, subscribed in another BLoC's constructor | **Cross-feature** notifications: a transaction broadcast triggers the UTXO list to refresh |
+
+Rules:
+- `emitAction` — transient, consumed once, not stored in state. Use for everything that fires-and-forgets within the current screen/feature.
+- `AppEventBus.emit` — for signals that cross feature boundaries. The emitting BLoC does not know which other BLoCs listen.
+- **Never** route UI effects (SnackBar, navigation) through `AppEventBus` — that couples presentation to the bus.
+- **Never** route cross-feature notifications through `emitAction` — actions are scoped to one BLoC's widget subtree.
+- BLoC state carries only **persistent render signals**: status enums, data lists, typed failure fields. No `Exception? exception`.
+
+---
+
 ## Repositories, DataSources, and Use Cases
 
 - `abstract interface class` for interfaces; `Impl` suffix for implementations.

@@ -1,6 +1,8 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/extensions/address_type_display.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_action.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_bloc.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_event.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_state.dart';
@@ -12,52 +14,25 @@ import 'package:wallet/wallet.dart';
 
 /// Displays unspent outputs (UTXOs) for a wallet.
 ///
-/// Creates its own [UtxoBloc] via [UtxoScope] factory — each instance
-/// owns an isolated UTXO BLoC with its own lifecycle.
-/// Navigates to [UtxoDetailScreen] via [AppRouter].
-class UtxoListScreen extends StatefulWidget {
-  const UtxoListScreen({
-    super.key,
-    required this.wallet,
-  });
+/// Creates its own [UtxoBloc] via [UtxoScope] factory — lifecycle managed
+/// by [BlocProvider].
+class UtxoListScreen extends StatelessWidget {
+  const UtxoListScreen({super.key, required this.wallet});
 
   final Wallet wallet;
 
   @override
-  State<UtxoListScreen> createState() => _UtxoListScreenState();
-}
-
-class _UtxoListScreenState extends State<UtxoListScreen> {
-  late final UtxoBloc _utxoBloc;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      _utxoBloc = UtxoScope.newUtxoBloc(context);
-      _utxoBloc.add(UtxoListRequested(wallet: widget.wallet));
-    }
-  }
-
-  @override
-  void dispose() {
-    _utxoBloc.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => BlocProvider<UtxoBloc>.value(
-    value: _utxoBloc,
+  Widget build(BuildContext context) => BlocProvider<UtxoBloc>(
+    create: (ctx) => UtxoScope.newUtxoBloc(ctx)..add(UtxoListRequested(wallet: wallet)),
     child: Scaffold(
       appBar: AppBar(title: const Text('Unspent Outputs')),
-      body: BlocConsumer<UtxoBloc, UtxoState>(
-        listener: (context, state) {
-          if (state.status == FetchStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-            );
+      body: ActionBlocConsumer<UtxoBloc, UtxoState, UtxoAction>(
+        listener: (context, action) {
+          switch (action) {
+            case UtxoErrorOccurred(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
           }
         },
         builder: (context, state) {
@@ -72,7 +47,7 @@ class _UtxoListScreenState extends State<UtxoListScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               context.read<UtxoBloc>().add(
-                UtxoRefreshRequested(wallet: widget.wallet),
+                UtxoRefreshRequested(wallet: wallet),
               );
             },
             child: ListView.builder(
@@ -94,10 +69,7 @@ class _UtxoListScreenState extends State<UtxoListScreen> {
 }
 
 class _UtxoTile extends StatelessWidget {
-  const _UtxoTile({
-    required this.utxo,
-    required this.onTap,
-  });
+  const _UtxoTile({required this.utxo, required this.onTap});
 
   final Utxo utxo;
   final VoidCallback onTap;
@@ -117,10 +89,7 @@ class _UtxoTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(
-              addressLabel,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(addressLabel, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 2),
             Text(
               '${utxo.type.shortLabel} • ${isMempool ? 'Unconfirmed' : utxo.confirmations}',

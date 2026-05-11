@@ -1,15 +1,20 @@
+import 'package:action_bloc/action_bloc.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:keys/keys.dart';
 import 'package:wallet/wallet.dart';
 
-final class WalletBloc extends Bloc<WalletEvent, WalletState> {
+final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMixin<WalletState, WalletAction> {
   final WalletRepository _walletRepository;
   final GetSeedUseCase _getSeed;
   final CreateNodeWalletUseCase _createNodeWallet;
   final CreateHdWalletUseCase _createHdWallet;
   final RestoreHdWalletUseCase _restoreHdWallet;
+
+  // Holds the pending HD wallet between HdWalletCreateRequested and SeedConfirmed.
+  HdWallet? _pendingHdWallet;
 
   WalletBloc({
     required WalletRepository walletRepository,
@@ -35,20 +40,15 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletListRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.loading, clearException: true));
+    emit(state.copyWith(status: WalletStatus.loading));
     try {
       final wallets = await _walletRepository.getWallets();
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.loaded,
-          wallets: wallets,
-          clearException: true,
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.loaded, wallets: wallets));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, exception: e));
+      emitAction(WalletErrorOccurred(exception: e));
+      emit(state.copyWith(status: WalletStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -58,21 +58,16 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     NodeWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
+    emit(state.copyWith(status: WalletStatus.creating));
     try {
       final wallet = await _createNodeWallet(event.name);
       if (isClosed) return;
-
-      emit(
-        state.copyWith(
-          status: WalletStatus.loaded,
-          wallets: [...state.wallets, wallet],
-          pendingWallet: wallet,
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, wallet]));
+      emitAction(WalletNodeCreated(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, exception: e));
+      emitAction(WalletErrorOccurred(exception: e));
+      emit(state.copyWith(status: WalletStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -82,30 +77,18 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     HdWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
+    emit(state.copyWith(status: WalletStatus.creating));
     try {
-      final (wallet, mnemonic) = await _createHdWallet(
-        event.name,
-        wordCount: event.wordCount,
-      );
+      final (wallet, mnemonic) = await _createHdWallet(event.name, wordCount: event.wordCount);
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.awaitingSeedConfirmation,
-          pendingWallet: wallet,
-          pendingMnemonic: mnemonic,
-        ),
-      );
+      _pendingHdWallet = wallet;
+      emit(state.copyWith(status: WalletStatus.awaitingSeedConfirmation));
+      emitAction(WalletHdAwaitingConfirmation(wallet: wallet, mnemonic: mnemonic));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.error,
-          exception: e,
-          clearPendingWallet: true,
-          clearPendingMnemonic: true,
-        ),
-      );
+      _pendingHdWallet = null;
+      emitAction(WalletErrorOccurred(exception: e));
+      emit(state.copyWith(status: WalletStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -115,39 +98,28 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletRestoreRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating, clearException: true));
+    emit(state.copyWith(status: WalletStatus.creating));
     try {
       final wallet = await _restoreHdWallet(event.name, event.mnemonic);
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.loaded,
-          wallets: [...state.wallets, wallet],
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, wallet]));
+      emitAction(WalletRestored(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, exception: e));
+      emitAction(WalletErrorOccurred(exception: e));
+      emit(state.copyWith(status: WalletStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
   }
 
-  void _onSeedConfirmed(
-    SeedConfirmed event,
-    Emitter<WalletState> emit,
-  ) {
-    final confirmed = state.pendingWallet;
+  void _onSeedConfirmed(SeedConfirmed event, Emitter<WalletState> emit) {
+    final confirmed = _pendingHdWallet;
     if (confirmed == null) return;
+    _pendingHdWallet = null;
 
-    emit(
-      state.copyWith(
-        status: WalletStatus.loaded,
-        wallets: [...state.wallets, confirmed],
-        clearPendingWallet: true,
-        clearPendingMnemonic: true,
-      ),
-    );
+    emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, confirmed]));
+    emitAction(WalletHdConfirmed(wallet: confirmed));
   }
 
   Future<void> _onSeedViewRequested(
@@ -157,16 +129,12 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> {
     try {
       final mnemonic = await _getSeed(event.walletId);
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: WalletStatus.awaitingSeedConfirmation,
-          pendingMnemonic: mnemonic,
-          clearException: true,
-        ),
-      );
+      emit(state.copyWith(status: WalletStatus.awaitingSeedConfirmation));
+      emitAction(WalletSeedReady(mnemonic: mnemonic));
     } on KeysException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.error, exception: e));
+      emitAction(WalletSeedFailed(exception: e));
+      emit(state.copyWith(status: WalletStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

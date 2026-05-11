@@ -1,6 +1,8 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:address/address.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_action.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,13 +10,7 @@ import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 
-/// BLoC that orchestrates the HD wallet sign-and-broadcast demo flow.
-///
-/// Step 1 — [UtxoScanRequested]: derives stored native SegWit addresses,
-///           scans the UTXO set via `scantxoutset`.
-/// Step 2 — [SignAndBroadcastRequested]: signs all found UTXOs as inputs,
-///           broadcasts the transaction, and verifies via `getrawtransaction`.
-final class SigningBloc extends Bloc<SigningEvent, SigningState> {
+final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBlocMixin<SigningState, SigningAction> {
   final AddressRepository _addressRepository;
   final ScanUtxosUseCase _scanUtxos;
   final SignTransactionUseCase _signTransaction;
@@ -22,7 +18,6 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
   final AppEventBus _eventBus;
 
   /// Maps native SegWit address string → derivation index.
-  /// Populated during [UtxoScanRequested], consumed during [SignAndBroadcastRequested].
   final Map<String, int> _addressIndexMap = {};
 
   SigningBloc({
@@ -48,15 +43,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     emit(const SigningState(status: SigningStatus.scanning));
     try {
       final addresses = await _addressRepository.getAddresses(event.walletId);
+      if (isClosed) return;
       final segwit = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
 
       if (segwit.isEmpty) {
-        emit(
-          SigningState(
-            status: SigningStatus.error,
-            exception: Exception('No native SegWit addresses found. Generate some first.'),
-          ),
-        );
+        emitAction(SigningNoAddressesFound());
+        emit(const SigningState(status: SigningStatus.error));
 
         return;
       }
@@ -72,7 +64,8 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(SigningState(status: SigningStatus.error, exception: e));
+      emitAction(SigningTransactionFailed(exception: e));
+      emit(const SigningState(status: SigningStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -84,12 +77,8 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
   ) async {
     final utxos = state.utxos;
     if (utxos.isEmpty) {
-      emit(
-        state.copyWith(
-          status: SigningStatus.error,
-          exception: Exception('No UTXOs to spend. Scan first.'),
-        ),
-      );
+      emitAction(SigningNoUtxosFound());
+      emit(state.copyWith(status: SigningStatus.error));
 
       return;
     }
@@ -144,11 +133,13 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> {
     } on KeysException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: SigningStatus.error, exception: e));
+      emitAction(SigningKeysFailed(exception: e));
+      emit(state.copyWith(status: SigningStatus.error));
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: SigningStatus.error, exception: e));
+      emitAction(SigningTransactionFailed(exception: e));
+      emit(state.copyWith(status: SigningStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

@@ -1,9 +1,11 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:address/address.dart';
+import 'package:bitcoin_wallet/feature/address/bloc/address_action.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-final class AddressBloc extends Bloc<AddressEvent, AddressState> {
+final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBlocMixin<AddressState, AddressAction> {
   final AddressRepository _addressRepository;
   final GenerateAddressUseCase _generateAddress;
 
@@ -21,7 +23,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     AddressListRequested event,
     Emitter<AddressState> emit,
   ) async {
-    emit(state.copyWith(status: AddressStatus.loading, clearException: true));
+    emit(state.copyWith(status: AddressStatus.loading));
     try {
       final addresses = await _addressRepository.getAddresses(event.wallet.id);
       if (isClosed) return;
@@ -30,7 +32,8 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     } on AddressException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.error, exception: e));
+      emitAction(AddressErrorOccurred(exception: e));
+      emit(state.copyWith(status: AddressStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -41,22 +44,17 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     if (state.status == AddressStatus.generating) return;
-    emit(state.copyWith(status: AddressStatus.generating, clearException: true));
+    emit(state.copyWith(status: AddressStatus.generating));
     try {
       final address = await _generateAddress(event.wallet, event.type);
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          status: AddressStatus.loaded,
-          addresses: [...state.addresses, address],
-          lastGenerated: address,
-        ),
-      );
+      emit(state.copyWith(status: AddressStatus.loaded, addresses: [...state.addresses, address]));
     } on AddressException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.error, exception: e));
+      emitAction(AddressErrorOccurred(exception: e));
+      emit(state.copyWith(status: AddressStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

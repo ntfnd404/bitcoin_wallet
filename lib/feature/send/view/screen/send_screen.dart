@@ -1,3 +1,5 @@
+import 'package:action_bloc/action_bloc.dart';
+import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
@@ -40,14 +42,21 @@ class _SendScreenState extends State<SendScreen> {
     create: (_) => SendScope.newSendBloc(context, widget.wallet),
     child: Scaffold(
       appBar: AppBar(title: const Text('Send')),
-      body: BlocConsumer<SendBloc, SendState>(
-        listener: (context, state) {
-          if (state.status == SendStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.exception?.toString() ?? 'Unknown error'),
-              ),
-            );
+      body: ActionBlocConsumer<SendBloc, SendState, SendAction>(
+        listener: (context, action) {
+          switch (action) {
+            case SendInsufficientFunds():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Insufficient funds for any strategy')),
+              );
+            case SendFailed(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
+            case SendMiningFailed(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
           }
         },
         builder: (context, state) => SingleChildScrollView(

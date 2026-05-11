@@ -1,4 +1,6 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
@@ -6,7 +8,6 @@ import 'package:bitcoin_wallet/feature/wallet/view/widget/wallet_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Displays a list of wallets loaded by [WalletBloc].
 class WalletListScreen extends StatefulWidget {
   const WalletListScreen({super.key});
 
@@ -20,7 +21,6 @@ class _WalletListScreenState extends State<WalletListScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (!_initialized) {
       _initialized = true;
       context.read<WalletBloc>().add(const WalletListRequested());
@@ -38,19 +38,21 @@ class _WalletListScreenState extends State<WalletListScreen> {
         child: const Icon(Icons.add),
       ),
     ),
-    body: BlocConsumer<WalletBloc, WalletState>(
-      listener: (context, state) {
-        if (state.status == WalletStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-          );
+    body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
+      listener: (context, action) {
+        switch (action) {
+          case WalletErrorOccurred(:final exception):
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(exception.toString())),
+            );
+          case _:
+            break;
         }
       },
       builder: (context, state) {
         if (state.status == WalletStatus.loading) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (state.wallets.isEmpty) {
           return const Center(child: Text('No wallets yet'));
         }
