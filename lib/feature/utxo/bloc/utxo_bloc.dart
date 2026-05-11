@@ -1,20 +1,17 @@
 import 'dart:async';
 
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart' as bus;
+import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_action.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_event.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
-/// BLoC for UTXO list state management.
-///
-/// Fetches unspent outputs from the domain layer and exposes it as state.
-/// Subscribes to [AppEventBus] to auto-refresh when a transaction is
-/// broadcast or a block is mined from another feature.
-final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
+final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<UtxoState, UtxoAction> {
   final GetUtxosUseCase _getUtxos;
   late final StreamSubscription<Object> _eventSub;
   Wallet? _currentWallet;
@@ -44,13 +41,12 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
     return super.close();
   }
 
-  /// Handles initial list fetch — emits loading state first.
   Future<void> _onUtxoListRequested(
     UtxoListRequested event,
     Emitter<UtxoState> emit,
   ) async {
     _currentWallet = event.wallet;
-    emit(state.copyWith(status: FetchStatus.loading, clearException: true));
+    emit(state.copyWith(status: FetchStatus.loading));
     try {
       final utxos = await _getUtxos(event.wallet.name);
       if (isClosed) return;
@@ -59,19 +55,18 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
         state.copyWith(
           utxos: utxos,
           status: FetchStatus.loaded,
-          clearException: true,
         ),
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emitAction(UtxoErrorOccurred(exception: e));
+      emit(state.copyWith(status: FetchStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
   }
 
-  /// Handles refresh — keeps current list visible while loading.
   Future<void> _onUtxoRefreshRequested(
     UtxoRefreshRequested event,
     Emitter<UtxoState> emit,
@@ -84,13 +79,13 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> {
         state.copyWith(
           utxos: utxos,
           status: FetchStatus.loaded,
-          clearException: true,
         ),
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emitAction(UtxoErrorOccurred(exception: e));
+      emit(state.copyWith(status: FetchStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

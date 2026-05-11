@@ -10,11 +10,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Usage:
 /// ```dart
 /// class MyBloc extends Bloc<MyEvent, MyState>
-///     with BlocActionMixin<MyState, MyAction> { ... }
+///     with ActionBlocMixin<MyState, MyAction> { ... }
 /// ```
-mixin BlocActionMixin<S, A> on BlocBase<S> {
-  final StreamController<A> _actionController =
-      StreamController<A>.broadcast();
+mixin ActionBlocMixin<S, A> on BlocBase<S> {
+  final StreamController<A> _actionController = StreamController<A>.broadcast();
 
   /// Broadcast stream of one-shot UI actions.
   ///

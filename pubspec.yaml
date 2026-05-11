@@ -7,6 +7,7 @@ environment:
   sdk: ^3.11.3
 
 workspace:
+  - packages/action_bloc
   - packages/address
   - packages/bitcoin_node
   - packages/keys
@@ -18,14 +19,18 @@ workspace:
   - packages/wallet
 
 dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_bloc: 9.1.1
+
+  # packages
+  action_bloc:
+    path: packages/action_bloc
   address:
     path: packages/address
   bitcoin_node:
     path: packages/bitcoin_node
-  flutter:
-    sdk: flutter
-  flutter_bloc: 9.1.1
-  nested: 1.0.0
   keys:
     path: packages/keys
   rpc_client:

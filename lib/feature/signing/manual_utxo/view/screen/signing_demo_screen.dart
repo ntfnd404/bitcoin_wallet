@@ -1,5 +1,7 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_action.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_bloc.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
@@ -39,14 +41,25 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
     create: (ctx) => ManualUtxoScope.newSigningBloc(ctx),
     child: Scaffold(
       appBar: AppBar(title: const Text('Sign & Send')),
-      body: BlocConsumer<SigningBloc, SigningState>(
-        listener: (context, state) {
-          if (state.status == SigningStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.exception?.toString() ?? 'Unknown error'),
-              ),
-            );
+      body: ActionBlocConsumer<SigningBloc, SigningState, SigningAction>(
+        listener: (context, action) {
+          switch (action) {
+            case SigningNoAddressesFound():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No native SegWit addresses found. Generate some first.')),
+              );
+            case SigningNoUtxosFound():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No UTXOs to spend. Scan first.')),
+              );
+            case SigningKeysFailed(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
+            case SigningTransactionFailed(:final exception):
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(exception.toString())),
+              );
           }
         },
         builder: (context, state) => SingleChildScrollView(

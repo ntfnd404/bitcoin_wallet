@@ -32,7 +32,7 @@ class XpubScreen extends StatelessWidget {
 
           if (state.status == FetchStatus.error) {
             return Center(
-              child: Text(state.exception?.toString() ?? 'Unknown error'),
+              child: Text(state.failure?.toString() ?? 'Failed to load xpubs'),
             );
           }
 

@@ -5,21 +5,24 @@ import 'package:shared_kernel/shared_kernel.dart';
 final class XpubState {
   final FetchStatus status;
   final Map<AddressType, AccountXpub> xpubs;
-  final Exception? exception;
+
+  /// Typed failure for persistent page-level error render.
+  final KeysException? failure;
 
   const XpubState({
     this.status = FetchStatus.initial,
     this.xpubs = const {},
-    this.exception,
+    this.failure,
   });
 
   XpubState copyWith({
     FetchStatus? status,
     Map<AddressType, AccountXpub>? xpubs,
-    Exception? exception,
+    KeysException? failure,
+    bool clearFailure = false,
   }) => XpubState(
     status: status ?? this.status,
     xpubs: xpubs ?? this.xpubs,
-    exception: exception ?? this.exception,
+    failure: clearFailure ? null : (failure ?? this.failure),
   );
 }

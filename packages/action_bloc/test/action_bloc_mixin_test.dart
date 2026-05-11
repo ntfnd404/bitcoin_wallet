@@ -1,23 +1,17 @@
 import 'dart:async';
 
-import 'package:bitcoin_wallet/core/bloc/bloc_action_mixin.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// Minimal BLoC stub for testing the mixin in isolation.
-final class _TestBloc extends Bloc<Object, int>
-    with BlocActionMixin<int, String> {
-  _TestBloc() : super(0) {
-    on<Object>((_, emit) => emit(state + 1));
-  }
-}
+import 'stubs/stub_action_bloc.dart';
 
 void main() {
-  group('BlocActionMixin', () {
-    late _TestBloc bloc;
+  group('ActionBlocMixin', () {
+    late StubActionBloc bloc;
 
-    setUp(() => bloc = _TestBloc());
-    tearDown(() => bloc.close());
+    setUp(() => bloc = StubActionBloc());
+    tearDown(() async {
+      if (!bloc.isClosed) await bloc.close();
+    });
 
     test('emitAction delivers action to stream subscriber', () async {
       final received = <String>[];

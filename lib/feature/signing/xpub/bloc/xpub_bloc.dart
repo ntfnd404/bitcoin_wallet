@@ -29,7 +29,7 @@ final class XpubBloc extends Bloc<XpubEvent, XpubState> {
     } on KeysException catch (e) {
       if (isClosed) return;
 
-      emit(state.copyWith(status: FetchStatus.error, exception: e));
+      emit(state.copyWith(status: FetchStatus.error, failure: e));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

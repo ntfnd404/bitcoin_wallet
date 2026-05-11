@@ -1,5 +1,7 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
@@ -12,7 +14,7 @@ import 'package:wallet/wallet.dart';
 ///
 /// Exactly one of [_prepareNode]/[_sendNode] or [_prepareHd]/[_sendHd] is non-null,
 /// determined at construction time by [wallet] type.
-final class SendBloc extends Bloc<SendEvent, SendState> {
+final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<SendState, SendAction> {
   final Wallet _wallet;
 
   // Node wallet path (non-null when wallet.isNode)
@@ -86,12 +88,9 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       }
 
       if (strategies.isEmpty) {
-        emit(
-          state.copyWith(
-            status: SendStatus.error,
-            exception: Exception('Insufficient funds for any strategy'),
-          ),
-        );
+        if (isClosed) return;
+        emitAction(SendInsufficientFunds());
+        emit(state.copyWith(status: SendStatus.error));
 
         return;
       }
@@ -108,7 +107,8 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: SendStatus.error, exception: e));
+      emitAction(SendFailed(exception: e));
+      emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -162,7 +162,8 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _wallet.id));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: SendStatus.error, exception: e));
+      emitAction(SendFailed(exception: e));
+      emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }
@@ -180,7 +181,8 @@ final class SendBloc extends Bloc<SendEvent, SendState> {
       _eventBus.emit(BlockMined(walletId: _wallet.id));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: SendStatus.error, exception: e));
+      emitAction(SendMiningFailed(exception: e));
+      emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
       Error.throwWithStackTrace(e, stack);
     }

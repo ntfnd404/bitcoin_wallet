@@ -1,14 +1,12 @@
+import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
+import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Allows the user to choose a wallet type and enter a wallet name.
-///
-/// Listens to [WalletBloc] and navigates to the appropriate next screen
-/// (wallet detail for Node wallets, seed phrase confirmation for HD wallets).
 class CreateWalletScreen extends StatefulWidget {
   const CreateWalletScreen({super.key});
 
@@ -45,32 +43,21 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Create Wallet')),
-    body: BlocConsumer<WalletBloc, WalletState>(
-      listenWhen: (previous, current) =>
-          (current.status == WalletStatus.loaded && previous.status == WalletStatus.creating) ||
-          (current.status == WalletStatus.loaded && previous.status == WalletStatus.awaitingSeedConfirmation) ||
-          current.status == WalletStatus.awaitingSeedConfirmation ||
-          current.status == WalletStatus.error,
-      listener: (context, state) {
-        if (state.status == WalletStatus.loaded) {
-          final wallet = state.pendingWallet;
-          if (wallet != null) {
-            // Node wallet just created — navigate to detail.
+    body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
+      listener: (context, action) {
+        switch (action) {
+          case WalletNodeCreated(:final wallet):
             AppRouter.toWalletDetail(context, wallet);
-          } else {
-            // HD wallet seed confirmed — pop CreateWalletScreen.
-            Navigator.pop(context);
-          }
-        } else if (state.status == WalletStatus.awaitingSeedConfirmation) {
-          final mnemonic = state.pendingMnemonic;
-          final wallet = state.pendingWallet;
-          if (mnemonic != null && wallet != null) {
+          case WalletHdAwaitingConfirmation(:final wallet, :final mnemonic):
             AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
-          }
-        } else if (state.status == WalletStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.exception?.toString() ?? 'Unknown error')),
-          );
+          case WalletHdConfirmed():
+            Navigator.pop(context);
+          case WalletErrorOccurred(:final exception):
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(exception.toString())),
+            );
+          case _:
+            break;
         }
       },
       builder: (context, state) {
