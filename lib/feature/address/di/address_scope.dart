@@ -7,8 +7,9 @@ import 'package:flutter/widgets.dart';
 /// Composition root: exposes a factory for screen-level [AddressBloc]
 /// instances via [_InheritedAddressScope].
 ///
-/// Use cases come from [AddressAssembly]. The router calls [newAddressBloc]
-/// to create a fresh [AddressBloc] per [WalletDetailScreen].
+/// Use cases come from `WalletAssembly` (address surface was merged into
+/// `wallet` in BW-0011). The router calls [newAddressBloc] to create a
+/// fresh [AddressBloc] per `WalletDetailScreen`.
 class AddressScope extends StatefulWidget {
   const AddressScope({
     super.key,
@@ -41,11 +42,10 @@ class _AddressScopeState extends State<AddressScope> {
     _initialized = true;
 
     final deps = AppScope.of(context);
-    final addressAssembly = deps.address;
 
     _blocFactory = () => AddressBloc(
-      addressRepository: addressAssembly.addressRepository,
-      generateAddress: addressAssembly.generateAddress,
+      addressRepository: deps.wallet.addressRepository,
+      generateAddress: deps.wallet.generateAddress,
     );
   }
 

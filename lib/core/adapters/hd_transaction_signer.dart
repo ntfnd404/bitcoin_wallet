@@ -2,11 +2,17 @@ import 'package:keys/keys.dart' show SigningInputParam, SigningOutput, SignTrans
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart' as tx show SigningInput, TransactionSigner;
 
-/// Implements [tx.TransactionSigner] using the HD wallet's mnemonic seed.
+/// Composition adapter: bridges [tx.TransactionSigner] (owned by `transaction`)
+/// to [SignTransactionUseCase] (owned by `keys`).
 ///
-/// Bridges the `transaction` domain interface to [SignTransactionUseCase]
-/// from the `keys` package. Lives in the app layer because it depends on both
-/// `transaction` and `keys` packages.
+/// **Architectural decision (BW-0011, kept as conscious compromise):**
+/// This adapter lives in the app layer instead of a dedicated `signing_port`
+/// package because it is the *only* cross-package bridge of its kind.
+/// Extracting a neutral package for one adapter would be premature abstraction
+/// (rule of three). Re-evaluate if 2+ more similar bridges appear — at that
+/// point, a `signing_port` package becomes warranted.
+///
+/// See `docs/project/conventions.md` § App-layer composition adapters.
 final class HdTransactionSigner implements tx.TransactionSigner {
   final SignTransactionUseCase _signTransaction;
 

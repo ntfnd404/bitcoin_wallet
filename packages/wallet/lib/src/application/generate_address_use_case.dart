@@ -1,6 +1,3 @@
-import 'package:address/src/application/address_generation_strategy.dart';
-import 'package:address/src/domain/entity/address.dart';
-import 'package:address/src/domain/exception/address_exception.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:wallet/wallet.dart';
 
@@ -17,18 +14,16 @@ final class GenerateAddressUseCase {
 
   const GenerateAddressUseCase({required List<AddressGenerationStrategy> strategies}) : _strategies = strategies;
 
-  Future<Address> call(Wallet wallet, AddressType type) async {
-    try {
-      final strategy = _strategies.firstWhere(
-        (s) => s.supports(wallet),
-        orElse: () => throw const AddressNoStrategyException(),
-      );
+  // Strategies and AddressRepositoryImpl already throw AddressException
+  // subtypes — nothing to translate here. Programmer errors (TypeError,
+  // RangeError, etc.) propagate naturally to the zone error handler and
+  // must NOT be masked as AddressGenerationException.
+  Future<Address> call(Wallet wallet, AddressType type) {
+    final strategy = _strategies.firstWhere(
+      (s) => s.supports(wallet),
+      orElse: () => throw const AddressNoStrategyException(),
+    );
 
-      return await strategy.generate(wallet, type);
-    } on AddressNoStrategyException {
-      rethrow;
-    } catch (e, stack) {
-      Error.throwWithStackTrace(const AddressGenerationException(), stack);
-    }
+    return strategy.generate(wallet, type);
   }
 }

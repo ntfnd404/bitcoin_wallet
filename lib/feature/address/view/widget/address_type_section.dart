@@ -1,6 +1,6 @@
-import 'package:address/address.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/wallet.dart';
 
 const _typeLabels = {
   AddressType.legacy: 'Legacy (P2PKH)',

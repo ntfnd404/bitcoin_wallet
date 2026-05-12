@@ -1,6 +1,6 @@
-import 'package:address/address.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:wallet/wallet.dart';
 
 /// Displays a single address with copy action, QR placeholder, and path info.
 class AddressScreen extends StatelessWidget {

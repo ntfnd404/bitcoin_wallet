@@ -1,6 +1,6 @@
-import 'package:address/address.dart';
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/wallet.dart';
 
 /// Known BIP39 test vector: 128-bit all-zero entropy.
 final kTestMnemonic = Mnemonic(

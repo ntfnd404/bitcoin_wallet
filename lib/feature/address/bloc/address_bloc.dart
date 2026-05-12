@@ -1,9 +1,9 @@
 import 'package:action_bloc/action_bloc.dart';
-import 'package:address/address.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_action.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wallet/wallet.dart';
 
 final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBlocMixin<AddressState, AddressAction> {
   final AddressRepository _addressRepository;

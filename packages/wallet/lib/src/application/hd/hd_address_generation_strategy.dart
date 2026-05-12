@@ -1,7 +1,3 @@
-import 'package:address/src/application/address_generation_strategy.dart';
-import 'package:address/src/domain/entity/address.dart';
-import 'package:address/src/domain/exception/address_exception.dart';
-import 'package:address/src/domain/repository/address_repository.dart';
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:wallet/wallet.dart';

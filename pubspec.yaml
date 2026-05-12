@@ -8,7 +8,6 @@ environment:
 
 workspace:
   - packages/action_bloc
-  - packages/address
   - packages/bitcoin_node
   - packages/keys
   - packages/rpc_client
@@ -27,8 +26,6 @@ dependencies:
   # packages
   action_bloc:
     path: packages/action_bloc
-  address:
-    path: packages/address
   bitcoin_node:
     path: packages/bitcoin_node
   keys:

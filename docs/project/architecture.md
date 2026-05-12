@@ -86,7 +86,7 @@ bitcoin_wallet/
 │   ├── common/
 │   └── feature/
 ├── packages/
-│   ├── address/
+│   ├── action_bloc/
 │   ├── bitcoin_node/
 │   ├── keys/
 │   ├── rpc_client/
@@ -116,10 +116,10 @@ ui_kit        -> (none)
 
 keys          -> shared_kernel
 storage       -> shared_kernel
-wallet        -> shared_kernel, keys
-address       -> shared_kernel, keys, wallet
-transaction   -> shared_kernel, address
-bitcoin_node  -> shared_kernel, rpc_client, wallet, address, transaction
+wallet        -> shared_kernel, keys, storage
+transaction   -> shared_kernel, wallet
+bitcoin_node  -> shared_kernel, rpc_client, wallet, transaction
+action_bloc   -> (flutter_bloc only)
 
 app (lib/)    -> all public package APIs as needed
 ```
@@ -146,8 +146,7 @@ Never put large entities, repositories, or use cases here.
 
 ### Business packages
 
-- `wallet`
-- `address`
+- `wallet` (owns address surface since BW-0011)
 - `transaction`
 - `keys`
 
@@ -188,8 +187,7 @@ own product workflows or business logic.
 |--------|------|
 | `shared_kernel` | tiny shared primitives and contracts |
 | `keys` | mnemonic, seed access, derivation services, crypto helpers |
-| `wallet` | wallet entities, wallet repositories, create/restore wallet use cases |
-| `address` | address entity, address repository, address generation |
+| `wallet` | wallet entities, wallet repositories, create/restore wallet use cases; address entity, address repository, address generation strategies (BW-0011 merge) |
 | `transaction` | transaction and UTXO domain, send/prepare/scan flows |
 | `bitcoin_node` | implementations of remote data-source interfaces |
 | `storage` | Flutter secure storage implementation |

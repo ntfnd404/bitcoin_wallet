@@ -1,8 +1,0 @@
-export 'src/application/address_generation_strategy.dart';
-export 'src/application/generate_address_use_case.dart';
-export 'src/application/hd/hd_address_generation_strategy.dart';
-export 'src/application/node/node_address_generation_strategy.dart';
-export 'src/domain/entity/address.dart';
-export 'src/domain/exception/address_exception.dart';
-export 'src/domain/gateway/node_address_gateway.dart';
-export 'src/domain/repository/address_repository.dart';

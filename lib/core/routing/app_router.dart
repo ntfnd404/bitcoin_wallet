@@ -1,4 +1,3 @@
-import 'package:address/address.dart';
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
 import 'package:bitcoin_wallet/feature/send/view/screen/send_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/screen/signing_demo_screen.dart';
