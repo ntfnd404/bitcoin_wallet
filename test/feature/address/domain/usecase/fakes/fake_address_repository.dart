@@ -1,4 +1,4 @@
-import 'package:address/address.dart';
+import 'package:wallet/wallet.dart';
 
 /// In-memory address repository for unit tests.
 final class FakeAddressRepository implements AddressRepository {

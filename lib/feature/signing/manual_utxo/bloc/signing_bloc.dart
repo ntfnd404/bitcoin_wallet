@@ -1,5 +1,4 @@
 import 'package:action_bloc/action_bloc.dart';
-import 'package:address/address.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_action.dart';
@@ -9,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:keys/keys.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
+import 'package:wallet/wallet.dart';
 
 final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBlocMixin<SigningState, SigningAction> {
   final AddressRepository _addressRepository;

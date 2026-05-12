@@ -32,7 +32,7 @@ class _ManualUtxoScopeState extends State<ManualUtxoScope> {
 
     final deps = AppScope.of(context);
     _factory = () => SigningBloc(
-      addressRepository: deps.address.addressRepository,
+      addressRepository: deps.wallet.addressRepository,
       scanUtxos: deps.transaction.scanUtxos,
       signTransaction: deps.keys.signTransaction,
       broadcastTransaction: deps.transaction.broadcastTransaction,

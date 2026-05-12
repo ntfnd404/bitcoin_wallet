@@ -1,4 +1,4 @@
-import 'package:address/address.dart';
+import 'package:wallet/wallet.dart';
 
 final class AddressState {
   final List<Address> addresses;

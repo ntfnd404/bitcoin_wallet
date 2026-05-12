@@ -1,4 +1,3 @@
-import 'package:address/address.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/hd/hd_send_preparation.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
@@ -9,6 +8,7 @@ import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
 import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
+import 'package:wallet/wallet.dart';
 
 /// Scans HD-wallet UTXOs, builds signing context, runs all coin-selection
 /// strategies, and returns an [HdSendPreparation] for the UI comparison table.

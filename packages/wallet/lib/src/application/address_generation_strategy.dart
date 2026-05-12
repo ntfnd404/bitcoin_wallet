@@ -1,4 +1,3 @@
-import 'package:address/src/domain/entity/address.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:wallet/wallet.dart';
 

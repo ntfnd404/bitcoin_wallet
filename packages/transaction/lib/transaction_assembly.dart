@@ -1,4 +1,3 @@
-import 'package:address/address.dart';
 import 'package:transaction/src/application/broadcast_transaction_use_case.dart';
 import 'package:transaction/src/application/get_transaction_detail_use_case.dart';
 import 'package:transaction/src/application/get_transactions_use_case.dart';
@@ -20,6 +19,7 @@ import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/service/transaction_signer.dart';
+import 'package:wallet/wallet.dart';
 
 /// Dependency injection factory for transaction and UTXO use cases.
 ///

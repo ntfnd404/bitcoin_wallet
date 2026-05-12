@@ -9,7 +9,6 @@ import 'package:wallet/src/domain/exception/wallet_exception.dart';
 /// Persists wallet metadata in [SecureStorage].
 ///
 /// All wallets are stored as a JSON array under a single key [_key].
-/// Follows the same storage pattern as [AddressLocalDataSourceImpl].
 ///
 /// Wraps storage / decode / cast failures as [WalletStorageException]
 /// so callers see only the wallet bounded-context language.

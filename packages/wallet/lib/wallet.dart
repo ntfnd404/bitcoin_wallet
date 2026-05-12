@@ -1,9 +1,17 @@
+export 'src/application/address_generation_strategy.dart';
+export 'src/application/generate_address_use_case.dart';
 export 'src/application/hd/create_hd_wallet_use_case.dart';
+export 'src/application/hd/hd_address_generation_strategy.dart';
 export 'src/application/hd/restore_hd_wallet_use_case.dart';
 export 'src/application/node/create_node_wallet_use_case.dart';
+export 'src/application/node/node_address_generation_strategy.dart';
+export 'src/domain/entity/address.dart';
 export 'src/domain/entity/wallet.dart';
+export 'src/domain/exception/address_exception.dart';
 export 'src/domain/exception/wallet_exception.dart';
+export 'src/domain/gateway/node_address_gateway.dart';
 export 'src/domain/gateway/node_wallet_gateway.dart';
+export 'src/domain/repository/address_repository.dart';
 export 'src/domain/repository/hd_wallet_repository.dart';
 export 'src/domain/repository/node_wallet_repository.dart';
 export 'src/domain/repository/wallet_repository.dart';

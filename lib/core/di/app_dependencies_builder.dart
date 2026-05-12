@@ -1,4 +1,3 @@
-import 'package:address/address_assembly.dart';
 import 'package:bitcoin_node/bitcoin_node.dart';
 import 'package:bitcoin_wallet/core/adapters/hd_transaction_signer.dart';
 import 'package:bitcoin_wallet/core/config/config.dart';
@@ -19,8 +18,6 @@ typedef RpcClientFactory =
     });
 
 /// Composition root — wires all concrete infrastructure implementations.
-///
-/// Called once at startup via [create()].
 final class AppDependenciesBuilder {
   final AppEnvironment _environment;
   final void Function(AppDependencies dependencies) _builder;
@@ -37,9 +34,6 @@ final class AppDependenciesBuilder {
        _onError = onError,
        _rpcClientFactory = rpcClientFactory;
 
-  /// Initializes the composition root and builds the app.
-  ///
-  /// Call this once at startup, typically in main().
   static void create({
     required AppEnvironment environment,
     required void Function(AppDependencies dependencies) builder,
@@ -69,19 +63,11 @@ final class AppDependenciesBuilder {
         network: _environment.network,
       );
 
-      final walletRemoteDataSource = NodeWalletGatewayImpl(rpcClient: rpcClient);
-      final addressRemoteDataSource = NodeAddressGatewayImpl(rpcClient: rpcClient);
-
       final wallet = WalletAssembly(
         storage: secureStorage,
-        remoteDataSource: walletRemoteDataSource,
+        remoteDataSource: NodeWalletGatewayImpl(rpcClient: rpcClient),
+        addressRemoteDataSource: NodeAddressGatewayImpl(rpcClient: rpcClient),
         bip39Service: keys.bip39Service,
-        seedRepository: keys.seedRepository,
-      );
-
-      final address = AddressAssembly(
-        storage: secureStorage,
-        remoteDataSource: addressRemoteDataSource,
         seedRepository: keys.seedRepository,
         keyDerivationService: keys.keyDerivationService,
       );
@@ -89,9 +75,7 @@ final class AppDependenciesBuilder {
       final nodeTxDataSource = NodeTransactionGatewayImpl(rpcClient: rpcClient);
       final blockGenDataSource = BlockGenerationGatewayImpl(rpcClient: rpcClient);
       final broadcastDataSource = BroadcastGatewayImpl(rpcClient: rpcClient);
-      final hdSigner = HdTransactionSigner(
-        signTransaction: keys.signTransaction,
-      );
+      final hdSigner = HdTransactionSigner(signTransaction: keys.signTransaction);
 
       final transaction = TransactionAssembly(
         transactionRemoteDataSource: TransactionHistoryGatewayImpl(rpcClient: rpcClient),
@@ -100,7 +84,7 @@ final class AppDependenciesBuilder {
         broadcastDataSource: broadcastDataSource,
         nodeTransactionDataSource: nodeTxDataSource,
         blockGenerationDataSource: blockGenDataSource,
-        addressRepository: address.addressRepository,
+        addressRepository: wallet.addressRepository,
         coinSelectors: const [
           FifoCoinSelector(),
           LifoCoinSelector(),
@@ -111,16 +95,15 @@ final class AppDependenciesBuilder {
         hdSigner: hdSigner,
       );
 
-      final dependencies = AppDependencies(
-        network: _environment.network,
-        keys: keys,
-        wallet: wallet,
-        address: address,
-        transaction: transaction,
-        eventBus: AppEventBus(),
+      _builder(
+        AppDependencies(
+          network: _environment.network,
+          keys: keys,
+          wallet: wallet,
+          transaction: transaction,
+          eventBus: AppEventBus(),
+        ),
       );
-
-      _builder(dependencies);
     } catch (e, s) {
       _onError(e, s);
     }
@@ -130,9 +113,5 @@ final class AppDependenciesBuilder {
     required String url,
     required String user,
     required String password,
-  }) => BitcoinRpcClient(
-    url: url,
-    user: user,
-    password: password,
-  );
+  }) => BitcoinRpcClient(url: url, user: user, password: password);
 }

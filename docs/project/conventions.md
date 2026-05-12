@@ -80,7 +80,7 @@ See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) f
 | Type | Packages | Rule |
 |------|----------|------|
 | **shared** | `shared_kernel` | Tiny shared primitives. Pure Dart. Zero business deps. |
-| **business** | `wallet`, `address`, `transaction`, `keys` | Own entities, contracts, use cases, and implementations. |
+| **business** | `wallet`, `transaction`, `keys` | Own entities, contracts, use cases, and implementations. |
 | **infra** | `bitcoin_node`, `rpc_client`, `storage` | Wrap one external system or platform boundary. No business ownership. |
 | **ui** | `ui_kit` | Design system only. No domain knowledge. |
 
@@ -142,6 +142,24 @@ See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) f
 - Extensions without architectural role → `lib/common/`
 - Domain logic → `packages/*`
 - Feature state → `lib/feature/*`
+
+#### App-layer composition adapters — escalation rule
+
+An adapter in `lib/core/adapters/` is acceptable when **all** hold:
+
+1. It bridges two package-level BCs that cannot depend on each other directly,
+   or where one direction would create a cycle.
+2. It carries real logic (DTO translation, composition of use cases) — not a
+   thin passthrough.
+3. It is the **only** such bridge between those two BCs.
+
+If 2+ adapters of similar shape accumulate between the same two BCs, extract
+their shared contract into a neutral package (e.g. `signing_port`). Do not
+extract prematurely on the first one — premature abstraction has a higher cost
+than a single documented adapter.
+
+Reference: `HdTransactionSigner` (BW-0011 decision) bridges
+`transaction.TransactionSigner` to `keys.SignTransactionUseCase`.
 
 ---
 

@@ -181,7 +181,7 @@ class _MineBlockTileState extends State<_MineBlockTile> {
             )
             .then((prep) => prep.changeAddress);
       } else {
-        final addresses = await deps.address.addressRepository.getAddresses(widget.wallet.id);
+        final addresses = await deps.wallet.addressRepository.getAddresses(widget.wallet.id);
         final native = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
         toAddress = native.isNotEmpty ? native.first.value : '';
       }

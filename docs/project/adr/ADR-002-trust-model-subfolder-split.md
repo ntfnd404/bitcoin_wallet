@@ -93,3 +93,9 @@ Concrete invariants this decision commits to:
 - **Reviewer responsibility.** Any PR that touches `wallet`, `transaction`, or `address` `data/` or `application/` layers must verify: (a) new files land in the correct subfolder; (b) imports respect the boundary; (c) shared files stay shared.
 - **Supersession bar is high.** This ADR may be superseded if a future domain change forces *behaviourally* different entities per trust model — not merely *field* differences. The `derivationPath?` pattern handles field-level differences; the `Wallet` sealed hierarchy handles type-tagged differences. Until something requires a method that genuinely differs in implementation per trust model, splitting `domain/` is the wrong move.
 - **Interaction with `HdAddressEntry` removal (Phase 2).** That removal demonstrates the same principle on a smaller scale: a parallel value-object family is a smell when no architectural cycle forces it. After Phase 2, `Address` is the canonical address type across both trust models — confirming Option A's premise that domain-level sharing is sustainable.
+
+---
+
+## Update (BW-0011, 2026-05-12)
+
+The `address` package was merged into `wallet` (BC consolidation — `address` had no aggregate root of its own; it was always operated on as part of the `wallet` aggregate). The `Address` entity referenced above at `packages/address/lib/src/domain/entity/address.dart` now lives at `packages/wallet/lib/src/domain/entity/address.dart`. All other invariants in this ADR remain in force: trust-model subfolder split, `keys` ownership of signing, etc. References to "`wallet`, `transaction`, `address`" in this ADR should be read as "`wallet`, `transaction`" — the trust-model rule now applies to the merged `wallet` package's `application/hd/` and `application/node/` subfolders for the address-generation strategies as well.

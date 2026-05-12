@@ -1,5 +1,5 @@
-import 'package:address/src/domain/entity/address.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:wallet/src/domain/entity/address.dart';
 
 /// Maps [Address] domain entities to and from their JSON-compatible [Map]
 /// representation used for persistence.

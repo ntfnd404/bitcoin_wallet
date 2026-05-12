@@ -8,8 +8,6 @@ environment:
 resolution: workspace
 
 dependencies:
-  address:
-    path: ../address
   rpc_client:
     path: ../rpc_client
   shared_kernel:
