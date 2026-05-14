@@ -77,11 +77,11 @@ class WalletDetailScreen extends StatelessWidget {
           },
           child: BlocBuilder<AddressBloc, AddressState>(
             builder: (context, state) {
-              if (state.status == AddressStatus.loading) {
+              if (state.status == AddressStatus.processing) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final isGenerating = state.status == AddressStatus.generating;
+              final isGenerating = state.status == AddressStatus.processing;
 
               return ListView(
                 children: [

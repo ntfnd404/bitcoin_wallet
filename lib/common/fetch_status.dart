@@ -2,4 +2,4 @@
 ///
 /// Domain-specific statuses (e.g. [WalletStatus], [AddressStatus]) with
 /// feature-specific values (creating, generating, …) stay separate.
-enum FetchStatus { initial, loading, loaded, error }
+enum FetchStatus { initial, loading, loaded }

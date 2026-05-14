@@ -76,7 +76,7 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
         }
       },
       builder: (context, state) {
-        final isSubmitting = state.status == WalletStatus.creating;
+        final isSubmitting = state.status == WalletStatus.processing;
         final trimmed = _phraseController.text.trim();
         final words = trimmed.isEmpty ? <String>[] : trimmed.split(RegExp(r'\s+'));
         final wordCount = words.length;

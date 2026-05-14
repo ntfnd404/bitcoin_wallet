@@ -52,19 +52,15 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       final transactions = await _getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          transactions: transactions,
-          status: FetchStatus.loaded,
-        ),
-      );
+      emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
       emitAction(TransactionErrorOccurred(exception: e));
-      emit(state.copyWith(status: FetchStatus.error));
+      emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: FetchStatus.initial));
     }
   }
 
@@ -76,19 +72,15 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       final transactions = await _getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          transactions: transactions,
-          status: FetchStatus.loaded,
-        ),
-      );
+      emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
       emitAction(TransactionErrorOccurred(exception: e));
-      emit(state.copyWith(status: FetchStatus.error));
+      emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: FetchStatus.initial));
     }
   }
 }

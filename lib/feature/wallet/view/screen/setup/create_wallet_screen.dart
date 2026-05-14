@@ -61,7 +61,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
         }
       },
       builder: (context, state) {
-        final isSubmitting = state.status == WalletStatus.creating;
+        final isSubmitting = state.status == WalletStatus.processing;
 
         return Padding(
           padding: const EdgeInsets.all(16),

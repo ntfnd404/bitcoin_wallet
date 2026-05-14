@@ -63,7 +63,6 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     Emitter<SendState> emit,
   ) async {
     emit(state.copyWith(status: SendStatus.preparing));
-
     try {
       final targetSat = Satoshi(event.amountSat);
       final Map<String, CoinSelectionResult> strategies;
@@ -110,7 +109,9 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
       emitAction(SendFailed(exception: e));
       emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error));
     }
   }
 
@@ -134,7 +135,6 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     }
 
     emit(state.copyWith(status: SendStatus.sending));
-
     try {
       final String txid;
 
@@ -165,7 +165,9 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
       emitAction(SendFailed(exception: e));
       emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error));
     }
   }
 
@@ -184,7 +186,9 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
       emitAction(SendMiningFailed(exception: e));
       emit(state.copyWith(status: SendStatus.error));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: SendStatus.error));
     }
   }
 }

@@ -13,9 +13,6 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
   final CreateHdWalletUseCase _createHdWallet;
   final RestoreHdWalletUseCase _restoreHdWallet;
 
-  // Holds the pending HD wallet between HdWalletCreateRequested and SeedConfirmed.
-  HdWallet? _pendingHdWallet;
-
   WalletBloc({
     required WalletRepository walletRepository,
     required GetSeedUseCase getSeed,
@@ -40,17 +37,20 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
     WalletListRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.loading));
+    emit(state.copyWith(status: WalletStatus.processing));
     try {
       final wallets = await _walletRepository.getWallets();
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.loaded, wallets: wallets));
+
+      emit(state.copyWith(status: WalletStatus.idle, wallets: wallets));
     } on WalletException catch (e) {
       if (isClosed) return;
       emitAction(WalletErrorOccurred(exception: e));
-      emit(state.copyWith(status: WalletStatus.error));
+      emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: WalletStatus.idle));
     }
   }
 
@@ -58,18 +58,21 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
     NodeWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating));
+    emit(state.copyWith(status: WalletStatus.processing));
     try {
       final wallet = await _createNodeWallet(event.name);
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, wallet]));
+
+      emit(state.copyWith(status: WalletStatus.idle, wallets: [...state.wallets, wallet]));
       emitAction(WalletNodeCreated(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
       emitAction(WalletErrorOccurred(exception: e));
-      emit(state.copyWith(status: WalletStatus.error));
+      emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: WalletStatus.idle));
     }
   }
 
@@ -77,20 +80,21 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
     HdWalletCreateRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating));
+    emit(state.copyWith(status: WalletStatus.processing));
     try {
       final (wallet, mnemonic) = await _createHdWallet(event.name, wordCount: event.wordCount);
       if (isClosed) return;
-      _pendingHdWallet = wallet;
-      emit(state.copyWith(status: WalletStatus.awaitingSeedConfirmation));
+
+      emit(state.copyWith(status: WalletStatus.idle, pendingHdWallet: wallet));
       emitAction(WalletHdAwaitingConfirmation(wallet: wallet, mnemonic: mnemonic));
     } on WalletException catch (e) {
       if (isClosed) return;
-      _pendingHdWallet = null;
       emitAction(WalletErrorOccurred(exception: e));
-      emit(state.copyWith(status: WalletStatus.error));
+      emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: WalletStatus.idle));
     }
   }
 
@@ -98,27 +102,35 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
     WalletRestoreRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(state.copyWith(status: WalletStatus.creating));
+    emit(state.copyWith(status: WalletStatus.processing));
     try {
       final wallet = await _restoreHdWallet(event.name, event.mnemonic);
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, wallet]));
+
+      emit(state.copyWith(status: WalletStatus.idle, wallets: [...state.wallets, wallet]));
       emitAction(WalletRestored(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
       emitAction(WalletErrorOccurred(exception: e));
-      emit(state.copyWith(status: WalletStatus.error));
+      emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: WalletStatus.idle));
     }
   }
 
   void _onSeedConfirmed(SeedConfirmed event, Emitter<WalletState> emit) {
-    final confirmed = _pendingHdWallet;
+    final confirmed = state.pendingHdWallet;
     if (confirmed == null) return;
-    _pendingHdWallet = null;
 
-    emit(state.copyWith(status: WalletStatus.loaded, wallets: [...state.wallets, confirmed]));
+    emit(
+      state.copyWith(
+        status: WalletStatus.idle,
+        wallets: [...state.wallets, confirmed],
+        clearPendingHdWallet: true,
+      ),
+    );
     emitAction(WalletHdConfirmed(wallet: confirmed));
   }
 
@@ -126,17 +138,21 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
     SeedViewRequested event,
     Emitter<WalletState> emit,
   ) async {
+    emit(state.copyWith(status: WalletStatus.processing));
     try {
       final mnemonic = await _getSeed(event.walletId);
       if (isClosed) return;
-      emit(state.copyWith(status: WalletStatus.awaitingSeedConfirmation));
+
+      emit(state.copyWith(status: WalletStatus.idle));
       emitAction(WalletSeedReady(mnemonic: mnemonic));
     } on KeysException catch (e) {
       if (isClosed) return;
       emitAction(WalletSeedFailed(exception: e));
-      emit(state.copyWith(status: WalletStatus.error));
+      emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: WalletStatus.idle));
     }
   }
 }

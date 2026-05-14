@@ -23,19 +23,20 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBloc
     AddressListRequested event,
     Emitter<AddressState> emit,
   ) async {
-    emit(state.copyWith(status: AddressStatus.loading));
+    emit(state.copyWith(status: AddressStatus.processing));
     try {
       final addresses = await _addressRepository.getAddresses(event.wallet.id);
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.loaded, addresses: addresses));
+      emit(state.copyWith(status: AddressStatus.idle, addresses: addresses));
     } on AddressException catch (e) {
       if (isClosed) return;
-
       emitAction(AddressErrorOccurred(exception: e));
-      emit(state.copyWith(status: AddressStatus.error));
+      emit(state.copyWith(status: AddressStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: AddressStatus.idle));
     }
   }
 
@@ -43,20 +44,21 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBloc
     AddressGenerateRequested event,
     Emitter<AddressState> emit,
   ) async {
-    if (state.status == AddressStatus.generating) return;
-    emit(state.copyWith(status: AddressStatus.generating));
+    if (state.status == AddressStatus.processing) return;
+    emit(state.copyWith(status: AddressStatus.processing));
     try {
       final address = await _generateAddress(event.wallet, event.type);
       if (isClosed) return;
 
-      emit(state.copyWith(status: AddressStatus.loaded, addresses: [...state.addresses, address]));
+      emit(state.copyWith(status: AddressStatus.idle, addresses: [...state.addresses, address]));
     } on AddressException catch (e) {
       if (isClosed) return;
-
       emitAction(AddressErrorOccurred(exception: e));
-      emit(state.copyWith(status: AddressStatus.error));
+      emit(state.copyWith(status: AddressStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: AddressStatus.idle));
     }
   }
 }

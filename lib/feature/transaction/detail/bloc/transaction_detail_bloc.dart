@@ -28,11 +28,12 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
       emit(state.copyWith(status: FetchStatus.loaded, detail: detail));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
       emitAction(TransactionDetailErrorOccurred(exception: e));
-      emit(state.copyWith(status: FetchStatus.error));
+      emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: FetchStatus.initial));
     }
   }
 }

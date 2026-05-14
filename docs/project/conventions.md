@@ -177,21 +177,21 @@ BLoC only — no Cubits. Events = past-tense user actions (`WalletListRequested`
 Hand-written immutable state classes — no `freezed` or code generation.
 
 ```dart
-final class WalletListState {
-  const WalletListState({
+final class WalletState {
+  const WalletState({
     this.wallets = const [],
-    this.status = WalletListStatus.initial,
-    this.errorMessage,
+    this.status = WalletStatus.idle,
+    this.pendingHdWallet,           // inter-event data lives in State, never as a BLoC field
   });
 
   final List<Wallet> wallets;
-  final WalletListStatus status;
-  final String? errorMessage;
+  final WalletStatus status;
+  final HdWallet? pendingHdWallet;  // null = no pending wallet; non-null = awaiting seed confirmation
 
-  WalletListState copyWith({...});
+  WalletState copyWith({...});
 }
 
-enum WalletListStatus { initial, loading, loaded, error }
+enum WalletStatus { idle, processing }
 ```
 
 BLoC constructors receive **use cases** (from module application layer). When no orchestration is needed, receiving repositories directly is acceptable.
@@ -243,6 +243,32 @@ Rules:
 - **Never** route UI effects (SnackBar, navigation) through `AppEventBus` — that couples presentation to the bus.
 - **Never** route cross-feature notifications through `emitAction` — actions are scoped to one BLoC's widget subtree.
 - BLoC state carries only **persistent render signals**: status enums, data lists, typed failure fields. No `Exception? exception`.
+
+### Status enum design
+
+Status describes *process phase*, not outcome. Baseline for simple flows:
+
+```dart
+enum XxxStatus { idle, processing }
+```
+
+Rules:
+- **No `error` value.** Errors are one-time signals → `emitAction(XxxErrorOccurred(...))`, state returns to `idle`. Exception: a page-level persistent error render (e.g. "failed to load, retry") may use a typed nullable failure field (`KeysException? failure`) instead of an `error` status value — derive the error state from `state.failure != null`.
+- **No redundant values.** `loaded` is the same as `idle` with data — derive from list being non-empty. `awaitingSeedConfirmation` is the same as `state.pendingHdWallet != null` — drop the status value.
+- **Wizard flows** with meaningful intermediate steps (`scanning`, `scanned`, `signing`, `broadcasted`) may keep those step values — but still no `error` and no `initial`/`idle` redundancy.
+- **After every error** always `emit(state.copyWith(status: XxxStatus.idle))` so the UI never gets stuck.
+
+### Inter-event data belongs in State
+
+Any data read in event handler B that was written in event handler A must live in `State`, not as a BLoC instance variable. Instance variables break hot-restart, make BLoC non-serialisable, and hide state from tests.
+
+```dart
+// Wrong
+HdWallet? _pendingHdWallet;          // invisible to state machine, lost on restart
+
+// Correct
+state.pendingHdWallet                // visible, testable, survives re-subscription
+```
 
 ---
 

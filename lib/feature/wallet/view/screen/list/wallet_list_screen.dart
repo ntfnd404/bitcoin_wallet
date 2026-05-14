@@ -50,7 +50,7 @@ class _WalletListScreenState extends State<WalletListScreen> {
         }
       },
       builder: (context, state) {
-        if (state.status == WalletStatus.loading) {
+        if (state.status == WalletStatus.processing) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.wallets.isEmpty) {
