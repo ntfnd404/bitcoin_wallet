@@ -87,6 +87,15 @@ void main() {
       expect(address.type, expectedType);
     });
 
+    test('StateError from strategy propagates — not wrapped as AddressGenerationException', () {
+      when(() => hdStrategy.generate(any(), any())).thenThrow(StateError('programmer bug'));
+
+      expect(
+        () => useCase(_hdWallet(), AddressType.nativeSegwit),
+        throwsA(isA<StateError>()),
+      );
+    });
+
     test('uses first matching strategy when multiple support the type', () async {
       final second = MockAddressGenerationStrategy();
       when(() => hdStrategy.supports(any(that: isA<HdWallet>()))).thenReturn(true);

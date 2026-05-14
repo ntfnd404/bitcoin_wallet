@@ -84,6 +84,15 @@ void main() {
       expect(first.id, isNot(second.id));
     });
 
+    test('ArgumentError from wallet repository propagates — not wrapped as WalletStorageException', () async {
+      walletRepo.throwOnSaveWallet = ArgumentError('unexpected type');
+
+      await expectLater(
+        () => useCase('Restored', kTestMnemonic),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
     test('seed is stored before wallet is saved', () async {
       final mockRepo = MockWalletRepository();
       when(() => mockRepo.saveWallet(any())).thenAnswer((_) async {});

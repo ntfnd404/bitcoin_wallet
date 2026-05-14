@@ -12,6 +12,5 @@ dependencies:
     path: ../shared_kernel
   wallet:
     path: ../wallet
-
 dev_dependencies:
-  test: 1.30.0
+  test: ^1.30.0

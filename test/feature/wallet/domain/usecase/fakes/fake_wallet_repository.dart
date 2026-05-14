@@ -2,12 +2,18 @@ import 'package:wallet/wallet.dart';
 
 /// In-memory wallet repository for unit tests.
 final class FakeWalletRepository implements HdWalletRepository {
+  Object? throwOnSaveWallet;
+
   final List<Wallet> _wallets = [];
 
   List<Wallet> get saved => List.unmodifiable(_wallets);
 
   @override
-  Future<void> saveWallet(HdWallet wallet) async => _wallets.add(wallet);
+  Future<void> saveWallet(HdWallet wallet) async {
+    final toThrow = throwOnSaveWallet;
+    if (toThrow != null) throw toThrow;
+    _wallets.add(wallet);
+  }
 
   @override
   Future<List<Wallet>> getWallets() async => List.unmodifiable(_wallets);

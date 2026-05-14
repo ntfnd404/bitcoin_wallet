@@ -56,8 +56,14 @@ final class SendNodeTransactionUseCase {
       );
 
       return _broadcastDataSource.broadcast(hexSigned);
-    } catch (e, stack) {
+    } on TransactionSigningException {
+      rethrow;
+    } on TransactionException {
+      rethrow;
+    } on Exception catch (_, stack) {
+      // 4-criteria (C1: translate RpcException from broadcast gateway, C2: n/a, C3: preserve stack, C4: typed recovery for caller).
       Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

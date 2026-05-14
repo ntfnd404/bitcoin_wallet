@@ -110,8 +110,11 @@ final class PrepareHdSendUseCase {
       );
     } on InsufficientFundsException {
       rethrow;
-    } catch (e, stack) {
+    } on AddressException catch (_, stack) {
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
+    } on TransactionException {
+      rethrow;
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

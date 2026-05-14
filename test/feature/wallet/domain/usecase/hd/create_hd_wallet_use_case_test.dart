@@ -71,6 +71,15 @@ void main() {
       expect(first.id, isNot(second.id));
     });
 
+    test('StateError from seed repository propagates — not wrapped as WalletStorageException', () async {
+      seedRepo.throwOnStoreSeed = StateError('programmer bug');
+
+      await expectLater(
+        () => useCase('My Wallet'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
     test('seed is stored before wallet is saved', () async {
       final mockRepo = MockWalletRepository();
       when(() => mockRepo.saveWallet(any())).thenAnswer((_) async {});
