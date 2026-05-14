@@ -351,3 +351,85 @@ These are hard rules. Never violate them.
 - **Never** import app code from a workspace package
 - **Never** create top-level `components/` for business modules
 - **Never** create god-object BLoCs handling multiple flows — one BLoC per flow
+
+---
+
+## Signing Boundary
+
+The signing boundary is the set of rules governing how seed material, private keys,
+and cryptographic secrets move through the `keys` bounded context. Violations are
+treated as Critical-lane defects.
+
+### Rule SB-1 — Secrets do not cross the `keys` BC boundary
+
+Mnemonic words and raw private-key bytes (`Uint8List`) must never appear in:
+- method parameters or return values on any public API (barrel exports of `keys.dart`)
+- exception messages, `toString()` output, or log calls
+- cross-package DTOs or value objects
+
+The only crossing is the signed transaction hex string, which is the intentional
+output of `SignTransactionUseCase`.
+
+### Rule SB-2 — `keys.SigningInput` is internal
+
+`keys.SigningInput` carries a raw 32-byte private key. It is NOT exported from
+`package:keys/keys.dart`. It is an application-internal DTO used only by
+`TransactionSigningService`, which is also internal to `keys`. External code must
+never reference this type.
+
+### Rule SB-3 — `toString` overrides on sensitive types are mandatory
+
+Any type that carries, or appears structurally adjacent to, sensitive material MUST
+override `toString` before being committed. The override must either:
+(a) redact all sensitive fields — `'TypeName(<redacted>)'`, or
+(b) enumerate all safe fields explicitly and exclude sensitive ones.
+
+Relying on the Dart default `Object.toString()` is forbidden for these types even
+though the default is currently safe.
+
+Affected types:
+- `Mnemonic` → `'Mnemonic(<redacted>)'`
+- `keys.SigningInput` → shows `txid`, `vout`, `amountSat`; redacts `privateKey` and `publicKey`
+
+### Rule SB-4 — `KeysException` subtypes must remain zero-field
+
+No subtype of `KeysException` may carry wallet identifiers, key material, seed
+phrases, or derivation paths. All subtypes must be zero-arg with a fixed string
+`toString`. This invariant is machine-checked by `packages/keys/test/keys_exception_test.dart`.
+
+### Rule SB-5 — Broad catch in signing use cases is permitted by security policy
+
+The signing use case (`SignTransactionUseCase`) uses a broad `catch (_, stack)` to
+wrap all unexpected errors from the signing service as `KeysSigningException`. This
+is a deliberate security-first policy justified by all four criteria:
+
+- C1 (change abstraction): translates internal crypto exception vocabulary to the
+  `keys` domain language.
+- C2 (hide secrets): the caught exception message or chained cause may carry key
+  material; discarding it via `_` is the only safe option.
+- C3 (add context): the original stack trace is preserved via
+  `Error.throwWithStackTrace` for debugging without exposing the message.
+- C4 (can recover): the caller can distinguish `KeysSeedNotFoundException`,
+  `KeysDerivationException`, and `KeysSigningException` and act accordingly.
+
+Consequence: `ArgumentError` from signing-service misuse is also mapped to
+`KeysSigningException`. This is intentional — programmer errors in the crypto stack
+are sanitized the same way as runtime errors because distinguishing them at runtime
+would require inspecting exception messages, which violates C2.
+
+### Rule SB-6 — Key zeroing is a known limitation
+
+Raw private-key `Uint8List` values constructed inside `SignTransactionUseCase` become
+GC-eligible immediately after `_signing.signP2wpkh` returns. No explicit zeroing is
+performed because the Dart VM JIT compiler does not guarantee physical memory zeroing.
+This is an acknowledged limitation for a regtest educational project. Do not add
+zeroing code without a Dart VM–specific analysis confirming it is effective.
+
+### Rule SB-7 — `transaction` must not depend on `keys`
+
+The `transaction` package does not declare `keys` as a dependency. `HdTransactionSigner`
+(the crossing-point adapter) lives in the app layer (`lib/core/adapters/`) precisely to
+avoid this coupling. The broad `on Exception catch` in `SendHdTransactionUseCase`
+(line 63 of `send_hd_transaction_use_case.dart`) is justified by this dependency
+direction rule: `KeysException` subtypes arrive as opaque `Exception` objects at the
+`transaction` boundary. This is a deliberate structural gap, not a coding error.

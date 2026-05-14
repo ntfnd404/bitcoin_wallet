@@ -1,6 +1,6 @@
 /// Immutable wrapper around a BIP39 word list.
 ///
-/// Does not override [toString] — prevents accidental logging of seed words.
+/// Overrides [toString] to redact seed words — prevents accidental logging.
 final class Mnemonic {
   final List<String> words;
 
@@ -11,4 +11,7 @@ final class Mnemonic {
       );
     }
   }
+
+  @override
+  String toString() => 'Mnemonic(<redacted>)';
 }

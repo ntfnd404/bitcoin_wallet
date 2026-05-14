@@ -71,8 +71,17 @@ final class SignTransactionUseCase {
       // SECURITY: do NOT log or inspect the caught exception — it may carry key material.
       Error.throwWithStackTrace(const KeysDerivationException(), stack);
     } catch (_, stack) {
-      // Signing service threw an unexpected error.
-      // SECURITY: do NOT log or inspect the caught exception — it may carry key material.
+      // Broad catch — deliberate security-first policy (Rule SB-5).
+      // C1 (change abstraction): translates internal crypto exception vocabulary to
+      //   the keys domain language.
+      // C2 (hide secrets): the caught exception message or chained cause may carry
+      //   key material; discarding it via _ is the only safe option.
+      // C3 (add context): the original stack trace is preserved via
+      //   Error.throwWithStackTrace for debugging without exposing the message.
+      // C4 (can recover): callers distinguish KeysSeedNotFoundException,
+      //   KeysDerivationException, and KeysSigningException and act accordingly.
+      // Consequence: ArgumentError from signing-service misuse is also mapped to
+      //   KeysSigningException (security-over-propagation — see Rule SB-5).
       Error.throwWithStackTrace(const KeysSigningException(), stack);
     }
   }

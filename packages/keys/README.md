@@ -27,7 +27,6 @@ Barrel: `package:keys/keys.dart`
 | `AccountXpub` | class | Account-level extended public key value object |
 | `DerivedAddress` | class | Address derived from a specific derivation path |
 | `Mnemonic` | class | BIP-39 mnemonic phrase value object |
-| `SigningInput` | class | Input descriptor for transaction signing |
 | `SigningOutput` | class | Signed transaction result |
 
 ### Domain repository
@@ -61,7 +60,7 @@ SDK: Dart SDK only.
 Add a symbol only when it is a BIP-standard cryptographic primitive, a key
 derivation concern, or a signing concern. Never add HD wallet orchestration
 (wallet creation, wallet persistence, address generation strategies) — those
-belong in `wallet` or `address`.
+belong in `wallet`.
 
 ## Layer layout
 
