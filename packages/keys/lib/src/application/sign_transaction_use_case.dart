@@ -71,17 +71,10 @@ final class SignTransactionUseCase {
       // SECURITY: do NOT log or inspect the caught exception — it may carry key material.
       Error.throwWithStackTrace(const KeysDerivationException(), stack);
     } catch (_, stack) {
-      // Broad catch — deliberate security-first policy (Rule SB-5).
-      // C1 (change abstraction): translates internal crypto exception vocabulary to
-      //   the keys domain language.
-      // C2 (hide secrets): the caught exception message or chained cause may carry
-      //   key material; discarding it via _ is the only safe option.
-      // C3 (add context): the original stack trace is preserved via
-      //   Error.throwWithStackTrace for debugging without exposing the message.
-      // C4 (can recover): callers distinguish KeysSeedNotFoundException,
-      //   KeysDerivationException, and KeysSigningException and act accordingly.
-      // Consequence: ArgumentError from signing-service misuse is also mapped to
-      //   KeysSigningException (security-over-propagation — see Rule SB-5).
+      // Broad catch — security-first policy (Rule SB-5): C1 vocabulary isolation,
+      // C2 key-material suppression (discard message via _), C3 stack preserved,
+      // C4 caller distinguishes all three exception types. ArgumentError → KeysSigningException
+      // is the accepted security-over-propagation trade-off.
       Error.throwWithStackTrace(const KeysSigningException(), stack);
     }
   }

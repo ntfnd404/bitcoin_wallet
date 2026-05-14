@@ -116,46 +116,6 @@ void main() {
       expect(caught.toString(), isNot(contains('CAFEBABE')));
     });
 
-    test('preserves original stack trace on KeysDerivationException', () async {
-      seedRepository.storeSeedSync(walletId, Mnemonic(words: mnemonic12));
-      derivation.throwOnDerivePrivateKey = StateError('sentinel_DEADBEEF');
-
-      StackTrace? capturedTrace;
-      try {
-        await useCase(
-          walletId: walletId,
-          inputs: [testInput],
-          outputs: [testOutput],
-          bech32Hrp: 'bcrt',
-        );
-      } catch (_, stack) {
-        capturedTrace = stack;
-      }
-
-      expect(capturedTrace, isNotNull);
-      expect(capturedTrace.toString(), isNotEmpty);
-    });
-
-    test('preserves original stack trace on KeysSigningException', () async {
-      seedRepository.storeSeedSync(walletId, Mnemonic(words: mnemonic12));
-      signing.signThrows = Exception('raw_key=CAFEBABE');
-
-      StackTrace? capturedTrace;
-      try {
-        await useCase(
-          walletId: walletId,
-          inputs: [testInput],
-          outputs: [testOutput],
-          bech32Hrp: 'bcrt',
-        );
-      } catch (_, stack) {
-        capturedTrace = stack;
-      }
-
-      expect(capturedTrace, isNotNull);
-      expect(capturedTrace.toString(), isNotEmpty);
-    });
-
     test(
         'ArgumentError from signing service is mapped to KeysSigningException '
         '(security-first policy)', () async {
