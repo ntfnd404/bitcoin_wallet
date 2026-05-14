@@ -33,10 +33,7 @@ final class AppBootstrap {
   /// Must be called inside `runZonedGuarded` before
   /// [AppDependenciesBuilder.create].
   static void initialize() {
-    // Fatal — if Flutter binding cannot be initialized the app cannot run.
     WidgetsFlutterBinding.ensureInitialized();
-
-    // Non-fatal — degraded observability is better than no app.
     _initBlocObserver();
 
     // TODO(ntfnd404): await _initSentry();
