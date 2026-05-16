@@ -3,54 +3,12 @@ import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
-import '../helpers/fake_address_repository.dart';
-import '../helpers/fake_coin_selector.dart';
-import '../helpers/fake_utxo_scan_gateway.dart';
+import '../fakes/fake_address_repository.dart';
+import '../fakes/fake_coin_selector.dart';
+import '../fakes/fake_utxo_scan_gateway.dart';
 
 const _walletId = 'wallet_1';
 const _address = 'bc1qtestaddress';
-
-PrepareHdSendUseCase _makeUseCase({
-  required FakeAddressRepository addressRepo,
-  required FakeUtxoScanGateway utxoGateway,
-  required List<CoinSelector> selectors,
-}) =>
-    PrepareHdSendUseCase(
-      addressRepository: addressRepo,
-      utxoScanDataSource: utxoGateway,
-      selectors: selectors,
-      feeEstimator: const P2wpkhFeeEstimator(),
-    );
-
-FakeAddressRepository _repoWithOneAddress() {
-  final repo = FakeAddressRepository();
-  repo.add(
-    Address(
-      value: _address,
-      type: AddressType.nativeSegwit,
-      walletId: _walletId,
-      index: 0,
-    ),
-  );
-
-  return repo;
-}
-
-FakeUtxoScanGateway _gatewayWithOneUtxo() {
-  final gateway = FakeUtxoScanGateway();
-  gateway.scanResult = [
-    const ScannedUtxo(
-      txid: 'utxo_tx',
-      vout: 0,
-      amountSat: Satoshi(100000),
-      scriptPubKeyHex: 'deadbeef',
-      height: 100,
-      address: _address,
-    ),
-  ];
-
-  return gateway;
-}
 
 void main() {
   group('PrepareHdSendUseCase', () {
@@ -115,8 +73,7 @@ void main() {
     });
 
     test('AddressException from address repo translates to TransactionPreparationException', () async {
-      final repo = FakeAddressRepository()
-        ..throwOnGetAddresses = const AddressStorageException();
+      final repo = FakeAddressRepository()..throwOnGetAddresses = const AddressStorageException();
       final useCase = _makeUseCase(
         addressRepo: repo,
         utxoGateway: FakeUtxoScanGateway(),
@@ -130,8 +87,7 @@ void main() {
     });
 
     test('StateError from selector propagates — not wrapped as TransactionPreparationException', () async {
-      final selector = FakeCoinSelector(name: 'fifo')
-        ..throwOnSelect = StateError('programmer bug');
+      final selector = FakeCoinSelector(name: 'fifo')..throwOnSelect = StateError('programmer bug');
       final useCase = _makeUseCase(
         addressRepo: _repoWithOneAddress(),
         utxoGateway: _gatewayWithOneUtxo(),
@@ -144,4 +100,45 @@ void main() {
       );
     });
   });
+}
+
+PrepareHdSendUseCase _makeUseCase({
+  required FakeAddressRepository addressRepo,
+  required FakeUtxoScanGateway utxoGateway,
+  required List<CoinSelector> selectors,
+}) => PrepareHdSendUseCase(
+  addressRepository: addressRepo,
+  utxoScanDataSource: utxoGateway,
+  selectors: selectors,
+  feeEstimator: const P2wpkhFeeEstimator(),
+);
+
+FakeAddressRepository _repoWithOneAddress() {
+  final repo = FakeAddressRepository();
+  repo.add(
+    Address(
+      value: _address,
+      type: AddressType.nativeSegwit,
+      walletId: _walletId,
+      index: 0,
+    ),
+  );
+
+  return repo;
+}
+
+FakeUtxoScanGateway _gatewayWithOneUtxo() {
+  final gateway = FakeUtxoScanGateway();
+  gateway.scanResult = [
+    const ScannedUtxo(
+      txid: 'utxo_tx',
+      vout: 0,
+      amountSat: Satoshi(100000),
+      scriptPubKeyHex: 'deadbeef',
+      height: 100,
+      address: _address,
+    ),
+  ];
+
+  return gateway;
 }

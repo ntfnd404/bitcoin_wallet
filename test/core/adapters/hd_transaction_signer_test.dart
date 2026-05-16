@@ -4,7 +4,7 @@ import 'package:keys/keys.dart' show KeysDerivationException, KeysSigningExcepti
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart' as tx show SigningInput;
 
-import 'helpers/fake_sign_transaction_use_case.dart';
+import 'fakes/fake_sign_transaction_use_case.dart';
 
 void main() {
   group('HdTransactionSigner', () {

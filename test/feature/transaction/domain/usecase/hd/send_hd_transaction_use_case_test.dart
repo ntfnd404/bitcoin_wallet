@@ -4,40 +4,8 @@ import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 
-import '../helpers/fake_broadcast_gateway.dart';
-import '../helpers/fake_transaction_signer.dart';
-
-HdSendPreparation _buildPreparation() {
-  const candidate = CoinCandidate(
-    txid: 'utxo_txid',
-    vout: 0,
-    amountSat: Satoshi(100000),
-    age: 1,
-  );
-
-  const signingInput = SigningInput(
-    txid: 'utxo_txid',
-    vout: 0,
-    amountSat: Satoshi(100000),
-    address: 'bc1qtest',
-    derivationIndex: 0,
-    addressType: AddressType.nativeSegwit,
-  );
-
-  return const HdSendPreparation(
-    candidates: [candidate],
-    strategies: {
-      'fifo': CoinSelectionResult(
-        inputs: [candidate],
-        totalInputSat: Satoshi(100000),
-        feeSat: Satoshi(1000),
-        changeSat: Satoshi.zero,
-      ),
-    },
-    signingInputs: {('utxo_txid', 0): signingInput},
-    changeAddress: 'bc1qchange',
-  );
-}
+import '../fakes/fake_broadcast_gateway.dart';
+import '../fakes/fake_transaction_signer.dart';
 
 void main() {
   group('SendHdTransactionUseCase', () {
@@ -153,4 +121,36 @@ void main() {
       });
     });
   });
+}
+
+HdSendPreparation _buildPreparation() {
+  const candidate = CoinCandidate(
+    txid: 'utxo_txid',
+    vout: 0,
+    amountSat: Satoshi(100000),
+    age: 1,
+  );
+
+  const signingInput = SigningInput(
+    txid: 'utxo_txid',
+    vout: 0,
+    amountSat: Satoshi(100000),
+    address: 'bc1qtest',
+    derivationIndex: 0,
+    addressType: AddressType.nativeSegwit,
+  );
+
+  return const HdSendPreparation(
+    candidates: [candidate],
+    strategies: {
+      'fifo': CoinSelectionResult(
+        inputs: [candidate],
+        totalInputSat: Satoshi(100000),
+        feeSat: Satoshi(1000),
+        changeSat: Satoshi.zero,
+      ),
+    },
+    signingInputs: {('utxo_txid', 0): signingInput},
+    changeAddress: 'bc1qchange',
+  );
 }
