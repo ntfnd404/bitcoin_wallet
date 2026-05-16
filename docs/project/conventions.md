@@ -176,6 +176,27 @@ See [guidelines.md](./guidelines.md) for detailed examples.
 BLoC only — no Cubits. Events = past-tense user actions (`WalletListRequested`).
 Hand-written immutable state classes — no `freezed` or code generation.
 
+### Naming conventions
+
+| Artifact | Suffix | Example |
+|----------|--------|---------|
+| BLoC class | `Bloc` | `WalletBloc` |
+| Event base | `Event` | `WalletEvent` |
+| Concrete event | (past-tense verb phrase) | `WalletListRequested` |
+| State class | `State` | `WalletState` |
+| Status enum | `Status` | `WalletStatus` |
+| Action base | `Action` | `WalletAction` |
+| Concrete action | `*Action` | `WalletErrorOccurredAction` |
+
+All concrete action classes **must** end with `Action` — symmetrically with `Bloc`, `Event`, `State`.
+
+### Status enum values
+
+Use `idle / processing / successful` (not `initial / loading / loaded`).
+Errors are one-time signals: `emitAction(XxxFailedAction(...))` → SnackBar.
+No `error` value in the status enum.
+Broad `catch (e, stack)` in BLoC handlers must also `emitAction` a generic failure action (e.g. `XxxUnexpectedFailedAction`) before `addError` so the user always sees feedback.
+
 ```dart
 final class WalletState {
   const WalletState({
@@ -301,6 +322,13 @@ Navigator 2.0 via custom `RouterDelegate` — no third-party routing packages.
 
 See [code-style-guide.md](./code-style-guide.md).
 
+### Widget file rules
+
+- **One public widget class per file.** Never put multiple widget classes in one file.
+- **No private widgets** (`_MyWidget`). All widgets are public — private widgets cannot be tested independently.
+- Reusable widgets live in `lib/feature/<feature>/view/widget/`. Each widget has its own file named after the class (`broadcast_result.dart` → `BroadcastResult`).
+- `_State` classes (the `State<T>` implementation) are the only acceptable private class in a screen file — they belong alongside their `StatefulWidget`.
+
 ---
 
 ## Testing
@@ -308,6 +336,33 @@ See [code-style-guide.md](./code-style-guide.md).
 - All Bitcoin-specific code (BIP39, derivation, coin selection, script) must have unit tests.
 - RPC integration — tests against a live regtest node. Do not mock Bitcoin Core.
 - Module tests organized by layer: `domain/` (pure unit), `application/` (mocked ports), `data/` (integration).
+
+### Test Double Placement
+
+Test helpers (fakes, mocks, stubs) must **never** be defined inline inside a test file.
+Each test double lives in its own file, named after the class it contains.
+
+**Folder structure** — place doubles alongside the test file in a subfolder named by role:
+```
+test/feature/<feature>/
+  <test_name>_test.dart
+  fakes/
+    fake_<name>.dart      ← Fake: working in-memory implementation
+    fake_slow_<name>.dart
+  mocks/
+    mock_<name>.dart      ← Mock: created via mocktail/mockito, verifies interactions
+```
+
+No `helpers/` folder. Use `fakes/` or `mocks/` only.
+
+**Naming taxonomy** (xUnit roles):
+- `Fake*` — working simplified implementation (e.g. in-memory repository)
+- `Mock*` — created via mocktail/mockito, verifies call expectations
+- `Stub*` — minimal concrete implementation that returns fixed values (no expectations)
+- `Spy*` — records calls for later assertion without blocking them
+
+**BLoC state enum standard** — use `idle / processing / successful` (not `initial / loading / loaded`).
+Errors are one-time signals via `emitAction(XxxFailed(...))` — never an `error` value in the status enum.
 
 ---
 
