@@ -1,10 +1,7 @@
 enum SendStatus {
-  initial,
+  idle,
   preparing,
   awaitingConfirmation,
   sending,
-  sent,
-  mining,
-  mined,
-  error,
+  successful,
 }
