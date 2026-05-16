@@ -27,4 +27,9 @@ final class SigningInput {
     required this.derivationIndex,
     required this.addressType,
   });
+
+  @override
+  String toString() =>
+      'SigningInput(txid: $txid, vout: $vout, amountSat: $amountSat, '
+      'address: $address, derivationIndex: $derivationIndex, addressType: $addressType)';
 }

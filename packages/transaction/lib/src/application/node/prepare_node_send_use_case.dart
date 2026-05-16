@@ -72,8 +72,12 @@ final class PrepareNodeSendUseCase {
       );
     } on InsufficientFundsException {
       rethrow;
-    } catch (e, stack) {
+    } on TransactionException {
+      rethrow;
+    } on Exception catch (_, stack) {
+      // 4-criteria (C1: translate infra failure to BC language, C2: n/a, C3: preserve stack, C4: typed recovery for caller).
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

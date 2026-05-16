@@ -5,7 +5,6 @@ export 'src/domain/derivation_paths.dart';
 export 'src/domain/entity/account_xpub.dart';
 export 'src/domain/entity/derived_address.dart';
 export 'src/domain/entity/mnemonic.dart';
-export 'src/domain/entity/signing_input.dart';
 export 'src/domain/entity/signing_output.dart';
 export 'src/domain/exception/keys_exception.dart';
 export 'src/domain/repository/seed_repository.dart';

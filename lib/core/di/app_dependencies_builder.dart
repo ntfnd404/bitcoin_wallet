@@ -75,7 +75,7 @@ final class AppDependenciesBuilder {
       final nodeTxDataSource = NodeTransactionGatewayImpl(rpcClient: rpcClient);
       final blockGenDataSource = BlockGenerationGatewayImpl(rpcClient: rpcClient);
       final broadcastDataSource = BroadcastGatewayImpl(rpcClient: rpcClient);
-      final hdSigner = HdTransactionSigner(signTransaction: keys.signTransaction);
+      final hdSigner = HdTransactionSigner(signTransaction: keys.signTransaction.call);
 
       final transaction = TransactionAssembly(
         transactionRemoteDataSource: TransactionHistoryGatewayImpl(rpcClient: rpcClient),

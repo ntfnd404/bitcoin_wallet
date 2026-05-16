@@ -51,19 +51,15 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
       final utxos = await _getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          utxos: utxos,
-          status: FetchStatus.loaded,
-        ),
-      );
+      emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
-      emitAction(UtxoErrorOccurred(exception: e));
-      emit(state.copyWith(status: FetchStatus.error));
+      emitAction(UtxoErrorOccurredAction(exception: e));
+      emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: FetchStatus.initial));
     }
   }
 
@@ -75,19 +71,15 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
       final utxos = await _getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(
-        state.copyWith(
-          utxos: utxos,
-          status: FetchStatus.loaded,
-        ),
-      );
+      emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
-      emitAction(UtxoErrorOccurred(exception: e));
-      emit(state.copyWith(status: FetchStatus.error));
+      emitAction(UtxoErrorOccurredAction(exception: e));
+      emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: FetchStatus.initial));
     }
   }
 }

@@ -13,8 +13,9 @@ final class ScanUtxosUseCase {
   Future<List<ScannedUtxo>> call(List<String> addresses) async {
     try {
       return await _dataSource.scanForAddresses(addresses);
-    } catch (e, stack) {
-      Error.throwWithStackTrace(const TransactionUtxoScanException(), stack);
+    } on TransactionException {
+      rethrow;
     }
+    // RpcException propagates intentionally — already typed at the gateway layer.
   }
 }

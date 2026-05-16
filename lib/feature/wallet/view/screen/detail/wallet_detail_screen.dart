@@ -1,5 +1,4 @@
 import 'package:action_bloc/action_bloc.dart';
-import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/core/routing/app_router.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_action.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_bloc.dart';
@@ -7,10 +6,13 @@ import 'package:bitcoin_wallet/feature/address/bloc/address_event.dart';
 import 'package:bitcoin_wallet/feature/address/bloc/address_state.dart';
 import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
 import 'package:bitcoin_wallet/feature/address/view/widget/address_type_section.dart';
+import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_bloc.dart';
+import 'package:bitcoin_wallet/feature/regtest_mining/di/regtest_mining_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
+import 'package:bitcoin_wallet/feature/wallet/view/widget/mine_block_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_kernel/shared_kernel.dart';
@@ -52,13 +54,13 @@ class WalletDetailScreen extends StatelessWidget {
       body: ActionBlocListener<WalletBloc, WalletState, WalletAction>(
         listener: (context, action) {
           switch (action) {
-            case WalletSeedReady(:final mnemonic):
+            case WalletSeedReadyAction(:final mnemonic):
               AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
-            case WalletErrorOccurred(:final exception):
+            case WalletErrorOccurredAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
-            case WalletSeedFailed(:final exception):
+            case WalletSeedFailedAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
@@ -69,7 +71,7 @@ class WalletDetailScreen extends StatelessWidget {
         child: ActionBlocListener<AddressBloc, AddressState, AddressAction>(
           listener: (context, action) {
             switch (action) {
-              case AddressErrorOccurred(:final exception):
+              case AddressErrorOccurredAction(:final exception):
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(exception.toString())),
                 );
@@ -77,11 +79,11 @@ class WalletDetailScreen extends StatelessWidget {
           },
           child: BlocBuilder<AddressBloc, AddressState>(
             builder: (context, state) {
-              if (state.status == AddressStatus.loading) {
+              if (state.status == AddressStatus.processing) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final isGenerating = state.status == AddressStatus.generating;
+              final isGenerating = state.status == AddressStatus.processing;
 
               return ListView(
                 children: [
@@ -106,7 +108,12 @@ class WalletDetailScreen extends StatelessWidget {
                     onTap: () => AppRouter.toSend(context, wallet),
                   ),
                   const Divider(height: 1),
-                  _MineBlockTile(wallet: wallet),
+                  RegtestMiningScope(
+                    child: BlocProvider<RegtestMiningBloc>(
+                      create: (ctx) => RegtestMiningScope.newBloc(ctx, wallet.id),
+                      child: MineBlockTile(wallet: wallet),
+                    ),
+                  ),
                   const Divider(height: 1),
                   if (wallet is HdWallet) ...[
                     ListTile(
@@ -144,78 +151,5 @@ class WalletDetailScreen extends StatelessWidget {
         ),
       ),
     ),
-  );
-}
-
-/// Dev-only tile that mines one block, crediting the coinbase to this wallet.
-///
-/// For Node wallets uses [NodeTransactionDataSource.getNewAddress]; for HD
-/// wallets uses the first stored nativeSegwit address. Shows a snack bar on
-/// success/failure.
-class _MineBlockTile extends StatefulWidget {
-  const _MineBlockTile({required this.wallet});
-
-  final Wallet wallet;
-
-  @override
-  State<_MineBlockTile> createState() => _MineBlockTileState();
-}
-
-class _MineBlockTileState extends State<_MineBlockTile> {
-  bool _isMining = false;
-
-  Future<void> _mine() async {
-    setState(() => _isMining = true);
-
-    try {
-      final deps = AppScope.of(context);
-
-      // Resolve target address.
-      final String toAddress;
-      if (widget.wallet is NodeWallet) {
-        toAddress = await deps.transaction.prepareNodeSend
-            .call(
-              walletName: widget.wallet.name,
-              targetSat: const Satoshi(1),
-              feeRateSatPerVbyte: 1,
-            )
-            .then((prep) => prep.changeAddress);
-      } else {
-        final addresses = await deps.wallet.addressRepository.getAddresses(widget.wallet.id);
-        final native = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
-        toAddress = native.isNotEmpty ? native.first.value : '';
-      }
-
-      if (toAddress.isEmpty) {
-        _showSnack('No address available to mine to');
-
-        return;
-      }
-
-      await deps.transaction.mineBlock(toAddress);
-      _showSnack('Block mined!');
-    } catch (e) {
-      _showSnack('Error: $e');
-    } finally {
-      if (mounted) setState(() => _isMining = false);
-    }
-  }
-
-  void _showSnack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    title: const Text('Mine 1 block (dev)'),
-    leading: _isMining
-        ? const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : const Icon(Icons.construction_outlined),
-    onTap: _isMining ? null : _mine,
   );
 }

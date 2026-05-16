@@ -46,13 +46,13 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
       listener: (context, action) {
         switch (action) {
-          case WalletNodeCreated(:final wallet):
+          case WalletNodeCreatedAction(:final wallet):
             AppRouter.toWalletDetail(context, wallet);
-          case WalletHdAwaitingConfirmation(:final wallet, :final mnemonic):
+          case WalletHdAwaitingConfirmationAction(:final wallet, :final mnemonic):
             AppRouter.toSeedPhrase(context, mnemonic, wallet.id);
-          case WalletHdConfirmed():
+          case WalletHdConfirmedAction():
             Navigator.pop(context);
-          case WalletErrorOccurred(:final exception):
+          case WalletErrorOccurredAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(exception.toString())),
             );
@@ -61,7 +61,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
         }
       },
       builder: (context, state) {
-        final isSubmitting = state.status == WalletStatus.creating;
+        final isSubmitting = state.status == WalletStatus.processing;
 
         return Padding(
           padding: const EdgeInsets.all(16),

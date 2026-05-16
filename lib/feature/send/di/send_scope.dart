@@ -1,22 +1,23 @@
 import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:flutter/widgets.dart';
+import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 /// Feature-scoped DI entry point for the send flow.
 ///
-/// Exposes a factory method for [SendBloc], wiring the correct prepare/send
-/// use cases based on [Wallet.type].
+/// Reads use cases from [AppDependencies.transaction] and creates the correct
+/// [SendWorkflow] implementation based on wallet type. Wallet identity is
+/// captured in the workflow at construction time.
 class SendScope extends StatefulWidget {
   const SendScope({super.key, required this.child});
 
-  /// Creates a new [SendBloc] for [wallet], wired with use cases from the
-  /// nearest [SendScope] ancestor.
+  /// Creates a new [SendBloc] for [wallet] from the nearest [SendScope] ancestor.
   static SendBloc newSendBloc(BuildContext context, Wallet wallet) {
     final scope = context.getInheritedWidgetOfExactType<_InheritedSendScope>();
     if (scope == null) throw StateError('SendScope not found in widget tree');
 
-    return scope.newSendBloc(wallet);
+    return scope.blocFactory(wallet);
   }
 
   final Widget child;
@@ -26,7 +27,7 @@ class SendScope extends StatefulWidget {
 }
 
 class _SendScopeState extends State<SendScope> {
-  late final SendBloc Function(Wallet) _factory;
+  late final SendBloc Function(Wallet) _blocFactory;
   bool _initialized = false;
 
   @override
@@ -40,39 +41,39 @@ class _SendScopeState extends State<SendScope> {
     final bech32Hrp = deps.network.bech32Hrp;
     final eventBus = deps.eventBus;
 
-    _factory = (wallet) => wallet is NodeWallet
-        ? SendBloc(
-            wallet: wallet,
-            prepareNode: tx.prepareNodeSend,
-            sendNode: tx.sendNodeTransaction,
-            mineBlock: tx.mineBlock,
-            bech32Hrp: bech32Hrp,
-            eventBus: eventBus,
-          )
-        : SendBloc(
-            wallet: wallet,
-            prepareHd: tx.prepareHdSend,
-            sendHd: tx.sendHdTransaction,
-            mineBlock: tx.mineBlock,
-            bech32Hrp: bech32Hrp,
-            eventBus: eventBus,
-          );
+    _blocFactory = (wallet) => SendBloc(
+      workflow: switch (wallet) {
+        NodeWallet() => NodeSendWorkflow(
+          prepare: tx.prepareNodeSend,
+          send: tx.sendNodeTransaction,
+          walletName: wallet.name,
+        ),
+        HdWallet() => HdSendWorkflow(
+          prepare: tx.prepareHdSend,
+          send: tx.sendHdTransaction,
+          walletId: wallet.id,
+          bech32Hrp: bech32Hrp,
+        ),
+      },
+      eventBus: eventBus,
+      walletId: wallet.id,
+    );
   }
 
   @override
   Widget build(BuildContext context) => _InheritedSendScope(
-    newSendBloc: _factory,
+    blocFactory: _blocFactory,
     child: widget.child,
   );
 }
 
 class _InheritedSendScope extends InheritedWidget {
   const _InheritedSendScope({
-    required this.newSendBloc,
+    required this.blocFactory,
     required super.child,
   });
 
-  final SendBloc Function(Wallet) newSendBloc;
+  final SendBloc Function(Wallet) blocFactory;
 
   @override
   bool updateShouldNotify(_InheritedSendScope old) => false;

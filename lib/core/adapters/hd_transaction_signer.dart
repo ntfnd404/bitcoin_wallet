@@ -1,6 +1,17 @@
-import 'package:keys/keys.dart' show SigningInputParam, SigningOutput, SignTransactionUseCase;
+import 'package:keys/keys.dart' show SigningInputParam, SigningOutput;
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart' as tx show SigningInput, TransactionSigner;
+
+/// Callable type matching [SignTransactionUseCase.call].
+///
+/// Extracted as a typedef so tests can inject a plain function without
+/// subclassing the `final` [SignTransactionUseCase].
+typedef SignTransaction = Future<String> Function({
+  required String walletId,
+  required List<SigningInputParam> inputs,
+  required List<SigningOutput> outputs,
+  required String bech32Hrp,
+});
 
 /// Composition adapter: bridges [tx.TransactionSigner] (owned by `transaction`)
 /// to [SignTransactionUseCase] (owned by `keys`).
@@ -14,10 +25,10 @@ import 'package:transaction/transaction.dart' as tx show SigningInput, Transacti
 ///
 /// See `docs/project/conventions.md` § App-layer composition adapters.
 final class HdTransactionSigner implements tx.TransactionSigner {
-  final SignTransactionUseCase _signTransaction;
+  final SignTransaction _signTransaction;
 
   const HdTransactionSigner({
-    required SignTransactionUseCase signTransaction,
+    required SignTransaction signTransaction,
   }) : _signTransaction = signTransaction;
 
   @override

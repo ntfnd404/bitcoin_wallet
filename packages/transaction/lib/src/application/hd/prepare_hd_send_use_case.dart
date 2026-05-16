@@ -50,7 +50,8 @@ final class PrepareHdSendUseCase {
 
       // 4. Map scanned UTXOs → CoinCandidate (age = rank, oldest = highest rank).
       //    Sort by block height ASC so the oldest UTXO gets rank = scanned.length.
-      final sortedByHeight = [...scanned]..sort((a, b) => a.height.compareTo(b.height));
+      scanned.sort((a, b) => a.height.compareTo(b.height));
+      final sortedByHeight = scanned;
 
       final candidates = <CoinCandidate>[];
       final signingInputs = <(String, int), SigningInput>{};
@@ -110,8 +111,11 @@ final class PrepareHdSendUseCase {
       );
     } on InsufficientFundsException {
       rethrow;
-    } catch (e, stack) {
+    } on AddressException catch (_, stack) {
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
+    } on TransactionException {
+      rethrow;
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

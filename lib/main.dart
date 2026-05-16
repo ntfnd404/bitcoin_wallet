@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:bitcoin_wallet/app.dart';
+import 'package:bitcoin_wallet/core/bootstrap/app_bootstrap.dart';
 import 'package:bitcoin_wallet/core/config/config.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies_builder.dart';
 import 'package:flutter/widgets.dart';
 
 void main() => runZonedGuarded(
   () {
-    WidgetsFlutterBinding.ensureInitialized();
+    AppBootstrap.initialize();
     final environment = loadEnvironment();
 
     AppDependenciesBuilder.create(

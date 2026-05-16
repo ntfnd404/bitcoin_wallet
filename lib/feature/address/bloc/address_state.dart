@@ -6,7 +6,7 @@ final class AddressState {
 
   const AddressState({
     this.addresses = const [],
-    this.status = AddressStatus.initial,
+    this.status = AddressStatus.idle,
   });
 
   AddressState copyWith({
@@ -18,10 +18,4 @@ final class AddressState {
   );
 }
 
-enum AddressStatus {
-  initial,
-  loading,
-  loaded,
-  generating,
-  error,
-}
+enum AddressStatus { idle, processing }

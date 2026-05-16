@@ -30,7 +30,7 @@ class XpubScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.status == FetchStatus.error) {
+          if (state.failure != null) {
             return Center(
               child: Text(state.failure?.toString() ?? 'Failed to load xpubs'),
             );
