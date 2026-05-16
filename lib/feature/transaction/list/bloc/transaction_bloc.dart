@@ -55,7 +55,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(TransactionErrorOccurred(exception: e));
+      emitAction(TransactionErrorOccurredAction(exception: e));
       emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
       addError(e, stack);
@@ -75,7 +75,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(TransactionErrorOccurred(exception: e));
+      emitAction(TransactionErrorOccurredAction(exception: e));
       emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
       addError(e, stack);

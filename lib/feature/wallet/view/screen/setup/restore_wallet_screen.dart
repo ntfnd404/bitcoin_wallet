@@ -5,6 +5,7 @@ import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_action.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_bloc.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_event.dart';
 import 'package:bitcoin_wallet/feature/wallet/bloc/wallet_state.dart';
+import 'package:bitcoin_wallet/feature/wallet/view/widget/word_highlight.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:keys/keys.dart';
@@ -65,9 +66,9 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
       listener: (context, action) {
         switch (action) {
-          case WalletRestored(:final wallet):
+          case WalletRestoredAction(:final wallet):
             AppRouter.toWalletDetail(context, wallet);
-          case WalletErrorOccurred(:final exception):
+          case WalletErrorOccurredAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(exception.toString())),
             );
@@ -118,7 +119,7 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
               ),
               if (trimmed.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                _WordHighlight(words: words, invalidWords: _invalidWords),
+                WordHighlight(words: words, invalidWords: _invalidWords),
               ],
               const SizedBox(height: 8),
               if (!isValidCount && trimmed.isNotEmpty)
@@ -147,28 +148,4 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
       },
     ),
   );
-}
-
-/// Renders the phrase with invalid words highlighted in red.
-class _WordHighlight extends StatelessWidget {
-  const _WordHighlight({required this.words, required this.invalidWords});
-
-  final List<String> words;
-  final List<String> invalidWords;
-
-  @override
-  Widget build(BuildContext context) {
-    final spans = words
-        .map(
-          (word) => TextSpan(
-            text: '$word ',
-            style: TextStyle(
-              color: invalidWords.contains(word) ? Theme.of(context).colorScheme.error : null,
-            ),
-          ),
-        )
-        .toList();
-
-    return Text.rich(TextSpan(children: spans));
-  }
 }

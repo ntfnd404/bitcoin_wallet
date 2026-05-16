@@ -31,7 +31,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBloc
       emit(state.copyWith(status: AddressStatus.idle, addresses: addresses));
     } on AddressException catch (e) {
       if (isClosed) return;
-      emitAction(AddressErrorOccurred(exception: e));
+      emitAction(AddressErrorOccurredAction(exception: e));
       emit(state.copyWith(status: AddressStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
@@ -53,7 +53,7 @@ final class AddressBloc extends Bloc<AddressEvent, AddressState> with ActionBloc
       emit(state.copyWith(status: AddressStatus.idle, addresses: [...state.addresses, address]));
     } on AddressException catch (e) {
       if (isClosed) return;
-      emitAction(AddressErrorOccurred(exception: e));
+      emitAction(AddressErrorOccurredAction(exception: e));
       emit(state.copyWith(status: AddressStatus.idle));
     } catch (e, stack) {
       addError(e, stack);

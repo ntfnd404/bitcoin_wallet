@@ -45,7 +45,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
       emit(state.copyWith(status: WalletStatus.idle, wallets: wallets));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emitAction(WalletErrorOccurred(exception: e));
+      emitAction(WalletErrorOccurredAction(exception: e));
       emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
@@ -64,10 +64,10 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
       if (isClosed) return;
 
       emit(state.copyWith(status: WalletStatus.idle, wallets: [...state.wallets, wallet]));
-      emitAction(WalletNodeCreated(wallet: wallet));
+      emitAction(WalletNodeCreatedAction(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emitAction(WalletErrorOccurred(exception: e));
+      emitAction(WalletErrorOccurredAction(exception: e));
       emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
@@ -86,10 +86,10 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
       if (isClosed) return;
 
       emit(state.copyWith(status: WalletStatus.idle, pendingHdWallet: wallet));
-      emitAction(WalletHdAwaitingConfirmation(wallet: wallet, mnemonic: mnemonic));
+      emitAction(WalletHdAwaitingConfirmationAction(wallet: wallet, mnemonic: mnemonic));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emitAction(WalletErrorOccurred(exception: e));
+      emitAction(WalletErrorOccurredAction(exception: e));
       emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
@@ -108,10 +108,10 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
       if (isClosed) return;
 
       emit(state.copyWith(status: WalletStatus.idle, wallets: [...state.wallets, wallet]));
-      emitAction(WalletRestored(wallet: wallet));
+      emitAction(WalletRestoredAction(wallet: wallet));
     } on WalletException catch (e) {
       if (isClosed) return;
-      emitAction(WalletErrorOccurred(exception: e));
+      emitAction(WalletErrorOccurredAction(exception: e));
       emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
@@ -131,7 +131,7 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
         clearPendingHdWallet: true,
       ),
     );
-    emitAction(WalletHdConfirmed(wallet: confirmed));
+    emitAction(WalletHdConfirmedAction(wallet: confirmed));
   }
 
   Future<void> _onSeedViewRequested(
@@ -144,10 +144,10 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
       if (isClosed) return;
 
       emit(state.copyWith(status: WalletStatus.idle));
-      emitAction(WalletSeedReady(mnemonic: mnemonic));
+      emitAction(WalletSeedReadyAction(mnemonic: mnemonic));
     } on KeysException catch (e) {
       if (isClosed) return;
-      emitAction(WalletSeedFailed(exception: e));
+      emitAction(WalletSeedFailedAction(exception: e));
       emit(state.copyWith(status: WalletStatus.idle));
     } catch (e, stack) {
       addError(e, stack);

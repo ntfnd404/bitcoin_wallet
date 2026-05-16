@@ -54,7 +54,7 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
       emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(UtxoErrorOccurred(exception: e));
+      emitAction(UtxoErrorOccurredAction(exception: e));
       emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
       addError(e, stack);
@@ -74,7 +74,7 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
       emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(UtxoErrorOccurred(exception: e));
+      emitAction(UtxoErrorOccurredAction(exception: e));
       emit(state.copyWith(status: FetchStatus.initial));
     } catch (e, stack) {
       addError(e, stack);
