@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:test/test.dart';
 import 'package:wallet/wallet.dart';
 
 import 'fakes/test_fixtures.dart';

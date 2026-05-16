@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:test/test.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
@@ -12,68 +12,57 @@ import 'fakes/fake_utxo_repository.dart';
 import 'fakes/fake_utxo_scan_gateway.dart';
 
 void main() {
-  late FakeAddressRepository fakeAddressRepo;
-  late FakeUtxoScanGateway fakeUtxoScan;
+  late FakeUtxoRepository fakeUtxoRepo;
+  late FakeNodeTransactionGateway fakeNodeGateway;
   late FakeBroadcastGateway fakeBroadcast;
   late FakeCoinSelector fakeCoinSelector;
-  late FakeTransactionSigner fakeSigner;
-  late HdSendWorkflow workflow;
+  late NodeSendWorkflow workflow;
 
-  const walletId = 'hd_wallet_id';
-  const bech32Hrp = 'bcrt';
+  const walletName = 'test_wallet';
   const targetSat = Satoshi(50000);
   const feeRate = 10;
 
   setUp(() {
-    fakeAddressRepo = FakeAddressRepository();
-    fakeUtxoScan = FakeUtxoScanGateway();
+    fakeUtxoRepo = FakeUtxoRepository();
+    fakeNodeGateway = FakeNodeTransactionGateway();
     fakeBroadcast = FakeBroadcastGateway();
     fakeCoinSelector = FakeCoinSelector(name: 'fifo');
-    fakeSigner = FakeTransactionSigner();
 
-    fakeAddressRepo.addresses = [
-      Address(
-        value: 'bcrt1qhdinput',
-        walletId: walletId,
-        index: 0,
-        type: AddressType.nativeSegwit,
-      ),
-    ];
-
-    fakeUtxoScan.scanResult = [
-      const ScannedUtxo(
-        txid: 'hdtxid123',
+    fakeUtxoRepo.utxos = [
+      const Utxo(
+        txid: 'abc123',
         vout: 0,
         amountSat: Satoshi(100000),
-        scriptPubKeyHex: '0014aabbcc',
-        height: 1,
-        address: 'bcrt1qhdinput',
+        confirmations: 3,
+        address: 'bcrt1qinput',
+        scriptPubKey: '0014aabbcc',
+        type: AddressType.nativeSegwit,
+        spendable: true,
       ),
     ];
 
-    final prepareUseCase = PrepareHdSendUseCase(
-      addressRepository: fakeAddressRepo,
-      utxoScanDataSource: fakeUtxoScan,
+    final prepareUseCase = PrepareNodeSendUseCase(
+      utxoRepository: fakeUtxoRepo,
+      nodeDataSource: fakeNodeGateway,
       selectors: [fakeCoinSelector],
       feeEstimator: const P2wpkhFeeEstimator(),
     );
 
-    final sendUseCase = SendHdTransactionUseCase(
-      signer: fakeSigner,
+    final sendUseCase = SendNodeTransactionUseCase(
+      nodeDataSource: fakeNodeGateway,
       broadcastDataSource: fakeBroadcast,
     );
 
-    workflow = HdSendWorkflow(
+    workflow = NodeSendWorkflow(
       prepare: prepareUseCase,
       send: sendUseCase,
-      walletId: walletId,
-      bech32Hrp: bech32Hrp,
+      walletName: walletName,
     );
   });
 
-  group('HdSendWorkflow', () {
+  group('NodeSendWorkflow', () {
     // T1
-    test('prepare returns HdSendResult with correct strategies and changeAddress', () async {
+    test('prepare returns NodeSendResult with correct strategies and changeAddress', () async {
       final preparation = await workflow.prepare(
         targetSat: targetSat,
         feeRateSatPerVbyte: feeRate,
@@ -81,12 +70,12 @@ void main() {
 
       expect(preparation.strategies, isNotEmpty);
       expect(preparation.strategies.containsKey('fifo'), isTrue);
-      expect(preparation.changeAddress, isNotEmpty);
+      expect(preparation.changeAddress, equals(fakeNodeGateway.newAddressResult));
     });
 
     // T2
     test('prepare throws TransactionException when use case throws', () async {
-      fakeUtxoScan.throwOnScan = const TransactionPreparationException();
+      fakeNodeGateway.newAddressThrows = const TransactionPreparationException();
 
       await expectLater(
         workflow.prepare(targetSat: targetSat, feeRateSatPerVbyte: feeRate),
@@ -95,7 +84,7 @@ void main() {
     });
 
     // T3
-    test('confirm calls SendHdTransactionUseCase with captured walletId and bech32Hrp', () async {
+    test('confirm calls SendNodeTransactionUseCase with captured walletName', () async {
       final preparation = await workflow.prepare(
         targetSat: targetSat,
         feeRateSatPerVbyte: feeRate,
@@ -108,19 +97,19 @@ void main() {
         amountSat: targetSat,
       );
 
-      expect(fakeSigner.capturedWalletId, equals(walletId));
-      expect(fakeSigner.capturedBech32Hrp, equals(bech32Hrp));
+      expect(fakeNodeGateway.capturedSignWalletName, equals(walletName));
     });
 
     // T4
     test('confirm throws ArgumentError when preparation is wrong type', () async {
-      final nodePreparation = await _buildNodePreparation(
+      final hdPreparation = await _buildHdPreparation(
+        fakeBroadcast: fakeBroadcast,
         fakeCoinSelector: fakeCoinSelector,
       );
 
       await expectLater(
         workflow.confirm(
-          preparation: nodePreparation,
+          preparation: hdPreparation,
           strategyName: 'fifo',
           recipientAddress: 'bcrt1qrecipient',
           amountSat: targetSat,
@@ -131,41 +120,48 @@ void main() {
   });
 }
 
-Future<SendPreparation> _buildNodePreparation({
+Future<SendPreparation> _buildHdPreparation({
+  required FakeBroadcastGateway fakeBroadcast,
   required FakeCoinSelector fakeCoinSelector,
 }) {
-  final fakeUtxoRepo = FakeUtxoRepository();
-  fakeUtxoRepo.utxos = [
-    const Utxo(
-      txid: 'abc123',
-      vout: 0,
-      amountSat: Satoshi(100000),
-      confirmations: 3,
-      address: 'bcrt1qinput',
-      scriptPubKey: '0014aabbcc',
+  final fakeAddressRepo = FakeAddressRepository();
+  fakeAddressRepo.addresses = [
+    Address(
+      value: 'bcrt1qhd',
+      walletId: 'hd_wallet',
+      index: 0,
       type: AddressType.nativeSegwit,
-      spendable: true,
     ),
   ];
 
-  final fakeNodeGateway = FakeNodeTransactionGateway();
-  final fakeBroadcast = FakeBroadcastGateway();
+  final fakeUtxoScan = FakeUtxoScanGateway();
+  fakeUtxoScan.scanResult = [
+    const ScannedUtxo(
+      txid: 'hdtxid',
+      vout: 0,
+      amountSat: Satoshi(100000),
+      scriptPubKeyHex: '0014aabbcc',
+      height: 1,
+      address: 'bcrt1qhd',
+    ),
+  ];
 
-  final nodeWorkflow = NodeSendWorkflow(
-    prepare: PrepareNodeSendUseCase(
-      utxoRepository: fakeUtxoRepo,
-      nodeDataSource: fakeNodeGateway,
+  final hdWorkflow = HdSendWorkflow(
+    prepare: PrepareHdSendUseCase(
+      addressRepository: fakeAddressRepo,
+      utxoScanDataSource: fakeUtxoScan,
       selectors: [fakeCoinSelector],
       feeEstimator: const P2wpkhFeeEstimator(),
     ),
-    send: SendNodeTransactionUseCase(
-      nodeDataSource: fakeNodeGateway,
+    send: SendHdTransactionUseCase(
+      signer: FakeTransactionSigner(),
       broadcastDataSource: fakeBroadcast,
     ),
-    walletName: 'test_wallet',
+    walletId: 'hd_wallet',
+    bech32Hrp: 'bcrt',
   );
 
-  return nodeWorkflow.prepare(
+  return hdWorkflow.prepare(
     targetSat: const Satoshi(50000),
     feeRateSatPerVbyte: 10,
   );

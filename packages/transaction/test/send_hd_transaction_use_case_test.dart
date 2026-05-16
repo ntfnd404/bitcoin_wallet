@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:keys/keys.dart';
 import 'package:rpc_client/rpc_client.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:test/test.dart';
 import 'package:transaction/transaction.dart';
 
-import '../fakes/fake_broadcast_gateway.dart';
-import '../fakes/fake_transaction_signer.dart';
+import 'fakes/fake_broadcast_gateway.dart';
+import 'fakes/fake_transaction_signer.dart';
 
 void main() {
   group('SendHdTransactionUseCase', () {

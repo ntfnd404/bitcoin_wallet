@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:rpc_client/rpc_client.dart';
+import 'package:test/test.dart';
 import 'package:transaction/transaction.dart';
 
 import 'fakes/fake_broadcast_gateway.dart';

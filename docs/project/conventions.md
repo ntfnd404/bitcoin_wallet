@@ -409,6 +409,19 @@ These are hard rules. Never violate them.
 
 ---
 
+## Architectural Import Boundaries
+
+Three import boundaries are enforced by code review. DCM `avoid-banned-imports`
+and `restrict_imports` require a paid subscription — boundaries are verified manually.
+
+| Boundary | Guarded scope | Forbidden import |
+|----------|--------------|-----------------|
+| SB-7: `transaction` ↛ `keys` | `packages/transaction/lib/` | `package:keys/` |
+| `keys` ↛ `transaction`/`wallet` | `packages/keys/lib/` | `package:transaction/`, `package:wallet/` |
+| View layer ↛ gateway/repository | `lib/feature/**/view/**` | any URI containing `/gateway/` or `/repository/` |
+
+---
+
 ## Signing Boundary
 
 The signing boundary is the set of rules governing how seed material, private keys,

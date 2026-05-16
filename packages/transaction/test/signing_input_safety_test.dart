@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:test/test.dart';
 import 'package:transaction/transaction.dart' show SigningInput;
 
 void main() {

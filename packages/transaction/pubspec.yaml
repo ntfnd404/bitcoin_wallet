@@ -12,5 +12,11 @@ dependencies:
     path: ../shared_kernel
   wallet:
     path: ../wallet
+
 dev_dependencies:
   test: ^1.30.0
+  
+  keys:
+    path: ../keys
+  rpc_client:
+    path: ../rpc_client

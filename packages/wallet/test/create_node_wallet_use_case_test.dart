@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:test/test.dart';
 import 'package:wallet/wallet.dart';
 
-import '../mocks/mock_wallet_repository.dart';
+import 'mocks/mock_wallet_repository.dart';
 
 void main() {
   setUpAll(() {

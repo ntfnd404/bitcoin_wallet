@@ -1,12 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:test/test.dart';
 import 'package:wallet/wallet.dart';
 
-import '../fakes/fake_bip39_service.dart';
-import '../fakes/fake_seed_repository.dart';
-import '../fakes/fake_wallet_repository.dart';
-import '../fakes/test_fixtures.dart';
-import '../mocks/mock_wallet_repository.dart';
+import 'fakes/fake_bip39_service.dart';
+import 'fakes/fake_seed_repository.dart';
+import 'fakes/fake_wallet_repository.dart';
+import 'fakes/test_fixtures.dart';
+import 'mocks/mock_wallet_repository.dart';
 
 void main() {
   setUpAll(() {

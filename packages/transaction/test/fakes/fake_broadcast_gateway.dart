@@ -1,22 +1,22 @@
 import 'package:transaction/transaction.dart';
 
 final class FakeBroadcastGateway implements BroadcastGateway {
+  String broadcastResult = 'txid_abc123';
   Object? broadcastThrows;
   Object? getTransactionThrows;
-  String broadcastResult = 'txid_abc123';
 
   @override
   Future<String> broadcast(String rawHex) async {
-    final toThrow = broadcastThrows;
-    if (toThrow != null) throw toThrow;
+    final t = broadcastThrows;
+    if (t != null) throw t;
 
     return broadcastResult;
   }
 
   @override
   Future<BroadcastedTx> getTransaction(String txid) async {
-    final toThrow = getTransactionThrows;
-    if (toThrow != null) throw toThrow;
+    final t = getTransactionThrows;
+    if (t != null) throw t;
 
     return BroadcastedTx(txid: txid, confirmations: 1, hex: 'deadbeef');
   }

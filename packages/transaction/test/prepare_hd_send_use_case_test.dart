@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_kernel/shared_kernel.dart';
+import 'package:test/test.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
-import '../fakes/fake_address_repository.dart';
-import '../fakes/fake_coin_selector.dart';
-import '../fakes/fake_utxo_scan_gateway.dart';
+import 'fakes/fake_address_repository.dart';
+import 'fakes/fake_coin_selector.dart';
+import 'fakes/fake_utxo_scan_gateway.dart';
 
 const _walletId = 'wallet_1';
 const _address = 'bc1qtestaddress';

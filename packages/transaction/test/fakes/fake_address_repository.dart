@@ -1,8 +1,13 @@
 import 'package:wallet/wallet.dart';
 
 final class FakeAddressRepository implements AddressRepository {
-  List<Address> addresses = const [];
   Object? throwOnGetAddresses;
+
+  List<Address> addresses = [];
+
+  List<Address> get saved => List.unmodifiable(addresses);
+
+  void add(Address address) => addresses.add(address);
 
   @override
   Future<List<Address>> getAddresses(String walletId) async {
@@ -13,8 +18,7 @@ final class FakeAddressRepository implements AddressRepository {
   }
 
   @override
-  Future<void> saveAddress(Address address) async =>
-      addresses = [...addresses, address];
+  Future<void> saveAddress(Address address) async => addresses.add(address);
 
   @override
   Future<int> nextAddressIndex(String walletId) async =>
