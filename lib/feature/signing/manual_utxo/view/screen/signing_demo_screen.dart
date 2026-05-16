@@ -1,14 +1,13 @@
 import 'package:action_bloc/action_bloc.dart';
-import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
-import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_action.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_bloc.dart';
-import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/di/manual_utxo_scope.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/widget/signing_broadcast_result.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/widget/signing_send_form.dart';
+import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/widget/utxo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 /// HD wallet sign-and-broadcast demo.
@@ -44,19 +43,19 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
       body: ActionBlocConsumer<SigningBloc, SigningState, SigningAction>(
         listener: (context, action) {
           switch (action) {
-            case SigningNoAddressesFound():
+            case SigningNoAddressesFoundAction():
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('No native SegWit addresses found. Generate some first.')),
               );
-            case SigningNoUtxosFound():
+            case SigningNoUtxosFoundAction():
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('No UTXOs to spend. Scan first.')),
               );
-            case SigningKeysFailed(:final exception):
+            case SigningKeysFailedAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
-            case SigningTransactionFailed(:final exception):
+            case SigningTransactionFailedAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
@@ -67,13 +66,13 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _UtxoSection(
+              UtxoSection(
                 walletId: widget.wallet.id,
                 state: state,
               ),
               if (state.status == SigningStatus.scanned && state.utxos.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _SendForm(
+                SigningSendForm(
                   formKey: _formKey,
                   recipientController: _recipientController,
                   amountController: _amountController,
@@ -82,196 +81,12 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
               ],
               if (state.status == SigningStatus.broadcasted && state.txid != null) ...[
                 const SizedBox(height: 24),
-                _BroadcastResult(state: state),
+                SigningBroadcastResult(state: state),
               ],
             ],
           ),
         ),
       ),
     ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Sub-widgets
-// ---------------------------------------------------------------------------
-
-class _UtxoSection extends StatelessWidget {
-  const _UtxoSection({required this.walletId, required this.state});
-
-  final String walletId;
-  final SigningState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final isLoading = state.status == SigningStatus.scanning;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ElevatedButton.icon(
-          onPressed: isLoading ? null : () => context.read<SigningBloc>().add(UtxoScanRequested(walletId: walletId)),
-          icon: isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.search),
-          label: Text(isLoading ? 'Scanning…' : 'Scan UTXOs'),
-        ),
-        if (state.utxos.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            'Found ${state.utxos.length} UTXO(s)',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          ...state.utxos.map(_UtxoTile.new),
-        ] else if (state.status == SigningStatus.scanned) ...[
-          const SizedBox(height: 16),
-          const Text('No UTXOs found at native SegWit addresses.'),
-        ],
-      ],
-    );
-  }
-}
-
-class _UtxoTile extends StatelessWidget {
-  const _UtxoTile(this.utxo);
-
-  final ScannedUtxo utxo;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.symmetric(vertical: 4),
-    child: ListTile(
-      title: Text(
-        '${utxo.txid.substring(0, 12)}…:${utxo.vout}',
-        style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-      ),
-      subtitle: utxo.address != null
-          ? Text(
-              utxo.address ?? '',
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-              overflow: TextOverflow.ellipsis,
-            )
-          : null,
-      trailing: Text(
-        '${utxo.amountSat.value} sat',
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-    ),
-  );
-}
-
-class _SendForm extends StatelessWidget {
-  const _SendForm({
-    required this.formKey,
-    required this.recipientController,
-    required this.amountController,
-    required this.walletId,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController recipientController;
-  final TextEditingController amountController;
-  final String walletId;
-
-  void _submit(BuildContext context) {
-    if (formKey.currentState == null || !formKey.currentState!.validate()) return;
-
-    final amount = int.tryParse(amountController.text.trim());
-    if (amount == null || amount <= 0) return;
-
-    context.read<SigningBloc>().add(
-      SignAndBroadcastRequested(
-        walletId: walletId,
-        recipientAddress: recipientController.text.trim(),
-        amountSat: amount,
-        bech32Hrp: AppScope.of(context).network.bech32Hrp,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isSigning = context.watch<SigningBloc>().state.status == SigningStatus.signing;
-
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Send', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: recipientController,
-            decoration: const InputDecoration(
-              labelText: 'Recipient address',
-              hintText: 'bcrt1q…',
-              border: OutlineInputBorder(),
-            ),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: amountController,
-            decoration: const InputDecoration(
-              labelText: 'Amount (sat)',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            validator: (v) {
-              final n = int.tryParse(v ?? '');
-              if (n == null || n <= 0) return 'Enter a positive integer';
-
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: isSigning ? null : () => _submit(context),
-            icon: isSigning
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-            label: Text(isSigning ? 'Signing…' : 'Sign & Broadcast'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BroadcastResult extends StatelessWidget {
-  const _BroadcastResult({required this.state});
-
-  final SigningState state;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Broadcasted',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.green),
-      ),
-      const SizedBox(height: 12),
-      DetailSection(
-        title: 'TXID',
-        child: CopyableText(text: state.txid ?? ''),
-      ),
-      if (state.broadcastedTx case final tx?) ...[
-        const SizedBox(height: 12),
-        DetailSection(
-          title: 'Confirmations',
-          child: Text('${tx.confirmations}'),
-        ),
-      ],
-    ],
   );
 }

@@ -6,6 +6,7 @@ import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detai
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_state.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/di/transaction_detail_scope.dart';
+import 'package:bitcoin_wallet/feature/transaction/detail/view/widget/transaction_detail_body.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction/transaction.dart';
@@ -39,7 +40,7 @@ class TransactionDetailScreen extends StatelessWidget {
       body: ActionBlocConsumer<TransactionDetailBloc, TransactionDetailState, TransactionDetailAction>(
         listener: (context, action) {
           switch (action) {
-            case TransactionDetailErrorOccurred(:final exception):
+            case TransactionDetailErrorOccurredAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
@@ -100,114 +101,12 @@ class TransactionDetailScreen extends StatelessWidget {
                 const Center(child: CircularProgressIndicator()),
               ],
 
-              if (state.status == FetchStatus.loaded && state.detail != null) _DetailBody(detail: state.detail!),
+              if (state.status == FetchStatus.loaded && state.detail != null)
+                TransactionDetailBody(detail: state.detail!),
             ],
           );
         },
       ),
     ),
   );
-}
-
-class _DetailBody extends StatelessWidget {
-  const _DetailBody({required this.detail});
-
-  final TransactionDetail detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 8),
-        DetailSection(
-          title: 'Size',
-          child: Text('${detail.size} bytes'),
-        ),
-        const SizedBox(height: 16),
-        DetailSection(
-          title: 'Weight',
-          child: Text('${detail.weight} WU'),
-        ),
-        const SizedBox(height: 16),
-        DetailSection(
-          title: 'Inputs (${detail.inputs.length})',
-          child: Column(
-            children: [
-              for (final input in detail.inputs) _InputTile(input: input, textTheme: textTheme),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        DetailSection(
-          title: 'Outputs (${detail.outputs.length})',
-          child: Column(
-            children: [
-              for (final output in detail.outputs) _OutputTile(output: output, textTheme: textTheme),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        DetailSection(
-          title: 'Raw Hex',
-          child: CopyableText(text: detail.hex),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-}
-
-class _InputTile extends StatelessWidget {
-  const _InputTile({required this.input, required this.textTheme});
-
-  final TransactionInput input;
-  final TextTheme textTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = input.isCoinbase ? 'Coinbase' : '${input.prevTxid!.substring(0, 8)}…:${input.prevVout}';
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Text(
-        label,
-        style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-      ),
-    );
-  }
-}
-
-class _OutputTile extends StatelessWidget {
-  const _OutputTile({required this.output, required this.textTheme});
-
-  final TransactionOutput output;
-  final TextTheme textTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final amountBtc = output.amountSat.btcDisplay;
-    final addressLabel = output.address ?? '(no address)';
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              addressLabel,
-              style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text('$amountBtc BTC', style: textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
 }
