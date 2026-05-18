@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
@@ -11,20 +12,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 
-import '../workflow/fakes/fake_send_workflow.dart';
+import 'fakes/fake_send_workflow.dart';
 
 // ---------------------------------------------------------------------------
 // Test data factories
 // ---------------------------------------------------------------------------
 
-CoinSelectionResult _fakeCoinResult() => const CoinSelectionResult(
-  inputs: [
-    CoinCandidate(txid: 'abc', vout: 0, amountSat: Satoshi(100000), age: 1),
-  ],
-  totalInputSat: Satoshi(100000),
-  changeSat: Satoshi(49000),
-  feeSat: Satoshi(1000),
-);
+CoinSelectionResult _fakeCoinResult({int fee = 1000, int change = 49000}) =>
+    CoinSelectionResult(
+      inputs: const [
+        CoinCandidate(txid: 'abc', vout: 0, amountSat: Satoshi(100000), age: 1),
+      ],
+      totalInputSat: const Satoshi(100000),
+      changeSat: Satoshi(change),
+      feeSat: Satoshi(fee),
+    );
 
 /// Builds a test [SendPreparation] for BLoC tests.
 ///
@@ -35,6 +37,17 @@ SendPreparation _fakePrep([String strategyName = 'fifo']) =>
       strategies: {strategyName: _fakeCoinResult()},
       changeAddress: 'bcrt1qchange',
     );
+
+/// Multi-strategy prep where 'min_change' has the lowest fee, so it is the
+/// expected recommended strategy.
+SendPreparation _fakeMultiPrep() => SendPreparation.forTest(
+  strategies: {
+    'fifo': _fakeCoinResult(fee: 2000, change: 48000),
+    'lifo': _fakeCoinResult(fee: 1500, change: 48500),
+    'min_change': _fakeCoinResult(),
+  },
+  changeAddress: 'bcrt1qchange',
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -170,9 +183,8 @@ void main() {
 
   group('SendBloc — SendStrategySelected', () {
     // B5
-    test('updates selectedStrategy without changing status', () async {
-      final prep = _fakePrep();
-      fakeWorkflow.prepareResult = prep;
+    test('updates selectedStrategy and switches mode to manual', () async {
+      fakeWorkflow.prepareResult = _fakeMultiPrep();
 
       bloc.add(
         const SendFormSubmitted(
@@ -189,7 +201,88 @@ void main() {
 
       final next = await bloc.stream.first.timeout(const Duration(seconds: 2));
       expect(next.selectedStrategy, equals('lifo'));
+      expect(next.selectionMode, equals(CoinSelectionMode.manual));
       expect(next.status, equals(SendStatus.awaitingConfirmation));
+    });
+
+    // B5b
+    test('ignores SendStrategySelected with unknown strategy name', () async {
+      fakeWorkflow.prepareResult = _fakeMultiPrep();
+
+      bloc.add(
+        const SendFormSubmitted(
+          recipientAddress: 'bcrt1qrecipient',
+          amountSat: 50000,
+          feeRateSatPerVbyte: 10,
+        ),
+      );
+      final initial = await bloc.stream
+          .firstWhere((s) => s.status == SendStatus.awaitingConfirmation)
+          .timeout(const Duration(seconds: 2));
+
+      bloc.add(const SendStrategySelected(strategyName: 'nonexistent'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.selectedStrategy, equals(initial.selectedStrategy));
+      expect(bloc.state.selectionMode, equals(CoinSelectionMode.auto));
+    });
+  });
+
+  group('SendBloc — Auto/Manual selection mode', () {
+    Future<void> prepareMulti() async {
+      fakeWorkflow.prepareResult = _fakeMultiPrep();
+      bloc.add(
+        const SendFormSubmitted(
+          recipientAddress: 'bcrt1qrecipient',
+          amountSat: 50000,
+          feeRateSatPerVbyte: 10,
+        ),
+      );
+      await bloc.stream
+          .firstWhere((s) => s.status == SendStatus.awaitingConfirmation)
+          .timeout(const Duration(seconds: 2));
+    }
+
+    // BA1
+    test('after prepare, selectionMode is auto and selectedStrategy is recommended',
+        () async {
+      await prepareMulti();
+
+      expect(bloc.state.selectionMode, equals(CoinSelectionMode.auto));
+      expect(bloc.state.selectedStrategy, equals('min_change'));
+    });
+
+    // BA2
+    test('SendSelectionModeChanged(auto) recalculates recommended', () async {
+      await prepareMulti();
+
+      bloc.add(const SendStrategySelected(strategyName: 'fifo'));
+      await bloc.stream
+          .firstWhere((s) => s.selectionMode == CoinSelectionMode.manual)
+          .timeout(const Duration(seconds: 2));
+      expect(bloc.state.selectedStrategy, equals('fifo'));
+
+      bloc.add(const SendSelectionModeChanged(mode: CoinSelectionMode.auto));
+      await bloc.stream
+          .firstWhere((s) => s.selectionMode == CoinSelectionMode.auto)
+          .timeout(const Duration(seconds: 2));
+
+      expect(bloc.state.selectedStrategy, equals('min_change'));
+    });
+
+    // BA3
+    test('SendSelectionModeChanged(manual) preserves current selectedStrategy',
+        () async {
+      await prepareMulti();
+      final before = bloc.state.selectedStrategy;
+
+      bloc.add(const SendSelectionModeChanged(mode: CoinSelectionMode.manual));
+      await bloc.stream
+          .firstWhere((s) => s.selectionMode == CoinSelectionMode.manual)
+          .timeout(const Duration(seconds: 2));
+
+      expect(bloc.state.selectedStrategy, equals(before));
+      expect(bloc.state.selectionMode, equals(CoinSelectionMode.manual));
     });
   });
 

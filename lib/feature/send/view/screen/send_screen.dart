@@ -57,6 +57,10 @@ class _SendScreenState extends State<SendScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
+            case SendUnexpectedFailedAction():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Something went wrong. Please try again.')),
+              );
           }
         },
         builder: (context, state) => SingleChildScrollView(

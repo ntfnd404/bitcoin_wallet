@@ -1,3 +1,4 @@
+import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
@@ -24,7 +25,12 @@ class SendSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Summary — $strategy', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          state.selectionMode == CoinSelectionMode.auto
+              ? 'Summary — Auto: $strategy'
+              : 'Summary — Manual: $strategy',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         SummaryRow(label: 'Inputs', value: '${result.inputs.length}'),
         SummaryRow(label: 'To recipient', value: '${state.amountSat} sat'),

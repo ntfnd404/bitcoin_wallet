@@ -1,3 +1,4 @@
+import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
 import 'package:transaction/transaction.dart';
 
@@ -6,6 +7,7 @@ final class SendState {
   final SendPreparation? preparation;
   final Map<String, CoinSelectionResult>? strategies;
   final String? selectedStrategy;
+  final CoinSelectionMode selectionMode;
   final String? changeAddress;
   final String? recipientAddress;
   final int? amountSat;
@@ -16,6 +18,7 @@ final class SendState {
     this.preparation,
     this.strategies,
     this.selectedStrategy,
+    this.selectionMode = CoinSelectionMode.auto,
     this.changeAddress,
     this.recipientAddress,
     this.amountSat,
@@ -27,6 +30,7 @@ final class SendState {
     SendPreparation? preparation,
     Map<String, CoinSelectionResult>? strategies,
     String? selectedStrategy,
+    CoinSelectionMode? selectionMode,
     String? changeAddress,
     String? recipientAddress,
     int? amountSat,
@@ -36,6 +40,7 @@ final class SendState {
     preparation: preparation ?? this.preparation,
     strategies: strategies ?? this.strategies,
     selectedStrategy: selectedStrategy ?? this.selectedStrategy,
+    selectionMode: selectionMode ?? this.selectionMode,
     changeAddress: changeAddress ?? this.changeAddress,
     recipientAddress: recipientAddress ?? this.recipientAddress,
     amountSat: amountSat ?? this.amountSat,

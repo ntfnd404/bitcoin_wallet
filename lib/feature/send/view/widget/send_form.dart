@@ -23,7 +23,8 @@ class SendForm extends StatelessWidget {
   final bool isLoading;
 
   void _submit(BuildContext context) {
-    if (!formKey.currentState!.validate()) return;
+    final formState = formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     final amount = int.tryParse(amountController.text.trim());
     final feeRate = int.tryParse(feeRateController.text.trim());
