@@ -1,7 +1,7 @@
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
+import 'package:transaction/src/domain/service/coin_selection_request.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
-import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
 import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
 
@@ -15,16 +15,14 @@ abstract base class CoinSelectorBase implements CoinSelector {
   /// Greedy accumulation: adds coins from [sorted] until `target + fee` is
   /// covered, re-computing the fee after each addition.
   ///
-  /// If the resulting change falls below [dustThreshold] it is folded into the
-  /// fee (change output is omitted and the fee is recomputed for 1 output).
+  /// If the resulting change falls below [request.dustThreshold] it is folded
+  /// into the fee (change output is omitted and the fee is recomputed for 1
+  /// output).
   ///
   /// Throws [InsufficientFundsException] when the total is insufficient.
   CoinSelectionResult accumulate({
     required List<CoinCandidate> sorted,
-    required Satoshi targetSat,
-    required FeeEstimator feeEstimator,
-    required int feeRateSatPerVbyte,
-    required int dustThreshold,
+    required CoinSelectionRequest request,
   }) {
     final selected = <CoinCandidate>[];
     var total = Satoshi.zero;
@@ -33,34 +31,37 @@ abstract base class CoinSelectorBase implements CoinSelector {
       selected.add(candidate);
       total = total + candidate.amountSat;
 
-      final fee = feeEstimator.estimate(
-        inputs: selected.length,
+      final fee = request.feeEstimator.estimateForCandidates(
+        inputs: selected,
         outputs: 2,
-        feeRateSatPerVbyte: feeRateSatPerVbyte,
+        feeRateSatPerVbyte: request.feeRateSatPerVbyte,
       );
 
-      if (total >= targetSat + fee) break;
+      if (total >= request.targetSat + fee) break;
     }
 
-    final feeSat = feeEstimator.estimate(
-      inputs: selected.length,
+    final feeSat = request.feeEstimator.estimateForCandidates(
+      inputs: selected,
       outputs: 2,
-      feeRateSatPerVbyte: feeRateSatPerVbyte,
+      feeRateSatPerVbyte: request.feeRateSatPerVbyte,
     );
 
-    if (total < targetSat + feeSat) {
-      throw InsufficientFundsException(available: total, required: targetSat + feeSat);
+    if (total < request.targetSat + feeSat) {
+      throw InsufficientFundsException(
+        available: total,
+        required: request.targetSat + feeSat,
+      );
     }
 
-    final rawChange = total - targetSat - feeSat;
+    final rawChange = total - request.targetSat - feeSat;
 
-    if (rawChange.value < dustThreshold) {
+    if (rawChange.value < request.dustThreshold) {
       // Fold dust into fee — single-output transaction.
       // All excess (total - target) goes to miners.
       return CoinSelectionResult(
         inputs: selected,
         totalInputSat: total,
-        feeSat: total - targetSat,
+        feeSat: total - request.targetSat,
         changeSat: Satoshi.zero,
       );
     }

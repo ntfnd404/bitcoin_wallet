@@ -9,22 +9,19 @@ final class FakeCoinSelector implements CoinSelector {
   @override
   String get name => _name;
 
+  @override
+  bool get isStochastic => false;
+
   FakeCoinSelector({String name = 'fake'}) : _name = name;
 
   @override
-  CoinSelectionResult select({
-    required List<CoinCandidate> candidates,
-    required Satoshi targetSat,
-    required FeeEstimator feeEstimator,
-    required int feeRateSatPerVbyte,
-    required int dustThreshold,
-  }) {
+  CoinSelectionResult select(CoinSelectionRequest request) {
     final t = throwOnSelect;
     if (t != null) throw t;
 
     return CoinSelectionResult(
-      inputs: candidates,
-      totalInputSat: candidates.fold(
+      inputs: request.candidates,
+      totalInputSat: request.candidates.fold(
         Satoshi.zero,
         (sum, c) => Satoshi(sum.value + c.amountSat.value),
       ),
