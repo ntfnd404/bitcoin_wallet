@@ -44,6 +44,7 @@ export 'src/domain/service/lifo_coin_selector.dart';
 export 'src/domain/service/minimize_change_coin_selector.dart';
 export 'src/domain/service/minimize_inputs_coin_selector.dart';
 export 'src/domain/service/single_random_draw_coin_selector.dart';
+export 'src/domain/service/smallest_single_coin_selector.dart';
 export 'src/domain/service/transaction_signer.dart';
 export 'src/domain/service/utxo_eligibility_filter.dart';
 export 'src/domain/value_object/coin_candidate.dart';

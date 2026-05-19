@@ -86,6 +86,7 @@ final class AppDependenciesBuilder {
         blockGenerationDataSource: blockGenDataSource,
         addressRepository: wallet.addressRepository,
         coinSelectors: const [
+          BranchAndBoundCoinSelector(),
           FifoCoinSelector(),
           LifoCoinSelector(),
           MinimizeInputsCoinSelector(),
