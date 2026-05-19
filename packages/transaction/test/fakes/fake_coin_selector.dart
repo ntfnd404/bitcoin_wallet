@@ -3,6 +3,7 @@ import 'package:transaction/transaction.dart';
 
 final class FakeCoinSelector implements CoinSelector {
   Object? throwOnSelect;
+  List<CoinCandidate>? capturedCandidates;
 
   final String _name;
 
@@ -16,6 +17,7 @@ final class FakeCoinSelector implements CoinSelector {
 
   @override
   CoinSelectionResult select(CoinSelectionRequest request) {
+    capturedCandidates = request.candidates;
     final t = throwOnSelect;
     if (t != null) throw t;
 
