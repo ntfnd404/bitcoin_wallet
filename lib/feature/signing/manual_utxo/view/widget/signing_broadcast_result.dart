@@ -1,3 +1,4 @@
+import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
 import 'package:flutter/material.dart';

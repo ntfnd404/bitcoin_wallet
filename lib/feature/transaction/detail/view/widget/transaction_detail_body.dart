@@ -1,3 +1,4 @@
+import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/widget/transaction_input_tile.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/widget/transaction_output_tile.dart';

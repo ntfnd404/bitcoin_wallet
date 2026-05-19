@@ -1,5 +1,6 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
+import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/bloc/transaction_detail_bloc.dart';

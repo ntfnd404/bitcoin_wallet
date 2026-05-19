@@ -1,5 +1,6 @@
 import 'package:bitcoin_wallet/common/extensions/address_type_display.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
+import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/bloc/xpub_bloc.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/bloc/xpub_event.dart';
