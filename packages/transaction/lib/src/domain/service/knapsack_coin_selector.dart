@@ -49,7 +49,8 @@ final class KnapsackCoinSelector extends CoinSelectorBase {
     }
 
     // Trial phase: random shuffles looking for near-exact match.
-    for (var trial = 0; trial < _maxTrials; trial++) {
+    final maxTrials = request.maxIterations ?? _maxTrials;
+    for (var trial = 0; trial < maxTrials; trial++) {
       final shuffled = List<CoinCandidate>.from(candidates)..shuffle(rng);
       var trialTotal = Satoshi.zero;
       final selected = <CoinCandidate>[];

@@ -8,10 +8,11 @@ import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
 /// MinChange coin selector — minimises the change output.
 ///
 /// Performs an exhaustive 2^N search over all non-empty subsets when N ≤ 20,
-/// keeping the result with the smallest non-dust change (including zero-change
-/// exact matches). For N > 20 the pool is reduced to the top-20 candidates by
-/// effective satoshis — this is a documented heuristic that may miss optimal
-/// subsets composed of small coins.
+/// keeping the result with the smallest change. Zero-change includes both true
+/// exact matches and dust-folded results (rawChange < dustThreshold); these are
+/// broken by feeSat then inputs.length. For N > 20 the pool is reduced to the
+/// top-20 candidates by effective satoshis — this is a documented heuristic
+/// that may miss optimal subsets composed of small coins.
 final class MinimizeChangeCoinSelector implements CoinSelector {
   static const int _cap = 20;
 
@@ -73,11 +74,9 @@ final class MinimizeChangeCoinSelector implements CoinSelector {
         );
       }
 
-      if (best == null || result.changeSat.value < best.changeSat.value) {
+      if (best == null || _isBetter(result, best)) {
         best = result;
       }
-
-      if (result.changeSat == Satoshi.zero) break;
     }
 
     if (best == null) {
@@ -88,6 +87,17 @@ final class MinimizeChangeCoinSelector implements CoinSelector {
     }
 
     return best;
+  }
+
+  bool _isBetter(CoinSelectionResult candidate, CoinSelectionResult current) {
+    if (candidate.changeSat.value != current.changeSat.value) {
+      return candidate.changeSat.value < current.changeSat.value;
+    }
+    if (candidate.feeSat.value != current.feeSat.value) {
+      return candidate.feeSat.value < current.feeSat.value;
+    }
+
+    return candidate.inputs.length < current.inputs.length;
   }
 
   /// Builds the candidate pool. If candidates ≤ _cap, uses all. Otherwise,
