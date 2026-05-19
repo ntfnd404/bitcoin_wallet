@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:action_bloc/src/action_bloc_mixin.dart';
+import 'package:action_bloc/src/action_bloc_streamable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -72,14 +73,15 @@ class _ActionBlocListenerState<B extends BlocBase<S>, S, A> extends SingleChildS
   }
 
   void _subscribe() {
-    if (_bloc is! ActionBlocMixin<S, A>) {
+    if (_bloc is! ActionBlocStreamable<A>) {
       throw StateError(
-        '$B does not use ActionBlocMixin<$S, $A>. '
-        'Mix ActionBlocMixin into $B to use ActionBlocListener.',
+        '$B does not implement ActionBlocStreamable<$A>. '
+        'Mix ActionBlocMixin into $B or implement the streamable contract '
+        'to use ActionBlocListener.',
       );
     }
-    final mixin = _bloc as ActionBlocMixin<S, A>;
-    _subscription = mixin.actionStream.listen((action) {
+    final actionBloc = _bloc as ActionBlocStreamable<A>;
+    _subscription = actionBloc.actionStream.listen((action) {
       if (!mounted) return;
       if (widget.listenWhen?.call(action) ?? true) {
         widget.listener(context, action);
@@ -90,6 +92,9 @@ class _ActionBlocListenerState<B extends BlocBase<S>, S, A> extends SingleChildS
   @override
   void didUpdateWidget(ActionBlocListener<B, S, A> old) {
     super.didUpdateWidget(old);
+    // When both [old.bloc] and [widget.bloc] are null the BLoC is resolved from
+    // the nearest provider — [context.read<B>()] returns the same instance, so
+    // [oldBloc == current] and no resubscription occurs. This is intentional.
     final oldBloc = old.bloc ?? context.read<B>();
     final current = widget.bloc ?? oldBloc;
     if (oldBloc != current) {

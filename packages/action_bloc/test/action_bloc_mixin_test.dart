@@ -1,15 +1,23 @@
 import 'dart:async';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/spy_action_bloc_observer.dart';
 import 'stubs/stub_action_bloc.dart';
 
 void main() {
   group('ActionBlocMixin', () {
     late StubActionBloc bloc;
+    late BlocObserver previousObserver;
 
-    setUp(() => bloc = StubActionBloc());
+    setUp(() {
+      previousObserver = Bloc.observer;
+      bloc = StubActionBloc();
+    });
+
     tearDown(() async {
+      Bloc.observer = previousObserver;
       if (!bloc.isClosed) await bloc.close();
     });
 
@@ -58,6 +66,18 @@ void main() {
       expect(received, isEmpty);
     });
 
+    test('emitAction notifies registered action observer', () async {
+      final observer = SpyActionBlocObserver();
+      Bloc.observer = observer;
+
+      bloc.emitAction('hello');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(observer.records, [
+        (bloc: bloc, action: 'hello'),
+      ]);
+    });
+
     test('close() completes the stream', () async {
       final done = Completer<void>();
       bloc.actionStream.listen((_) {}, onDone: done.complete);
@@ -68,3 +88,4 @@ void main() {
     });
   });
 }
+
