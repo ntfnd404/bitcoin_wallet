@@ -87,6 +87,7 @@ final class AppDependenciesBuilder {
         addressRepository: wallet.addressRepository,
         coinSelectors: const [
           BranchAndBoundCoinSelector(),
+          SmallestSingleCoinSelector(),
           FifoCoinSelector(),
           LifoCoinSelector(),
           MinimizeInputsCoinSelector(),
