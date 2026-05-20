@@ -41,7 +41,7 @@ class _WalletListScreenState extends State<WalletListScreen> {
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
       listener: (context, action) {
         switch (action) {
-          case WalletErrorOccurred(:final exception):
+          case WalletErrorOccurredAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(exception.toString())),
             );
@@ -50,7 +50,7 @@ class _WalletListScreenState extends State<WalletListScreen> {
         }
       },
       builder: (context, state) {
-        if (state.status == WalletStatus.loading) {
+        if (state.status == WalletStatus.processing) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.wallets.isEmpty) {

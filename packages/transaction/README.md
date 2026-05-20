@@ -6,10 +6,6 @@ Transaction and UTXO domain module. Owns entities, repositories, use cases, and
 coin-selection services for building, broadcasting, and querying transactions on
 both the HD and node wallet paths.
 
-The `address` dependency was added in Phase 2. `HdAddressEntry`, which
-previously carried address data inline, was removed in Phase 2; use cases now
-work with `Address` (from the `address` package) directly.
-
 Assembly entry point: `package:transaction/transaction_assembly.dart` —
 `TransactionAssembly`.
 
@@ -38,17 +34,16 @@ Barrel: `package:transaction/transaction.dart`
 | `HdSendPreparation` | class | Result of `PrepareHdSendUseCase` |
 | `NodeSendPreparation` | class | Result of `PrepareNodeSendUseCase` |
 
-### Domain data sources
+### Domain gateways
 
 | Symbol | Kind | Description |
 |---|---|---|
-| `BlockGenerationDataSource` | abstract class | Mines blocks in regtest (testing utility) |
-| `BroadcastDataSource` | abstract class | Broadcasts raw transactions |
-| `HdAddressDataSource` | abstract class | Provides HD addresses for change and scan operations |
-| `NodeTransactionDataSource` | abstract class | Node-specific transaction operations |
-| `TransactionRemoteDataSource` | abstract class | Reads transactions from a node |
-| `UtxoRemoteDataSource` | abstract class | Reads UTXOs from a node |
-| `UtxoScanDataSource` | abstract class | Scans UTXOs across the chain |
+| `BlockGenerationGateway` | abstract class | Mines blocks in regtest (testing utility) |
+| `BroadcastGateway` | abstract class | Broadcasts raw transactions |
+| `NodeTransactionGateway` | abstract class | Node-specific transaction operations |
+| `TransactionHistoryGateway` | abstract class | Reads transaction history from a node |
+| `UtxoGateway` | abstract class | Reads UTXOs from a node |
+| `UtxoScanGateway` | abstract class | Scans UTXOs across the chain |
 
 ### Domain entities
 
@@ -105,13 +100,9 @@ Barrel: `package:transaction/transaction.dart`
 
 ## Dependencies
 
-Workspace packages: `address` (added Phase 2), `shared_kernel`.
+Workspace packages: `shared_kernel`, `wallet`.
 Third-party: none.
 SDK: Dart SDK only.
-
-Note: `HdAddressEntry` was removed in Phase 2. Use cases that previously
-consumed `HdAddressEntry` now receive `Address` from the `address` package
-directly.
 
 ## When to add here
 
@@ -145,14 +136,13 @@ lib/
       transaction_repository_impl.dart
       utxo_repository_impl.dart
     domain/
-      data_sources/
-        block_generation_data_source.dart
-        broadcast_data_source.dart
-        hd_address_data_source.dart
-        node_transaction_data_source.dart
-        transaction_remote_data_source.dart
-        utxo_remote_data_source.dart
-        utxo_scan_data_source.dart
+      gateway/
+        block_generation_gateway.dart
+        broadcast_gateway.dart
+        node_transaction_gateway.dart
+        transaction_history_gateway.dart
+        utxo_gateway.dart
+        utxo_scan_gateway.dart
       entity/
         broadcasted_tx.dart
         scanned_utxo.dart

@@ -6,9 +6,9 @@ import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_bloc.da
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_state.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/di/transaction_list_scope.dart';
+import 'package:bitcoin_wallet/feature/transaction/list/view/widget/transaction_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 /// Displays transaction history for a wallet.
@@ -29,7 +29,7 @@ class TransactionListScreen extends StatelessWidget {
       body: ActionBlocConsumer<TransactionBloc, TransactionState, TransactionAction>(
         listener: (context, action) {
           switch (action) {
-            case TransactionErrorOccurred(:final exception):
+            case TransactionErrorOccurredAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
@@ -53,7 +53,7 @@ class TransactionListScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final tx = state.transactions[index];
 
-                return _TransactionTile(
+                return TransactionTile(
                   transaction: tx,
                   onTap: () => AppRouter.toTransactionDetail(context, tx, wallet),
                 );
@@ -64,39 +64,4 @@ class TransactionListScreen extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({
-    required this.transaction,
-    required this.onTap,
-  });
-
-  final Transaction transaction;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isMempool = transaction.isMempool;
-    final isIncoming = transaction.direction == TransactionDirection.incoming;
-    final amountBtc = transaction.amountSat.btcDisplay;
-    final confirmations = transaction.confirmations;
-
-    return Material(
-      color: isMempool ? Colors.amber.shade50 : Colors.transparent,
-      child: ListTile(
-        onTap: onTap,
-        title: Text(amountBtc),
-        subtitle: Text(
-          isMempool ? 'Unconfirmed' : 'Confirmed ($confirmations)',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        leading: Icon(
-          isIncoming ? Icons.arrow_downward : Icons.arrow_upward,
-          color: isIncoming ? Colors.green : Colors.red,
-        ),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
-  }
 }

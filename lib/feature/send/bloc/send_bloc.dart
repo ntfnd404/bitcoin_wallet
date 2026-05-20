@@ -1,6 +1,7 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
@@ -8,54 +9,32 @@ import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
-import 'package:wallet/wallet.dart';
-
 /// Orchestrates the two-step send flow: prepare (coin selection) → confirm (broadcast).
 ///
-/// Exactly one of [_prepareNode]/[_sendNode] or [_prepareHd]/[_sendHd] is non-null,
-/// determined at construction time by [wallet] type.
+/// Delegates wallet-specific logic entirely to [SendWorkflow], which captures
+/// wallet identity and all configuration at construction time. The BLoC never
+/// inspects [SendPreparation] subtypes — it passes [state.preparation] back
+/// to [workflow.confirm] as-is.
 final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<SendState, SendAction> {
-  final Wallet _wallet;
-
-  // Node wallet path (non-null when wallet.isNode)
-  final PrepareNodeSendUseCase? _prepareNode;
-  final SendNodeTransactionUseCase? _sendNode;
-
-  // HD wallet path (non-null when wallet.isHd)
-  final PrepareHdSendUseCase? _prepareHd;
-  final SendHdTransactionUseCase? _sendHd;
-
-  // Shared
-  final MineBlockUseCase _mineBlock;
-  final String _bech32Hrp;
+  final SendWorkflow _workflow;
   final AppEventBus _eventBus;
-
-  // Internal — holds the preparation DTO between prepare and confirm steps.
-  NodeSendPreparation? _nodePrep;
-  HdSendPreparation? _hdPrep;
+  final String _walletId;
+  final CoinSelectionRecommender _recommender;
 
   SendBloc({
-    required Wallet wallet,
-    PrepareNodeSendUseCase? prepareNode,
-    SendNodeTransactionUseCase? sendNode,
-    PrepareHdSendUseCase? prepareHd,
-    SendHdTransactionUseCase? sendHd,
-    required MineBlockUseCase mineBlock,
-    required String bech32Hrp,
+    required SendWorkflow workflow,
     required AppEventBus eventBus,
-  }) : _wallet = wallet,
-       _prepareNode = prepareNode,
-       _sendNode = sendNode,
-       _prepareHd = prepareHd,
-       _sendHd = sendHd,
-       _mineBlock = mineBlock,
-       _bech32Hrp = bech32Hrp,
+    required String walletId,
+    CoinSelectionRecommender recommender = const DefaultCoinSelectionRecommender(),
+  }) : _workflow = workflow,
        _eventBus = eventBus,
+       _walletId = walletId,
+       _recommender = recommender,
        super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
+    on<SendSelectionModeChanged>(_onSelectionModeChanged);
     on<SendConfirmed>(_onConfirmed);
-    on<MineBlockRequested>(_onMineBlock);
   }
 
   Future<void> _onFormSubmitted(
@@ -63,54 +42,46 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     Emitter<SendState> emit,
   ) async {
     emit(state.copyWith(status: SendStatus.preparing));
-
     try {
-      final targetSat = Satoshi(event.amountSat);
-      final Map<String, CoinSelectionResult> strategies;
-      final String changeAddress;
+      final preparation = await _workflow.prepare(
+        targetSat: Satoshi(event.amountSat),
+        feeRateSatPerVbyte: event.feeRateSatPerVbyte,
+      );
 
-      if (_prepareNode != null) {
-        _nodePrep = await _prepareNode.call(
-          walletName: _wallet.name,
-          targetSat: targetSat,
-          feeRateSatPerVbyte: event.feeRateSatPerVbyte,
-        );
-        strategies = _nodePrep!.strategies;
-        changeAddress = _nodePrep!.changeAddress;
-      } else {
-        _hdPrep = await _prepareHd!.call(
-          walletId: _wallet.id,
-          targetSat: targetSat,
-          feeRateSatPerVbyte: event.feeRateSatPerVbyte,
-        );
-        strategies = _hdPrep!.strategies;
-        changeAddress = _hdPrep!.changeAddress;
-      }
-
-      if (strategies.isEmpty) {
+      if (preparation.strategies.isEmpty) {
         if (isClosed) return;
-        emitAction(SendInsufficientFunds());
-        emit(state.copyWith(status: SendStatus.error));
+        emitAction(SendInsufficientFundsAction());
+        emit(const SendState());
 
         return;
       }
 
+      if (isClosed) return;
       emit(
         state.copyWith(
           status: SendStatus.awaitingConfirmation,
-          strategies: strategies,
-          selectedStrategy: strategies.keys.first,
-          changeAddress: changeAddress,
+          preparation: preparation,
+          strategies: preparation.strategies,
+          selectedStrategy: _recommender.recommend(
+            preparation.strategies,
+            event.feeRateSatPerVbyte,
+          ),
+          selectionMode: CoinSelectionMode.auto,
+          changeAddress: preparation.changeAddress,
           recipientAddress: event.recipientAddress,
           amountSat: event.amountSat,
+          feeRateSatPerVbyte: event.feeRateSatPerVbyte,
         ),
       );
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(SendFailed(exception: e));
-      emit(state.copyWith(status: SendStatus.error));
+      emitAction(SendFailedAction(exception: e));
+      emit(const SendState());
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emitAction(SendUnexpectedFailedAction());
+      emit(const SendState());
     }
   }
 
@@ -118,73 +89,71 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     SendStrategySelected event,
     Emitter<SendState> emit,
   ) {
-    emit(state.copyWith(selectedStrategy: event.strategyName));
+    final strategies = state.strategies;
+    if (strategies == null || !strategies.any((e) => e.name == event.strategyName)) return;
+
+    emit(state.copyWith(
+      selectedStrategy: event.strategyName,
+      selectionMode: CoinSelectionMode.manual,
+    ));
+  }
+
+  void _onSelectionModeChanged(
+    SendSelectionModeChanged event,
+    Emitter<SendState> emit,
+  ) {
+    switch (event.mode) {
+      case CoinSelectionMode.auto:
+        final strategies = state.strategies;
+        final feeRate = state.feeRateSatPerVbyte;
+        if (strategies == null || feeRate == null) {
+          emit(state.copyWith(selectionMode: CoinSelectionMode.auto));
+
+          return;
+        }
+        emit(state.copyWith(
+          selectionMode: CoinSelectionMode.auto,
+          selectedStrategy: _recommender.recommend(strategies, feeRate),
+        ));
+      case CoinSelectionMode.manual:
+        emit(state.copyWith(selectionMode: CoinSelectionMode.manual));
+    }
   }
 
   Future<void> _onConfirmed(
     SendConfirmed event,
     Emitter<SendState> emit,
   ) async {
+    final preparation = state.preparation;
     final strategyName = state.selectedStrategy;
     final recipientAddress = state.recipientAddress;
     final amountSat = state.amountSat;
 
-    if (strategyName == null || recipientAddress == null || amountSat == null) {
+    if (preparation == null || strategyName == null || recipientAddress == null || amountSat == null) {
       return;
     }
 
     emit(state.copyWith(status: SendStatus.sending));
-
     try {
-      final String txid;
-
-      if (_sendNode != null && _nodePrep != null) {
-        txid = await _sendNode.call(
-          preparation: _nodePrep!,
-          strategyName: strategyName,
-          walletName: _wallet.name,
-          recipientAddress: recipientAddress,
-          amountSat: Satoshi(amountSat),
-        );
-      } else {
-        txid = await _sendHd!.call(
-          preparation: _hdPrep!,
-          strategyName: strategyName,
-          walletId: _wallet.id,
-          recipientAddress: recipientAddress,
-          amountSat: Satoshi(amountSat),
-          bech32Hrp: _bech32Hrp,
-        );
-      }
+      final txid = await _workflow.confirm(
+        preparation: preparation,
+        strategyName: strategyName,
+        recipientAddress: recipientAddress,
+        amountSat: Satoshi(amountSat),
+      );
 
       if (isClosed) return;
-      emit(state.copyWith(status: SendStatus.sent, txid: txid));
-      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _wallet.id));
+      emit(state.copyWith(status: SendStatus.successful, txid: txid));
+      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: _walletId));
     } on TransactionException catch (e) {
       if (isClosed) return;
-      emitAction(SendFailed(exception: e));
-      emit(state.copyWith(status: SendStatus.error));
+      emitAction(SendFailedAction(exception: e));
+      emit(state.copyWith(status: SendStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
-    }
-  }
-
-  Future<void> _onMineBlock(
-    MineBlockRequested event,
-    Emitter<SendState> emit,
-  ) async {
-    emit(state.copyWith(status: SendStatus.mining));
-    try {
-      await _mineBlock(event.toAddress);
+      addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: SendStatus.mined));
-      _eventBus.emit(BlockMined(walletId: _wallet.id));
-    } on TransactionException catch (e) {
-      if (isClosed) return;
-      emitAction(SendMiningFailed(exception: e));
-      emit(state.copyWith(status: SendStatus.error));
-    } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      emitAction(SendUnexpectedFailedAction());
+      emit(state.copyWith(status: SendStatus.idle));
     }
   }
 }

@@ -35,11 +35,11 @@ class _SeedPhraseScreenState extends State<SeedPhraseScreen> {
     body: ActionBlocListener<WalletBloc, WalletState, WalletAction>(
       listener: (context, action) {
         switch (action) {
-          case WalletErrorOccurred(:final exception):
+          case WalletErrorOccurredAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(exception.toString())),
             );
-          case WalletSeedFailed(:final exception):
+          case WalletSeedFailedAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(exception.toString())),
             );

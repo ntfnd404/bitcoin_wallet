@@ -1,4 +1,5 @@
 import 'package:bitcoin_wallet/common/extensions/address_type_display.dart';
+import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
 import 'package:flutter/material.dart';
 import 'package:transaction/transaction.dart';

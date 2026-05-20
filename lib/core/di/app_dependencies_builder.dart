@@ -75,7 +75,7 @@ final class AppDependenciesBuilder {
       final nodeTxDataSource = NodeTransactionGatewayImpl(rpcClient: rpcClient);
       final blockGenDataSource = BlockGenerationGatewayImpl(rpcClient: rpcClient);
       final broadcastDataSource = BroadcastGatewayImpl(rpcClient: rpcClient);
-      final hdSigner = HdTransactionSigner(signTransaction: keys.signTransaction);
+      final hdSigner = HdTransactionSigner(signTransaction: keys.signTransaction.call);
 
       final transaction = TransactionAssembly(
         transactionRemoteDataSource: TransactionHistoryGatewayImpl(rpcClient: rpcClient),
@@ -85,11 +85,15 @@ final class AppDependenciesBuilder {
         nodeTransactionDataSource: nodeTxDataSource,
         blockGenerationDataSource: blockGenDataSource,
         addressRepository: wallet.addressRepository,
-        coinSelectors: const [
-          FifoCoinSelector(),
-          LifoCoinSelector(),
-          MinimizeInputsCoinSelector(),
-          MinimizeChangeCoinSelector(),
+        coinSelectors: [
+          const BranchAndBoundCoinSelector(),
+          KnapsackCoinSelector(),
+          const SmallestSingleCoinSelector(),
+          const FifoCoinSelector(),
+          const LifoCoinSelector(),
+          const MinimizeInputsCoinSelector(),
+          const MinimizeChangeCoinSelector(),
+          SingleRandomDrawCoinSelector(),
         ],
         feeEstimator: const P2wpkhFeeEstimator(),
         hdSigner: hdSigner,

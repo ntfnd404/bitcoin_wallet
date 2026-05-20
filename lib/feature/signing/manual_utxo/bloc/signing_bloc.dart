@@ -17,9 +17,6 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
   final BroadcastTransactionUseCase _broadcastTransaction;
   final AppEventBus _eventBus;
 
-  /// Maps native SegWit address string → derivation index.
-  final Map<String, int> _addressIndexMap = {};
-
   SigningBloc({
     required AddressRepository addressRepository,
     required ScanUtxosUseCase scanUtxos,
@@ -47,27 +44,25 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
       final segwit = addresses.where((a) => a.type == AddressType.nativeSegwit).toList();
 
       if (segwit.isEmpty) {
-        emitAction(SigningNoAddressesFound());
-        emit(const SigningState(status: SigningStatus.error));
+        emitAction(SigningNoAddressesFoundAction());
+        emit(const SigningState());
 
         return;
       }
 
-      _addressIndexMap
-        ..clear()
-        ..addEntries(segwit.map((a) => MapEntry(a.value, a.index)));
-
+      final indexMap = {for (final a in segwit) a.value: a.index};
       final utxos = await _scanUtxos(segwit.map((a) => a.value).toList());
       if (isClosed) return;
 
-      emit(SigningState(status: SigningStatus.scanned, utxos: utxos));
+      emit(SigningState(status: SigningStatus.scanned, utxos: utxos, addressIndexMap: indexMap));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
-      emitAction(SigningTransactionFailed(exception: e));
-      emit(const SigningState(status: SigningStatus.error));
+      emitAction(SigningTransactionFailedAction(exception: e));
+      emit(const SigningState());
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(const SigningState());
     }
   }
 
@@ -77,8 +72,8 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
   ) async {
     final utxos = state.utxos;
     if (utxos.isEmpty) {
-      emitAction(SigningNoUtxosFound());
-      emit(state.copyWith(status: SigningStatus.error));
+      emitAction(SigningNoUtxosFoundAction());
+      emit(state.copyWith(status: SigningStatus.idle));
 
       return;
     }
@@ -87,7 +82,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
     try {
       final inputs = utxos.map((utxo) {
         final address = utxo.address;
-        final index = address != null ? _addressIndexMap[address] : null;
+        final index = address != null ? state.addressIndexMap[address] : null;
         if (index == null) {
           throw const TransactionSigningException();
         }
@@ -132,16 +127,16 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
       _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
     } on KeysException catch (e) {
       if (isClosed) return;
-
-      emitAction(SigningKeysFailed(exception: e));
-      emit(state.copyWith(status: SigningStatus.error));
+      emitAction(SigningKeysFailedAction(exception: e));
+      emit(state.copyWith(status: SigningStatus.idle));
     } on TransactionException catch (e) {
       if (isClosed) return;
-
-      emitAction(SigningTransactionFailed(exception: e));
-      emit(state.copyWith(status: SigningStatus.error));
+      emitAction(SigningTransactionFailedAction(exception: e));
+      emit(state.copyWith(status: SigningStatus.idle));
     } catch (e, stack) {
-      Error.throwWithStackTrace(e, stack);
+      addError(e, stack);
+      if (isClosed) return;
+      emit(state.copyWith(status: SigningStatus.idle));
     }
   }
 }

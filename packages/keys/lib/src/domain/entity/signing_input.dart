@@ -5,8 +5,10 @@ import 'package:shared_kernel/shared_kernel.dart';
 /// A UTXO to be spent, together with the derived private key needed to sign it.
 ///
 /// Used as input to [TransactionSigningService]. The private key must have been
-/// derived from the wallet's mnemonic before constructing this object and must
-/// be zeroed after signing (caller's responsibility).
+/// derived from the wallet's mnemonic before constructing this object.
+/// Zeroing is the caller's intent; in practice the Dart VM GC makes zeroing
+/// unreliable — the buffer becomes GC-eligible immediately after
+/// `signP2wpkh` returns. See Rule SB-6 in `docs/project/conventions.md`.
 final class SigningInput {
   /// Txid of the UTXO being spent (display hex — big-endian).
   final String txid;
@@ -30,4 +32,9 @@ final class SigningInput {
     required this.privateKey,
     required this.publicKey,
   });
+
+  @override
+  String toString() =>
+      'SigningInput(txid: $txid, vout: $vout, amountSat: $amountSat, '
+      '<key-material-redacted>)';
 }

@@ -18,4 +18,9 @@ final class SigningInputParam {
     required this.type,
     required this.derivationIndex,
   });
+
+  @override
+  String toString() =>
+      'SigningInputParam(txid: $txid, vout: $vout, amountSat: $amountSat, '
+      'type: $type, derivationIndex: $derivationIndex)';
 }

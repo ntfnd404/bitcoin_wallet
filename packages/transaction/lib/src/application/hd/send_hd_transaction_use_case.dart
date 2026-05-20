@@ -31,11 +31,11 @@ final class SendHdTransactionUseCase {
     required Satoshi amountSat,
     required String bech32Hrp,
   }) async {
-    final result = preparation.strategies[strategyName];
-    if (result == null) {
-      throw const TransactionPreparationException();
-    }
+    final entries = preparation.strategies.where((e) => e.name == strategyName);
+    if (entries.isEmpty) throw const TransactionPreparationException();
+    final result = entries.first.result;
 
+    final String hexSigned;
     try {
       final signingInputs = result.inputs.map((c) {
         final input = preparation.signingInputs[(c.txid, c.vout)];
@@ -46,7 +46,7 @@ final class SendHdTransactionUseCase {
         return input;
       }).toList();
 
-      final hexSigned = await _signer.sign(
+      hexSigned = await _signer.sign(
         walletId: walletId,
         inputs: signingInputs,
         recipientAddress: recipientAddress,
@@ -55,14 +55,27 @@ final class SendHdTransactionUseCase {
         changeSat: result.changeSat,
         bech32Hrp: bech32Hrp,
       );
-
-      return _broadcastDataSource.broadcast(hexSigned);
     } on TransactionSigningException {
       rethrow;
     } on TransactionPreparationException {
       rethrow;
-    } catch (e, stack) {
+    } on Exception catch (_, stack) {
+      // 4-criteria (C1: translate keys-BC exception to transaction-BC language,
+      // C2: hide potential key material from signer, C3: preserve stack,
+      // C4: caller distinguishes signing vs broadcast failures).
+      // TODO(ntfnd404): narrow to on KeysException subtypes once keys dep is added to pubspec.yaml.
+      Error.throwWithStackTrace(const TransactionSigningException(), stack);
+    }
+    // Programmer errors from signing propagate to the zone handler.
+
+    try {
+      return await _broadcastDataSource.broadcast(hexSigned);
+    } on TransactionException {
+      rethrow;
+    } on Exception catch (_, stack) {
+      // 4-criteria (C1: translate RpcException to BC language, C2: n/a, C3: preserve stack, C4: typed recovery for caller).
       Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }
+    // Programmer errors from broadcast propagate to the zone handler.
   }
 }

@@ -1,12 +1,16 @@
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/src/application/hd/hd_send_preparation.dart';
+import 'package:transaction/src/domain/exception/coin_selection_no_solution_exception.dart';
 import 'package:transaction/src/domain/exception/insufficient_funds_exception.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
+import 'package:transaction/src/domain/service/coin_selection_request.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
+import 'package:transaction/src/domain/service/eligibility_policy.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
+import 'package:transaction/src/domain/service/utxo_eligibility_filter.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
+import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
 import 'package:wallet/wallet.dart';
 
@@ -20,16 +24,19 @@ final class PrepareHdSendUseCase {
   final UtxoScanGateway _utxoScanDataSource;
   final List<CoinSelector> _selectors;
   final FeeEstimator _feeEstimator;
+  final UtxoEligibilityFilter _eligibilityFilter;
 
   const PrepareHdSendUseCase({
     required AddressRepository addressRepository,
     required UtxoScanGateway utxoScanDataSource,
     required List<CoinSelector> selectors,
     required FeeEstimator feeEstimator,
+    UtxoEligibilityFilter eligibilityFilter = const DefaultUtxoEligibilityFilter(),
   }) : _addressRepository = addressRepository,
        _utxoScanDataSource = utxoScanDataSource,
        _selectors = selectors,
-       _feeEstimator = feeEstimator;
+       _feeEstimator = feeEstimator,
+       _eligibilityFilter = eligibilityFilter;
 
   Future<HdSendPreparation> call({
     required String walletId,
@@ -50,7 +57,8 @@ final class PrepareHdSendUseCase {
 
       // 4. Map scanned UTXOs → CoinCandidate (age = rank, oldest = highest rank).
       //    Sort by block height ASC so the oldest UTXO gets rank = scanned.length.
-      final sortedByHeight = [...scanned]..sort((a, b) => a.height.compareTo(b.height));
+      scanned.sort((a, b) => a.height.compareTo(b.height));
+      final sortedByHeight = scanned;
 
       final candidates = <CoinCandidate>[];
       final signingInputs = <(String, int), SigningInput>{};
@@ -59,16 +67,20 @@ final class PrepareHdSendUseCase {
         final u = sortedByHeight[i];
         final age = sortedByHeight.length - i; // oldest → highest age
 
+        final entry = u.address != null ? addressLookup[u.address] : null;
         candidates.add(
           CoinCandidate(
             txid: u.txid,
             vout: u.vout,
             amountSat: u.amountSat,
             age: age,
+            scriptType: entry?.type ?? AddressType.nativeSegwit,
+            scriptPubKeyHex: u.scriptPubKeyHex,
+            // HD wallet: scantxoutset does not expose confirmations relative
+            // to chain tip. Leave null (unknown) per G6 / EligibilityPolicy.
           ),
         );
 
-        final entry = u.address != null ? addressLookup[u.address] : null;
         if (entry != null) {
           signingInputs[(u.txid, u.vout)] = SigningInput(
             txid: u.txid,
@@ -86,32 +98,53 @@ final class PrepareHdSendUseCase {
           ? ''
           : (nativeSegwit..sort((a, b) => b.index.compareTo(a.index))).first.value;
 
+      // 5b. Apply eligibility filter (dust/effective-value check).
+      // HD wallet uses EligibilityPolicy.hd: unknown confirmations are allowed
+      // because scantxoutset does not expose per-UTXO block height relative to tip.
+      final eligibleCandidates = _eligibilityFilter.filter(
+        candidates,
+        EligibilityPolicy.hd,
+        _feeEstimator,
+        feeRateSatPerVbyte,
+      );
+
       // 6. Run all strategies; failures (insufficient funds) are omitted.
-      final strategies = <String, CoinSelectionResult>{};
+      final strategies = <CoinSelectionStrategyResult>[];
       for (final selector in _selectors) {
         try {
-          strategies[selector.name] = selector.select(
-            candidates: candidates,
-            targetSat: targetSat,
-            feeEstimator: _feeEstimator,
-            feeRateSatPerVbyte: feeRateSatPerVbyte,
-            dustThreshold: 546,
-          );
+          strategies.add(CoinSelectionStrategyResult(
+            name: selector.name,
+            isStochastic: selector.isStochastic,
+            result: selector.select(
+              CoinSelectionRequest(
+                candidates: eligibleCandidates,
+                targetSat: targetSat,
+                feeEstimator: _feeEstimator,
+                feeRateSatPerVbyte: feeRateSatPerVbyte,
+                dustThreshold: _feeEstimator.dustThreshold(AddressType.nativeSegwit),
+              ),
+            ),
+          ));
         } on InsufficientFundsException {
+          // Strategy could not cover the amount — omit.
+        } on CoinSelectionNoSolutionException {
           // Strategy could not cover the amount — omit from comparison table.
         }
       }
 
       return HdSendPreparation(
         candidates: candidates,
-        strategies: Map.unmodifiable(strategies),
+        strategies: List.unmodifiable(strategies),
         signingInputs: Map.unmodifiable(signingInputs),
         changeAddress: changeAddress,
       );
     } on InsufficientFundsException {
       rethrow;
-    } catch (e, stack) {
+    } on AddressException catch (_, stack) {
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
+    } on TransactionException {
+      rethrow;
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

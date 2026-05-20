@@ -29,10 +29,9 @@ final class SendNodeTransactionUseCase {
     required String recipientAddress,
     required Satoshi amountSat,
   }) async {
-    final result = preparation.strategies[strategyName];
-    if (result == null) {
-      throw const TransactionPreparationException();
-    }
+    final entries = preparation.strategies.where((e) => e.name == strategyName);
+    if (entries.isEmpty) throw const TransactionPreparationException();
+    final result = entries.first.result;
 
     try {
       final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();
@@ -56,8 +55,14 @@ final class SendNodeTransactionUseCase {
       );
 
       return _broadcastDataSource.broadcast(hexSigned);
-    } catch (e, stack) {
+    } on TransactionSigningException {
+      rethrow;
+    } on TransactionException {
+      rethrow;
+    } on Exception catch (_, stack) {
+      // 4-criteria (C1: translate RpcException from broadcast gateway, C2: n/a, C3: preserve stack, C4: typed recovery for caller).
       Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }
+    // Programmer errors propagate to the zone handler.
   }
 }

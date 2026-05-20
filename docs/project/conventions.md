@@ -176,22 +176,43 @@ See [guidelines.md](./guidelines.md) for detailed examples.
 BLoC only — no Cubits. Events = past-tense user actions (`WalletListRequested`).
 Hand-written immutable state classes — no `freezed` or code generation.
 
+### Naming conventions
+
+| Artifact | Suffix | Example |
+|----------|--------|---------|
+| BLoC class | `Bloc` | `WalletBloc` |
+| Event base | `Event` | `WalletEvent` |
+| Concrete event | (past-tense verb phrase) | `WalletListRequested` |
+| State class | `State` | `WalletState` |
+| Status enum | `Status` | `WalletStatus` |
+| Action base | `Action` | `WalletAction` |
+| Concrete action | `*Action` | `WalletErrorOccurredAction` |
+
+All concrete action classes **must** end with `Action` — symmetrically with `Bloc`, `Event`, `State`.
+
+### Status enum values
+
+Use `idle / processing / successful` (not `initial / loading / loaded`).
+Errors are one-time signals: `emitAction(XxxFailedAction(...))` → SnackBar.
+No `error` value in the status enum.
+Broad `catch (e, stack)` in BLoC handlers must also `emitAction` a generic failure action (e.g. `XxxUnexpectedFailedAction`) before `addError` so the user always sees feedback.
+
 ```dart
-final class WalletListState {
-  const WalletListState({
+final class WalletState {
+  const WalletState({
     this.wallets = const [],
-    this.status = WalletListStatus.initial,
-    this.errorMessage,
+    this.status = WalletStatus.idle,
+    this.pendingHdWallet,           // inter-event data lives in State, never as a BLoC field
   });
 
   final List<Wallet> wallets;
-  final WalletListStatus status;
-  final String? errorMessage;
+  final WalletStatus status;
+  final HdWallet? pendingHdWallet;  // null = no pending wallet; non-null = awaiting seed confirmation
 
-  WalletListState copyWith({...});
+  WalletState copyWith({...});
 }
 
-enum WalletListStatus { initial, loading, loaded, error }
+enum WalletStatus { idle, processing }
 ```
 
 BLoC constructors receive **use cases** (from module application layer). When no orchestration is needed, receiving repositories directly is acceptable.
@@ -244,6 +265,32 @@ Rules:
 - **Never** route cross-feature notifications through `emitAction` — actions are scoped to one BLoC's widget subtree.
 - BLoC state carries only **persistent render signals**: status enums, data lists, typed failure fields. No `Exception? exception`.
 
+### Status enum design
+
+Status describes *process phase*, not outcome. Baseline for simple flows:
+
+```dart
+enum XxxStatus { idle, processing }
+```
+
+Rules:
+- **No `error` value.** Errors are one-time signals → `emitAction(XxxErrorOccurred(...))`, state returns to `idle`. Exception: a page-level persistent error render (e.g. "failed to load, retry") may use a typed nullable failure field (`KeysException? failure`) instead of an `error` status value — derive the error state from `state.failure != null`.
+- **No redundant values.** `loaded` is the same as `idle` with data — derive from list being non-empty. `awaitingSeedConfirmation` is the same as `state.pendingHdWallet != null` — drop the status value.
+- **Wizard flows** with meaningful intermediate steps (`scanning`, `scanned`, `signing`, `broadcasted`) may keep those step values — but still no `error` and no `initial`/`idle` redundancy.
+- **After every error** always `emit(state.copyWith(status: XxxStatus.idle))` so the UI never gets stuck.
+
+### Inter-event data belongs in State
+
+Any data read in event handler B that was written in event handler A must live in `State`, not as a BLoC instance variable. Instance variables break hot-restart, make BLoC non-serialisable, and hide state from tests.
+
+```dart
+// Wrong
+HdWallet? _pendingHdWallet;          // invisible to state machine, lost on restart
+
+// Correct
+state.pendingHdWallet                // visible, testable, survives re-subscription
+```
+
 ---
 
 ## Repositories, DataSources, and Use Cases
@@ -275,6 +322,13 @@ Navigator 2.0 via custom `RouterDelegate` — no third-party routing packages.
 
 See [code-style-guide.md](./code-style-guide.md).
 
+### Widget file rules
+
+- **One public widget class per file.** Never put multiple widget classes in one file.
+- **No private widgets** (`_MyWidget`). All widgets are public — private widgets cannot be tested independently.
+- Reusable widgets live in `lib/feature/<feature>/view/widget/`. Each widget has its own file named after the class (`broadcast_result.dart` → `BroadcastResult`).
+- `_State` classes (the `State<T>` implementation) are the only acceptable private class in a screen file — they belong alongside their `StatefulWidget`.
+
 ---
 
 ## Testing
@@ -282,6 +336,33 @@ See [code-style-guide.md](./code-style-guide.md).
 - All Bitcoin-specific code (BIP39, derivation, coin selection, script) must have unit tests.
 - RPC integration — tests against a live regtest node. Do not mock Bitcoin Core.
 - Module tests organized by layer: `domain/` (pure unit), `application/` (mocked ports), `data/` (integration).
+
+### Test Double Placement
+
+Test helpers (fakes, mocks, stubs) must **never** be defined inline inside a test file.
+Each test double lives in its own file, named after the class it contains.
+
+**Folder structure** — place doubles alongside the test file in a subfolder named by role:
+```
+test/feature/<feature>/
+  <test_name>_test.dart
+  fakes/
+    fake_<name>.dart      ← Fake: working in-memory implementation
+    fake_slow_<name>.dart
+  mocks/
+    mock_<name>.dart      ← Mock: created via mocktail/mockito, verifies interactions
+```
+
+No `helpers/` folder. Use `fakes/` or `mocks/` only.
+
+**Naming taxonomy** (xUnit roles):
+- `Fake*` — working simplified implementation (e.g. in-memory repository)
+- `Mock*` — created via mocktail/mockito, verifies call expectations
+- `Stub*` — minimal concrete implementation that returns fixed values (no expectations)
+- `Spy*` — records calls for later assertion without blocking them
+
+**BLoC state enum standard** — use `idle / processing / successful` (not `initial / loading / loaded`).
+Errors are one-time signals via `emitAction(XxxFailed(...))` — never an `error` value in the status enum.
 
 ---
 
@@ -325,3 +406,98 @@ These are hard rules. Never violate them.
 - **Never** import app code from a workspace package
 - **Never** create top-level `components/` for business modules
 - **Never** create god-object BLoCs handling multiple flows — one BLoC per flow
+
+---
+
+## Architectural Import Boundaries
+
+Three import boundaries are enforced by code review. DCM `avoid-banned-imports`
+and `restrict_imports` require a paid subscription — boundaries are verified manually.
+
+| Boundary | Guarded scope | Forbidden import |
+|----------|--------------|-----------------|
+| SB-7: `transaction` ↛ `keys` | `packages/transaction/lib/` | `package:keys/` |
+| `keys` ↛ `transaction`/`wallet` | `packages/keys/lib/` | `package:transaction/`, `package:wallet/` |
+| View layer ↛ gateway/repository | `lib/feature/**/view/**` | any URI containing `/gateway/` or `/repository/` |
+
+---
+
+## Signing Boundary
+
+The signing boundary is the set of rules governing how seed material, private keys,
+and cryptographic secrets move through the `keys` bounded context. Violations are
+treated as Critical-lane defects.
+
+### Rule SB-1 — Secrets do not cross the `keys` BC boundary
+
+Mnemonic words and raw private-key bytes (`Uint8List`) must never appear in:
+- method parameters or return values on any public API (barrel exports of `keys.dart`)
+- exception messages, `toString()` output, or log calls
+- cross-package DTOs or value objects
+
+The only crossing is the signed transaction hex string, which is the intentional
+output of `SignTransactionUseCase`.
+
+### Rule SB-2 — `keys.SigningInput` is internal
+
+`keys.SigningInput` carries a raw 32-byte private key. It is NOT exported from
+`package:keys/keys.dart`. It is an application-internal DTO used only by
+`TransactionSigningService`, which is also internal to `keys`. External code must
+never reference this type.
+
+### Rule SB-3 — `toString` overrides on sensitive types are mandatory
+
+Any type that carries, or appears structurally adjacent to, sensitive material MUST
+override `toString` before being committed. The override must either:
+(a) redact all sensitive fields — `'TypeName(<redacted>)'`, or
+(b) enumerate all safe fields explicitly and exclude sensitive ones.
+
+Relying on the Dart default `Object.toString()` is forbidden for these types even
+though the default is currently safe.
+
+Affected types:
+- `Mnemonic` → `'Mnemonic(<redacted>)'`
+- `keys.SigningInput` → shows `txid`, `vout`, `amountSat`; redacts `privateKey` and `publicKey`
+
+### Rule SB-4 — `KeysException` subtypes must remain zero-field
+
+No subtype of `KeysException` may carry wallet identifiers, key material, seed
+phrases, or derivation paths. All subtypes must be zero-arg with a fixed string
+`toString`. This invariant is machine-checked by `packages/keys/test/keys_exception_test.dart`.
+
+### Rule SB-5 — Broad catch in signing use cases is permitted by security policy
+
+The signing use case (`SignTransactionUseCase`) uses a broad `catch (_, stack)` to
+wrap all unexpected errors from the signing service as `KeysSigningException`. This
+is a deliberate security-first policy justified by all four criteria:
+
+- C1 (change abstraction): translates internal crypto exception vocabulary to the
+  `keys` domain language.
+- C2 (hide secrets): the caught exception message or chained cause may carry key
+  material; discarding it via `_` is the only safe option.
+- C3 (add context): the original stack trace is preserved via
+  `Error.throwWithStackTrace` for debugging without exposing the message.
+- C4 (can recover): the caller can distinguish `KeysSeedNotFoundException`,
+  `KeysDerivationException`, and `KeysSigningException` and act accordingly.
+
+Consequence: `ArgumentError` from signing-service misuse is also mapped to
+`KeysSigningException`. This is intentional — programmer errors in the crypto stack
+are sanitized the same way as runtime errors because distinguishing them at runtime
+would require inspecting exception messages, which violates C2.
+
+### Rule SB-6 — Key zeroing is a known limitation
+
+Raw private-key `Uint8List` values constructed inside `SignTransactionUseCase` become
+GC-eligible immediately after `_signing.signP2wpkh` returns. No explicit zeroing is
+performed because the Dart VM JIT compiler does not guarantee physical memory zeroing.
+This is an acknowledged limitation for a regtest educational project. Do not add
+zeroing code without a Dart VM–specific analysis confirming it is effective.
+
+### Rule SB-7 — `transaction` must not depend on `keys`
+
+The `transaction` package does not declare `keys` as a dependency. `HdTransactionSigner`
+(the crossing-point adapter) lives in the app layer (`lib/core/adapters/`) precisely to
+avoid this coupling. The broad `on Exception catch` in `SendHdTransactionUseCase`
+(line 63 of `send_hd_transaction_use_case.dart`) is justified by this dependency
+direction rule: `KeysException` subtypes arrive as opaque `Exception` objects at the
+`transaction` boundary. This is a deliberate structural gap, not a coding error.

@@ -1,5 +1,5 @@
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
+import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
 
 /// Immutable result of [PrepareHdSendUseCase].
@@ -10,8 +10,9 @@ import 'package:transaction/src/domain/value_object/signing_input.dart';
 final class HdSendPreparation {
   final List<CoinCandidate> candidates;
 
-  /// Strategy name → selection result for all four [CoinSelector] strategies.
-  final Map<String, CoinSelectionResult> strategies;
+  /// Ordered list of strategy results. Each entry carries name, isStochastic,
+  /// and the [CoinSelectionResult] for the comparison table.
+  final List<CoinSelectionStrategyResult> strategies;
 
   /// `(txid, vout)` → [SigningInput] for all scanned UTXOs in [candidates].
   final Map<(String, int), SigningInput> signingInputs;

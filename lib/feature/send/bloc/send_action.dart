@@ -3,18 +3,18 @@ import 'package:transaction/transaction.dart';
 sealed class SendAction {}
 
 /// Coin selection found no strategy that covers the requested amount.
-final class SendInsufficientFunds extends SendAction {}
+final class SendInsufficientFundsAction extends SendAction {}
 
 /// Transaction preparation or broadcast failed.
-final class SendFailed extends SendAction {
+final class SendFailedAction extends SendAction {
   final TransactionException exception;
 
-  SendFailed({required this.exception});
+  SendFailedAction({required this.exception});
 }
 
-/// Block mining failed (regtest dev helper).
-final class SendMiningFailed extends SendAction {
-  final TransactionException exception;
+/// An unexpected programmer error occurred during preparation or broadcast.
+///
+/// Emitted alongside [Bloc.addError] so the zone handler gets the original
+/// error while the UI still shows a generic failure message.
+final class SendUnexpectedFailedAction extends SendAction {}
 
-  SendMiningFailed({required this.exception});
-}

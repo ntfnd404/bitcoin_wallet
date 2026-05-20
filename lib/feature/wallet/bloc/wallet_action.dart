@@ -6,53 +6,53 @@ sealed class WalletAction {}
 // Navigation actions — replace pendingWallet / pendingMnemonic state fields
 
 /// Node wallet was created; navigate to wallet detail.
-final class WalletNodeCreated extends WalletAction {
+final class WalletNodeCreatedAction extends WalletAction {
   final NodeWallet wallet;
 
-  WalletNodeCreated({required this.wallet});
+  WalletNodeCreatedAction({required this.wallet});
 }
 
 /// HD wallet was created; navigate to seed phrase confirmation screen.
-final class WalletHdAwaitingConfirmation extends WalletAction {
+final class WalletHdAwaitingConfirmationAction extends WalletAction {
   final HdWallet wallet;
   final Mnemonic mnemonic;
 
-  WalletHdAwaitingConfirmation({required this.wallet, required this.mnemonic});
+  WalletHdAwaitingConfirmationAction({required this.wallet, required this.mnemonic});
 }
 
 /// HD wallet seed was confirmed; wallet added to list — pop CreateWalletScreen.
-final class WalletHdConfirmed extends WalletAction {
+final class WalletHdConfirmedAction extends WalletAction {
   final HdWallet wallet;
 
-  WalletHdConfirmed({required this.wallet});
+  WalletHdConfirmedAction({required this.wallet});
 }
 
 /// HD wallet was restored; navigate back to wallet list.
-final class WalletRestored extends WalletAction {
+final class WalletRestoredAction extends WalletAction {
   final HdWallet wallet;
 
-  WalletRestored({required this.wallet});
+  WalletRestoredAction({required this.wallet});
 }
 
 /// Seed was loaded for view; navigate to seed phrase screen.
-final class WalletSeedReady extends WalletAction {
+final class WalletSeedReadyAction extends WalletAction {
   final Mnemonic mnemonic;
 
-  WalletSeedReady({required this.mnemonic});
+  WalletSeedReadyAction({required this.mnemonic});
 }
 
 // Error actions — replace Exception? exception state field
 
 /// A wallet operation failed (load, create, restore).
-final class WalletErrorOccurred extends WalletAction {
+final class WalletErrorOccurredAction extends WalletAction {
   final WalletException exception;
 
-  WalletErrorOccurred({required this.exception});
+  WalletErrorOccurredAction({required this.exception});
 }
 
 /// Seed retrieval failed.
-final class WalletSeedFailed extends WalletAction {
+final class WalletSeedFailedAction extends WalletAction {
   final KeysException exception;
 
-  WalletSeedFailed({required this.exception});
+  WalletSeedFailedAction({required this.exception});
 }

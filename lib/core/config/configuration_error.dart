@@ -1,7 +1,7 @@
 final class ConfigurationError implements Exception {
-  const ConfigurationError(this.message);
-
   final String message;
+
+  const ConfigurationError(this.message);
 
   @override
   String toString() => 'ConfigurationError: $message';
