@@ -17,7 +17,7 @@ final class XpubBloc extends Bloc<XpubEvent, XpubState> {
     XpubLoadRequested event,
     Emitter<XpubState> emit,
   ) async {
-    emit(state.copyWith(status: FetchStatus.loading));
+    emit(state.copyWith(status: FetchStatus.processing));
     try {
       final results = <AddressType, AccountXpub>{};
       for (final type in AddressType.values) {
@@ -25,14 +25,14 @@ final class XpubBloc extends Bloc<XpubEvent, XpubState> {
         if (isClosed) return;
       }
 
-      emit(state.copyWith(status: FetchStatus.loaded, xpubs: results));
+      emit(state.copyWith(status: FetchStatus.idle, xpubs: results));
     } on KeysException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial, failure: e));
+      emit(state.copyWith(status: FetchStatus.idle, failure: e));
     } catch (e, stack) {
       addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     }
   }
 }

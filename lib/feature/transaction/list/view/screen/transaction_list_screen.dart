@@ -36,7 +36,7 @@ class TransactionListScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state.status == FetchStatus.loading) {
+          if (state.status == FetchStatus.processing) {
             return const Center(child: CircularProgressIndicator());
           }
 

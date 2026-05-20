@@ -1,14 +1,23 @@
 import 'package:bitcoin_wallet/common/widgets/copyable_text.dart';
 import 'package:bitcoin_wallet/common/widgets/detail_section.dart';
+import 'package:bitcoin_wallet/feature/transaction/detail/bloc/decoded_transaction_input.dart';
+import 'package:bitcoin_wallet/feature/transaction/detail/bloc/decoded_transaction_output.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/widget/transaction_input_tile.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/widget/transaction_output_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:transaction/transaction.dart';
 
 class TransactionDetailBody extends StatelessWidget {
-  const TransactionDetailBody({super.key, required this.detail});
+  const TransactionDetailBody({
+    super.key,
+    required this.detail,
+    required this.decodedOutputs,
+    required this.decodedInputs,
+  });
 
   final TransactionDetail detail;
+  final List<DecodedTransactionOutput> decodedOutputs;
+  final List<DecodedTransactionInput> decodedInputs;
 
   @override
   Widget build(BuildContext context) {
@@ -31,19 +40,21 @@ class TransactionDetailBody extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         DetailSection(
-          title: 'Inputs (${detail.inputs.length})',
+          title: 'Inputs (${decodedInputs.length})',
           child: Column(
             children: [
-              for (final input in detail.inputs) TransactionInputTile(input: input, textTheme: textTheme),
+              for (final decoded in decodedInputs)
+                TransactionInputTile(decoded: decoded, textTheme: textTheme),
             ],
           ),
         ),
         const SizedBox(height: 16),
         DetailSection(
-          title: 'Outputs (${detail.outputs.length})',
+          title: 'Outputs (${decodedOutputs.length})',
           child: Column(
             children: [
-              for (final output in detail.outputs) TransactionOutputTile(output: output, textTheme: textTheme),
+              for (final decoded in decodedOutputs)
+                TransactionOutputTile(decoded: decoded, textTheme: textTheme),
             ],
           ),
         ),

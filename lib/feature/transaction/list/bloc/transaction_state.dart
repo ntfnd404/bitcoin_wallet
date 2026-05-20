@@ -7,7 +7,7 @@ final class TransactionState {
 
   const TransactionState({
     this.transactions = const [],
-    this.status = FetchStatus.initial,
+    this.status = FetchStatus.idle,
   });
 
   TransactionState copyWith({

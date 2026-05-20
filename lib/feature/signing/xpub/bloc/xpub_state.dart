@@ -10,7 +10,7 @@ final class XpubState {
   final KeysException? failure;
 
   const XpubState({
-    this.status = FetchStatus.initial,
+    this.status = FetchStatus.idle,
     this.xpubs = const {},
     this.failure,
   });

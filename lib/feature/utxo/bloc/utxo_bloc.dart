@@ -46,20 +46,20 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
     Emitter<UtxoState> emit,
   ) async {
     _currentWallet = event.wallet;
-    emit(state.copyWith(status: FetchStatus.loading));
+    emit(state.copyWith(status: FetchStatus.processing));
     try {
       final utxos = await _utxoRepository.getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
+      emit(state.copyWith(utxos: utxos, status: FetchStatus.idle));
     } on TransactionException catch (e) {
       if (isClosed) return;
       emitAction(UtxoErrorOccurredAction(exception: e));
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     }
   }
 
@@ -71,15 +71,15 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
       final utxos = await _utxoRepository.getUtxos(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
+      emit(state.copyWith(utxos: utxos, status: FetchStatus.idle));
     } on TransactionException catch (e) {
       if (isClosed) return;
       emitAction(UtxoErrorOccurredAction(exception: e));
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     }
   }
 }

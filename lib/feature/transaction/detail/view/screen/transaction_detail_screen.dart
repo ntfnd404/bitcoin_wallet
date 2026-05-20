@@ -45,6 +45,10 @@ class TransactionDetailScreen extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
+            case TransactionDetailUnexpectedFailedAction():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('An unexpected error occurred.')),
+              );
           }
         },
         builder: (context, state) {
@@ -97,13 +101,17 @@ class TransactionDetailScreen extends StatelessWidget {
               ),
 
               // ── Decoded detail (loaded on demand) ────────────────────
-              if (state.status == FetchStatus.loading) ...[
+              if (state.status == FetchStatus.processing) ...[
                 const SizedBox(height: 24),
                 const Center(child: CircularProgressIndicator()),
               ],
 
-              if (state.status == FetchStatus.loaded && state.detail != null)
-                TransactionDetailBody(detail: state.detail!),
+              if (state.status == FetchStatus.idle && state.detail != null)
+                TransactionDetailBody(
+                  detail: state.detail!,
+                  decodedOutputs: state.decodedOutputs,
+                  decodedInputs: state.decodedInputs,
+                ),
             ],
           );
         },
