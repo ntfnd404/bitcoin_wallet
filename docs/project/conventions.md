@@ -304,6 +304,42 @@ state.pendingHdWallet                // visible, testable, survives re-subscript
   - `BitcoinCoreRemoteDataSource` — in `wallet/domain/data_sources/`, implemented in `bitcoin_node/`
 - **Use Cases** — Application layer, live in `packages/<module>/src/application/`. Orchestrate repositories, services, and data sources; produce and return domain entities.
 - Every package exposes one public barrel `package:<module>/<module>.dart` and may expose an optional `package:<module>/<module>_assembly.dart`. Treat everything under `src/` as internal.
+- **Thin use case rule** — do not create a use case that only delegates to a single repository or gateway method with no added logic. Call the repository / gateway directly. A use case is justified when it orchestrates multiple calls, translates between bounded contexts, enforces a domain rule, or handles scenario-specific exceptions.
+
+---
+
+## Error Handling
+
+### Layer responsibilities
+
+Each layer handles only the errors that belong to its contract:
+
+- **Gateway / DataSource** (`*GatewayImpl`) — translates external failures (RPC, network, parse) into bounded-context exceptions. Uses `catch (_, stack)` + `Error.throwWithStackTrace`. No domain logic inside the catch.
+- **Use Case** — catches only exceptions that are part of the use-case scenario: cross-BC translation, algorithm fallbacks, security sanitization. Does NOT re-wrap exceptions already translated by the gateway/repository beneath it. Does NOT use broad `catch (e, stack)` unless justified by all four criteria (see SB-5).
+- **BLoC / Controller** — catches bounded-context domain exceptions for UI feedback (`on XxxException catch (e) → emitAction`). Unexpected errors go to `addError` for the zone handler. Always `emitAction` a generic failure action **before** `addError` so the user sees feedback even if the BLoC closes.
+- **Domain Service** — no `try/catch` except expected algorithm branches (e.g. `InsufficientFundsException` inside a coin-selection loop).
+
+### `rethrow` vs `Error.throwWithStackTrace`
+
+- `rethrow` — re-throws the **same** exception object. Use when the catch block adds no translation and the exception type must stay unchanged.
+- `Error.throwWithStackTrace(newException, stack)` — creates a **new** exception while preserving the original stack trace. Use when translating an external exception into a bounded-context one at a layer boundary.
+
+```dart
+// ✅ rethrow — same exception, same type
+on TransactionException {
+  rethrow;
+}
+
+// ✅ throwWithStackTrace — new domain exception, original stack preserved
+} catch (_, stack) {
+  Error.throwWithStackTrace(const TransactionFetchException(), stack);
+}
+
+// ❌ throw without preserving stack — stack trace is lost
+} catch (_) {
+  throw const TransactionFetchException();
+}
+```
 
 ---
 
@@ -360,6 +396,41 @@ No `helpers/` folder. Use `fakes/` or `mocks/` only.
 - `Mock*` — created via mocktail/mockito, verifies call expectations
 - `Stub*` — minimal concrete implementation that returns fixed values (no expectations)
 - `Spy*` — records calls for later assertion without blocking them
+
+### TDD principle — test through interfaces, not implementations
+
+Unit-test consumers through interface fakes/mocks, not concrete `*Impl` classes.
+Infrastructure implementations (`*GatewayImpl`, `*RepositoryImpl`) are tested via
+integration tests against the real external system, not unit-tested with mocked internals.
+
+```dart
+// ❌ Wrong — tests GatewayImpl by mocking its internal http.Client
+class _MockHttpClient extends Mock implements http.Client {}
+final gateway = BlockGenerationGatewayImpl(rpcClient: BitcoinRpcClient(..., client: mock));
+
+// ✅ Correct — test the BLoC through FakeBlockGenerationGateway
+final bloc = RegtestMiningBloc(blockGenerationGateway: FakeBlockGenerationGateway());
+```
+
+Rule: if you are mocking a dependency **of the impl** (not of the interface the BLoC depends on), you are testing implementation details — move that to integration tests or remove it.
+
+### mocktail usage rules
+
+- Use mocktail to mock `abstract class` or `abstract interface class` only — **never** `final class`.
+- Declaration: `class MockFoo extends Mock implements FooInterface {}`
+- Place in `test/<feature>/mocks/mock_foo.dart`.
+- Use `when()` / `verify()` only when interaction verification is the test goal.
+- Prefer `Fake*` over `Mock*` when you don't need to assert call counts or argument capture.
+
+```dart
+// ✅ Correct — mocking an interface
+abstract interface class BlockGenerationGateway { ... }
+class MockBlockGenerationGateway extends Mock implements BlockGenerationGateway {}
+
+// ❌ Wrong — cannot mock a final class with mocktail
+final class BitcoinRpcClient { ... }
+class MockBitcoinRpcClient extends Mock implements BitcoinRpcClient {} // compile error
+```
 
 **BLoC state enum standard** — use `idle / processing / successful` (not `initial / loading / loaded`).
 Errors are one-time signals via `emitAction(XxxFailed(...))` — never an `error` value in the status enum.
