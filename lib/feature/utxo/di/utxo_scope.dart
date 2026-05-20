@@ -15,8 +15,7 @@ class UtxoScope extends StatefulWidget {
     required this.child,
   });
 
-  /// Creates a new [UtxoBloc] wired with use cases from the nearest
-  /// [UtxoScope] ancestor.
+  /// Creates a new [UtxoBloc] wired from the nearest [UtxoScope] ancestor.
   static UtxoBloc newUtxoBloc(BuildContext context) {
     final scope = context.getInheritedWidgetOfExactType<_InheritedUtxoScope>();
     if (scope == null) throw StateError('UtxoScope not found in widget tree');
@@ -44,7 +43,7 @@ class _UtxoScopeState extends State<UtxoScope> {
     final transactionAssembly = deps.transaction;
 
     _blocFactory = () => UtxoBloc(
-      getUtxos: transactionAssembly.getUtxos,
+      utxoRepository: transactionAssembly.utxoRepository,
       eventBus: deps.eventBus,
     );
   }

@@ -23,7 +23,7 @@ void main() {
     fakeGateway = FakeBlockGenerationGateway();
     eventBus = AppEventBus();
     bloc = RegtestMiningBloc(
-      mineBlock: MineBlockUseCase(dataSource: fakeGateway),
+      blockGenerationGateway: fakeGateway,
       eventBus: eventBus,
       walletId: 'wallet-1',
       addressResolver: (_) async => 'bcrt1qresolved',
@@ -153,7 +153,7 @@ void main() {
     );
 
     final slowBloc = RegtestMiningBloc(
-      mineBlock: MineBlockUseCase(dataSource: mockGateway),
+      blockGenerationGateway: mockGateway,
       eventBus: eventBus,
       walletId: 'wallet-1',
       addressResolver: (_) async => 'bcrt1qresolved',

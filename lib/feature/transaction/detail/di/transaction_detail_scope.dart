@@ -31,7 +31,7 @@ class _TransactionDetailScopeState extends State<TransactionDetailScope> {
     _initialized = true;
 
     final deps = AppScope.of(context);
-    _factory = () => TransactionDetailBloc(getDetail: deps.transaction.getTransactionDetail);
+    _factory = () => TransactionDetailBloc(repository: deps.transaction.transactionRepository);
   }
 
   @override

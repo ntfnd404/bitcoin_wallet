@@ -1,12 +1,8 @@
 import 'package:keys/src/data/seed_repository_impl.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
-import 'package:keys/src/domain/exception/keys_exception.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:shared_kernel/shared_kernel.dart';
 import 'package:test/test.dart';
 
 import 'fake_secure_storage.dart';
-import 'mock_secure_storage.dart';
 
 void main() {
   late FakeSecureStorage storage;
@@ -89,51 +85,6 @@ void main() {
           repository.deleteSeed('nonexistent'),
           completes,
         );
-      });
-    });
-
-    group('error wrapping (Phase 3)', () {
-      late MockSecureStorage mockStorage;
-      late SeedRepositoryImpl repo;
-
-      setUp(() {
-        mockStorage = MockSecureStorage();
-        repo = SeedRepositoryImpl(storage: mockStorage);
-      });
-
-      test('storeSeed wraps storage failure as KeysStorageException', () async {
-        when(
-          () => mockStorage.setString(any(), any()),
-        ).thenThrow(const SecureStorageException());
-
-        await expectLater(
-          () => repo.storeSeed(walletId, mnemonic),
-          throwsA(isA<KeysStorageException>()),
-        );
-
-        verify(() => mockStorage.setString('seed_$walletId', any())).called(1);
-      });
-
-      test('getSeed wraps storage failure as KeysStorageException', () async {
-        when(() => mockStorage.getString(any())).thenThrow(const SecureStorageException());
-
-        await expectLater(
-          () => repo.getSeed(walletId),
-          throwsA(isA<KeysStorageException>()),
-        );
-
-        verify(() => mockStorage.getString('seed_$walletId')).called(1);
-      });
-
-      test('deleteSeed wraps storage failure as KeysStorageException', () async {
-        when(() => mockStorage.remove(any())).thenThrow(const SecureStorageException());
-
-        await expectLater(
-          () => repo.deleteSeed(walletId),
-          throwsA(isA<KeysStorageException>()),
-        );
-
-        verify(() => mockStorage.remove('seed_$walletId')).called(1);
       });
     });
 

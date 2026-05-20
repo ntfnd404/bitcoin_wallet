@@ -16,7 +16,7 @@ import 'package:wallet/wallet.dart';
 /// the BLoC does not know about wallet subtypes.
 final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningState>
     with ActionBlocMixin<RegtestMiningState, RegtestMiningAction> {
-  final MineBlockUseCase _mineBlock;
+  final BlockGenerationGateway _blockGenerationGateway;
   final AppEventBus _eventBus;
   final String _walletId;
 
@@ -25,11 +25,11 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
   final Future<String> Function(Wallet wallet) _addressResolver;
 
   RegtestMiningBloc({
-    required MineBlockUseCase mineBlock,
+    required BlockGenerationGateway blockGenerationGateway,
     required AppEventBus eventBus,
     required String walletId,
     required Future<String> Function(Wallet wallet) addressResolver,
-  }) : _mineBlock = mineBlock,
+  }) : _blockGenerationGateway = blockGenerationGateway,
        _eventBus = eventBus,
        _walletId = walletId,
        _addressResolver = addressResolver,
@@ -61,9 +61,9 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
 
       return;
     } catch (e, stack) {
+      emitAction(RegtestMiningUnexpectedFailedAction());
       addError(e, stack);
       if (isClosed) return;
-      emitAction(RegtestMiningUnexpectedFailedAction());
       emit(state.copyWith(status: RegtestMiningStatus.idle));
 
       return;
@@ -82,7 +82,7 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
   Future<void> _mine(String toAddress, Emitter<RegtestMiningState> emit) async {
     emit(state.copyWith(status: RegtestMiningStatus.processing));
     try {
-      await _mineBlock(toAddress);
+      await _blockGenerationGateway.generateToAddress(1, toAddress);
       if (isClosed) return;
       emit(state.copyWith(status: RegtestMiningStatus.successful));
       _eventBus.emit(BlockMined(walletId: _walletId));
@@ -91,9 +91,9 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
       emitAction(RegtestMiningFailedAction(exception: e));
       emit(state.copyWith(status: RegtestMiningStatus.idle));
     } catch (e, stack) {
+      emitAction(RegtestMiningUnexpectedFailedAction());
       addError(e, stack);
       if (isClosed) return;
-      emitAction(RegtestMiningUnexpectedFailedAction());
       emit(state.copyWith(status: RegtestMiningStatus.idle));
     }
   }
