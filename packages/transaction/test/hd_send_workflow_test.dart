@@ -80,7 +80,7 @@ void main() {
       );
 
       expect(preparation.strategies, isNotEmpty);
-      expect(preparation.strategies.containsKey('fifo'), isTrue);
+      expect(preparation.strategies.any((e) => e.name == 'fifo'), isTrue);
       expect(preparation.changeAddress, isNotEmpty);
     });
 

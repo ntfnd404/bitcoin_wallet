@@ -28,24 +28,36 @@ CoinSelectionResult _fakeCoinResult({int fee = 1000, int change = 49000}) =>
       feeSat: Satoshi(fee),
     );
 
+CoinSelectionStrategyResult _fakeStrategy(
+  String name, {
+  int fee = 1000,
+  int change = 49000,
+}) => CoinSelectionStrategyResult(
+  name: name,
+  isStochastic: false,
+  result: _fakeCoinResult(fee: fee, change: change),
+);
+
 /// Builds a test [SendPreparation] for BLoC tests.
 ///
 /// Uses [SendPreparation.forTest] to avoid depending on internal subtypes
 /// ([NodeSendResult]/[HdSendResult]) from the test layer.
 SendPreparation _fakePrep([String strategyName = 'fifo']) =>
     SendPreparation.forTest(
-      strategies: {strategyName: _fakeCoinResult()},
+      strategies: [_fakeStrategy(strategyName)],
       changeAddress: 'bcrt1qchange',
     );
 
-/// Multi-strategy prep where 'min_change' has the lowest fee, so it is the
-/// expected recommended strategy.
+/// Multi-strategy prep. With feeRate=10 (used in tests):
+/// - fifo:       score = 2000 + 68*10 = 2680
+/// - lifo:       score = 1500 + 68*10 = 2180
+/// - min_change: score = 1000 + 68*10 = 1680  ← recommended
 SendPreparation _fakeMultiPrep() => SendPreparation.forTest(
-  strategies: {
-    'fifo': _fakeCoinResult(fee: 2000, change: 48000),
-    'lifo': _fakeCoinResult(fee: 1500, change: 48500),
-    'min_change': _fakeCoinResult(),
-  },
+  strategies: [
+    _fakeStrategy('fifo', fee: 2000, change: 48000),
+    _fakeStrategy('lifo', fee: 1500, change: 48500),
+    _fakeStrategy('min_change'),
+  ],
   changeAddress: 'bcrt1qchange',
 );
 
@@ -132,7 +144,7 @@ void main() {
     // B3
     test('emits SendInsufficientFundsAction action and error status when strategies empty', () async {
       fakeWorkflow.prepareResult = SendPreparation.forTest(
-        strategies: {},
+        strategies: [],
         changeAddress: 'bcrt1qchange',
       );
 

@@ -31,10 +31,9 @@ final class SendHdTransactionUseCase {
     required Satoshi amountSat,
     required String bech32Hrp,
   }) async {
-    final result = preparation.strategies[strategyName];
-    if (result == null) {
-      throw const TransactionPreparationException();
-    }
+    final entries = preparation.strategies.where((e) => e.name == strategyName);
+    if (entries.isEmpty) throw const TransactionPreparationException();
+    final result = entries.first.result;
 
     final String hexSigned;
     try {

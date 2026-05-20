@@ -26,7 +26,7 @@ void main() {
         feeRateSatPerVbyte: 5,
       );
 
-      expect(result.strategies, contains('fifo'));
+      expect(result.strategies.any((e) => e.name == 'fifo'), isTrue);
       expect(result.candidates, hasLength(1));
     });
 

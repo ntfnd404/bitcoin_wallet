@@ -1,7 +1,6 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
-import 'package:bitcoin_wallet/feature/send/application/recommend_strategy.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
@@ -20,14 +19,17 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
   final SendWorkflow _workflow;
   final AppEventBus _eventBus;
   final String _walletId;
+  final CoinSelectionRecommender _recommender;
 
   SendBloc({
     required SendWorkflow workflow,
     required AppEventBus eventBus,
     required String walletId,
+    CoinSelectionRecommender recommender = const DefaultCoinSelectionRecommender(),
   }) : _workflow = workflow,
        _eventBus = eventBus,
        _walletId = walletId,
+       _recommender = recommender,
        super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
@@ -60,11 +62,15 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
           status: SendStatus.awaitingConfirmation,
           preparation: preparation,
           strategies: preparation.strategies,
-          selectedStrategy: recommendStrategy(preparation.strategies),
+          selectedStrategy: _recommender.recommend(
+            preparation.strategies,
+            event.feeRateSatPerVbyte,
+          ),
           selectionMode: CoinSelectionMode.auto,
           changeAddress: preparation.changeAddress,
           recipientAddress: event.recipientAddress,
           amountSat: event.amountSat,
+          feeRateSatPerVbyte: event.feeRateSatPerVbyte,
         ),
       );
     } on TransactionException catch (e) {
@@ -84,7 +90,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     Emitter<SendState> emit,
   ) {
     final strategies = state.strategies;
-    if (strategies == null || !strategies.containsKey(event.strategyName)) return;
+    if (strategies == null || !strategies.any((e) => e.name == event.strategyName)) return;
 
     emit(state.copyWith(
       selectedStrategy: event.strategyName,
@@ -99,14 +105,15 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     switch (event.mode) {
       case CoinSelectionMode.auto:
         final strategies = state.strategies;
-        if (strategies == null) {
+        final feeRate = state.feeRateSatPerVbyte;
+        if (strategies == null || feeRate == null) {
           emit(state.copyWith(selectionMode: CoinSelectionMode.auto));
 
           return;
         }
         emit(state.copyWith(
           selectionMode: CoinSelectionMode.auto,
-          selectedStrategy: recommendStrategy(strategies),
+          selectedStrategy: _recommender.recommend(strategies, feeRate),
         ));
       case CoinSelectionMode.manual:
         emit(state.copyWith(selectionMode: CoinSelectionMode.manual));

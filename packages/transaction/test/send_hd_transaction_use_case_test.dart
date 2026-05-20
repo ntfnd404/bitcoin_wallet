@@ -142,14 +142,18 @@ HdSendPreparation _buildPreparation() {
 
   return const HdSendPreparation(
     candidates: [candidate],
-    strategies: {
-      'fifo': CoinSelectionResult(
-        inputs: [candidate],
-        totalInputSat: Satoshi(100000),
-        feeSat: Satoshi(1000),
-        changeSat: Satoshi.zero,
+    strategies: [
+      CoinSelectionStrategyResult(
+        name: 'fifo',
+        isStochastic: false,
+        result: CoinSelectionResult(
+          inputs: [candidate],
+          totalInputSat: Satoshi(100000),
+          feeSat: Satoshi(1000),
+          changeSat: Satoshi.zero,
+        ),
       ),
-    },
+    ],
     signingInputs: {('utxo_txid', 0): signingInput},
     changeAddress: 'bc1qchange',
   );

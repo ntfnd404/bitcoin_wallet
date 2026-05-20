@@ -11,7 +11,7 @@ import 'package:transaction/src/domain/service/eligibility_policy.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/service/utxo_eligibility_filter.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
+import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
 
 /// Fetches Node-wallet UTXOs, runs all coin-selection strategies, and returns
 /// a [NodeSendPreparation] for the UI comparison table.
@@ -71,18 +71,22 @@ final class PrepareNodeSendUseCase {
 
       final changeAddress = await _nodeDataSource.getNewAddress(walletName);
 
-      final strategies = <String, CoinSelectionResult>{};
+      final strategies = <CoinSelectionStrategyResult>[];
       for (final selector in _selectors) {
         try {
-          strategies[selector.name] = selector.select(
-            CoinSelectionRequest(
-              candidates: candidates,
-              targetSat: targetSat,
-              feeEstimator: _feeEstimator,
-              feeRateSatPerVbyte: feeRateSatPerVbyte,
-              dustThreshold: _feeEstimator.dustThreshold(AddressType.nativeSegwit),
+          strategies.add(CoinSelectionStrategyResult(
+            name: selector.name,
+            isStochastic: selector.isStochastic,
+            result: selector.select(
+              CoinSelectionRequest(
+                candidates: candidates,
+                targetSat: targetSat,
+                feeEstimator: _feeEstimator,
+                feeRateSatPerVbyte: feeRateSatPerVbyte,
+                dustThreshold: _feeEstimator.dustThreshold(AddressType.nativeSegwit),
+              ),
             ),
-          );
+          ));
         } on InsufficientFundsException {
           // Strategy could not cover the amount — omit.
         } on CoinSelectionNoSolutionException {
@@ -92,7 +96,7 @@ final class PrepareNodeSendUseCase {
 
       return NodeSendPreparation(
         candidates: candidates,
-        strategies: Map.unmodifiable(strategies),
+        strategies: List.unmodifiable(strategies),
         changeAddress: changeAddress,
       );
     } on InsufficientFundsException {

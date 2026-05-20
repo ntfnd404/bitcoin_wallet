@@ -29,10 +29,9 @@ final class SendNodeTransactionUseCase {
     required String recipientAddress,
     required Satoshi amountSat,
   }) async {
-    final result = preparation.strategies[strategyName];
-    if (result == null) {
-      throw const TransactionPreparationException();
-    }
+    final entries = preparation.strategies.where((e) => e.name == strategyName);
+    if (entries.isEmpty) throw const TransactionPreparationException();
+    final result = entries.first.result;
 
     try {
       final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();

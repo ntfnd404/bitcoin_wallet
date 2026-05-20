@@ -17,7 +17,12 @@ class SendSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strategy = state.selectedStrategy;
-    final result = state.strategies?[strategy];
+    final result = strategy == null
+        ? null
+        : state.strategies
+            ?.where((e) => e.name == strategy)
+            .firstOrNull
+            ?.result;
     final isSending = state.status == SendStatus.sending;
 
     if (result == null) return const SizedBox.shrink();

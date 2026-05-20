@@ -1,15 +1,16 @@
 import 'package:transaction/src/application/hd/hd_send_preparation.dart';
 import 'package:transaction/src/application/node/node_send_preparation.dart';
-import 'package:transaction/src/domain/value_object/coin_selection_result.dart';
+import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
 
 /// Opaque result of [SendWorkflow.prepare].
 ///
-/// Exposes only the fields needed for UI rendering. The inner preparation DTO
-/// (HD or Node) is accessible only to the workflow implementation via internal
-/// pattern matching. Feature-layer code (SendBloc, SendState) must never
-/// downcast or inspect the subtype.
+/// Exposes only the fields needed for UI rendering. Subtypes must not be
+/// downcast or inspected outside the workflow implementation.
 sealed class SendPreparation {
-  final Map<String, CoinSelectionResult> strategies;
+  /// All coin-selection results computed during preparation, ordered by strategy.
+  final List<CoinSelectionStrategyResult> strategies;
+
+  /// Change address allocated for this preparation.
   final String changeAddress;
 
   const SendPreparation({
@@ -22,7 +23,7 @@ sealed class SendPreparation {
   /// Provides a concrete instance without requiring access to the internal
   /// [NodeSendResult]/[HdSendResult] subtypes.
   static SendPreparation forTest({
-    required Map<String, CoinSelectionResult> strategies,
+    required List<CoinSelectionStrategyResult> strategies,
     required String changeAddress,
   }) =>
       _TestSendPreparation(strategies: strategies, changeAddress: changeAddress);

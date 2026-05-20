@@ -5,12 +5,13 @@ import 'package:transaction/transaction.dart';
 final class SendState {
   final SendStatus status;
   final SendPreparation? preparation;
-  final Map<String, CoinSelectionResult>? strategies;
+  final List<CoinSelectionStrategyResult>? strategies;
   final String? selectedStrategy;
   final CoinSelectionMode selectionMode;
   final String? changeAddress;
   final String? recipientAddress;
   final int? amountSat;
+  final int? feeRateSatPerVbyte;
   final String? txid;
 
   const SendState({
@@ -22,18 +23,20 @@ final class SendState {
     this.changeAddress,
     this.recipientAddress,
     this.amountSat,
+    this.feeRateSatPerVbyte,
     this.txid,
   });
 
   SendState copyWith({
     SendStatus? status,
     SendPreparation? preparation,
-    Map<String, CoinSelectionResult>? strategies,
+    List<CoinSelectionStrategyResult>? strategies,
     String? selectedStrategy,
     CoinSelectionMode? selectionMode,
     String? changeAddress,
     String? recipientAddress,
     int? amountSat,
+    int? feeRateSatPerVbyte,
     String? txid,
   }) => SendState(
     status: status ?? this.status,
@@ -44,6 +47,7 @@ final class SendState {
     changeAddress: changeAddress ?? this.changeAddress,
     recipientAddress: recipientAddress ?? this.recipientAddress,
     amountSat: amountSat ?? this.amountSat,
+    feeRateSatPerVbyte: feeRateSatPerVbyte ?? this.feeRateSatPerVbyte,
     txid: txid ?? this.txid,
   );
 }

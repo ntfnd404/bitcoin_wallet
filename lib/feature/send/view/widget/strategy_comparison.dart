@@ -42,13 +42,14 @@ class StrategyComparison extends StatelessWidget {
           },
           children: [
             StrategyHeaderRow(textTheme: textTheme),
-            ...strategies.entries.map(
+            ...strategies.map(
               (e) => StrategyDataRow(
                 context: context,
-                name: e.key,
-                result: e.value,
-                isSelected: state.selectedStrategy == e.key,
-                isRecommended: isAuto && state.selectedStrategy == e.key,
+                name: e.name,
+                result: e.result,
+                isStochastic: e.isStochastic,
+                isSelected: state.selectedStrategy == e.name,
+                isRecommended: isAuto && state.selectedStrategy == e.name,
                 textTheme: textTheme,
               ),
             ),
@@ -82,6 +83,7 @@ class StrategyDataRow extends TableRow {
     required BuildContext context,
     required String name,
     required CoinSelectionResult result,
+    required bool isStochastic,
     required bool isSelected,
     required bool isRecommended,
     required TextTheme textTheme,
@@ -98,23 +100,23 @@ class StrategyDataRow extends TableRow {
                   .add(SendStrategySelected(strategyName: name)),
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: isRecommended
-                    ? Row(
-                        children: [
-                          Text(
-                            name,
-                            style: textTheme.bodySmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(width: 4),
-                          _AutoBadge(textTheme: textTheme, context: context),
-                        ],
-                      )
-                    : Text(
-                        name,
-                        style: textTheme.bodySmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
+                child: Row(
+                  children: [
+                    Text(
+                      name,
+                      style: textTheme.bodySmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    if (isRecommended) ...[
+                      const SizedBox(width: 4),
+                      _AutoBadge(textTheme: textTheme, context: context),
+                    ],
+                    if (isStochastic) ...[
+                      const SizedBox(width: 4),
+                      _StochasticBadge(textTheme: textTheme, context: context),
+                    ],
+                  ],
+                ),
               ),
             ),
             StrategyCell(text: '${result.inputs.length}', textTheme: textTheme),
@@ -156,6 +158,29 @@ class _AutoBadge extends StatelessWidget {
           'Auto',
           style: textTheme.labelSmall?.copyWith(
             color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 9,
+          ),
+        ),
+      );
+}
+
+class _StochasticBadge extends StatelessWidget {
+  const _StochasticBadge({required this.textTheme, required this.context});
+
+  final TextTheme textTheme;
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.tertiary,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          '~',
+          style: textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onTertiary,
             fontSize: 9,
           ),
         ),
