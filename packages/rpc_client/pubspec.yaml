@@ -9,5 +9,6 @@ resolution: workspace
 
 dependencies:
   http: 1.6.0
+  
 dev_dependencies:
   test: ^1.30.0

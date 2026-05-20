@@ -1,13 +1,7 @@
-import 'package:transaction/src/application/broadcast_transaction_use_case.dart';
-import 'package:transaction/src/application/get_transaction_detail_use_case.dart';
-import 'package:transaction/src/application/get_transactions_use_case.dart';
-import 'package:transaction/src/application/get_utxos_use_case.dart';
 import 'package:transaction/src/application/hd/prepare_hd_send_use_case.dart';
 import 'package:transaction/src/application/hd/send_hd_transaction_use_case.dart';
-import 'package:transaction/src/application/mine_block_use_case.dart';
 import 'package:transaction/src/application/node/prepare_node_send_use_case.dart';
 import 'package:transaction/src/application/node/send_node_transaction_use_case.dart';
-import 'package:transaction/src/application/scan_utxos_use_case.dart';
 import 'package:transaction/src/data/transaction_repository_impl.dart';
 import 'package:transaction/src/data/utxo_repository_impl.dart';
 import 'package:transaction/src/domain/gateway/block_generation_gateway.dart';
@@ -16,25 +10,27 @@ import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
 import 'package:transaction/src/domain/gateway/transaction_history_gateway.dart';
 import 'package:transaction/src/domain/gateway/utxo_gateway.dart';
 import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
+import 'package:transaction/src/domain/repository/transaction_repository.dart';
+import 'package:transaction/src/domain/repository/utxo_repository.dart';
 import 'package:transaction/src/domain/service/coin_selector.dart';
 import 'package:transaction/src/domain/service/fee_estimator.dart';
 import 'package:transaction/src/domain/service/transaction_signer.dart';
 import 'package:wallet/wallet.dart';
 
-/// Dependency injection factory for transaction and UTXO use cases.
+/// Dependency injection factory for the transaction bounded context.
 ///
-/// Exposes only use cases — repositories are internal implementation details.
+/// Exposes repositories and gateways for direct use by BLoCs.
+/// Use cases that contain no logic beyond delegation are not wrapped here.
 final class TransactionAssembly {
-  final GetTransactionsUseCase getTransactions;
-  final GetTransactionDetailUseCase getTransactionDetail;
-  final GetUtxosUseCase getUtxos;
-  final ScanUtxosUseCase scanUtxos;
-  final BroadcastTransactionUseCase broadcastTransaction;
+  final TransactionRepository transactionRepository;
+  final UtxoRepository utxoRepository;
+  final UtxoScanGateway utxoScanGateway;
+  final BroadcastGateway broadcastGateway;
+  final BlockGenerationGateway blockGenerationGateway;
   final PrepareNodeSendUseCase prepareNodeSend;
   final PrepareHdSendUseCase prepareHdSend;
   final SendNodeTransactionUseCase sendNodeTransaction;
   final SendHdTransactionUseCase sendHdTransaction;
-  final MineBlockUseCase mineBlock;
 
   factory TransactionAssembly({
     required TransactionHistoryGateway transactionRemoteDataSource,
@@ -56,13 +52,11 @@ final class TransactionAssembly {
     );
 
     return TransactionAssembly._(
-      getTransactions: GetTransactionsUseCase(repository: txRepo),
-      getTransactionDetail: GetTransactionDetailUseCase(repository: txRepo),
-      getUtxos: GetUtxosUseCase(repository: utxoRepo),
-      scanUtxos: ScanUtxosUseCase(dataSource: utxoScanDataSource),
-      broadcastTransaction: BroadcastTransactionUseCase(
-        dataSource: broadcastDataSource,
-      ),
+      transactionRepository: txRepo,
+      utxoRepository: utxoRepo,
+      utxoScanGateway: utxoScanDataSource,
+      broadcastGateway: broadcastDataSource,
+      blockGenerationGateway: blockGenerationDataSource,
       prepareNodeSend: PrepareNodeSendUseCase(
         utxoRepository: utxoRepo,
         nodeDataSource: nodeTransactionDataSource,
@@ -83,20 +77,18 @@ final class TransactionAssembly {
         signer: hdSigner,
         broadcastDataSource: broadcastDataSource,
       ),
-      mineBlock: MineBlockUseCase(dataSource: blockGenerationDataSource),
     );
   }
 
   const TransactionAssembly._({
-    required this.getTransactions,
-    required this.getTransactionDetail,
-    required this.getUtxos,
-    required this.scanUtxos,
-    required this.broadcastTransaction,
+    required this.transactionRepository,
+    required this.utxoRepository,
+    required this.utxoScanGateway,
+    required this.broadcastGateway,
+    required this.blockGenerationGateway,
     required this.prepareNodeSend,
     required this.prepareHdSend,
     required this.sendNodeTransaction,
     required this.sendHdTransaction,
-    required this.mineBlock,
   });
 }

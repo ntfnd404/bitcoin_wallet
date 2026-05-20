@@ -13,14 +13,14 @@ import 'package:wallet/wallet.dart';
 
 final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
     with ActionBlocMixin<TransactionState, TransactionAction> {
-  final GetTransactionsUseCase _getTransactions;
+  final TransactionRepository _repository;
   late final StreamSubscription<Object> _eventSub;
   Wallet? _currentWallet;
 
   TransactionBloc({
-    required GetTransactionsUseCase getTransactions,
+    required TransactionRepository repository,
     required AppEventBus eventBus,
-  }) : _getTransactions = getTransactions,
+  }) : _repository = repository,
        super(const TransactionState()) {
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
@@ -49,7 +49,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
     _currentWallet = event.wallet;
     emit(state.copyWith(status: FetchStatus.loading));
     try {
-      final transactions = await _getTransactions(event.wallet.name);
+      final transactions = await _repository.getTransactions(event.wallet.name);
       if (isClosed) return;
 
       emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
@@ -69,7 +69,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
     Emitter<TransactionState> emit,
   ) async {
     try {
-      final transactions = await _getTransactions(event.wallet.name);
+      final transactions = await _repository.getTransactions(event.wallet.name);
       if (isClosed) return;
 
       emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));

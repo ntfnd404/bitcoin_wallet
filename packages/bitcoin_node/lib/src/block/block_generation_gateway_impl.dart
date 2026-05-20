@@ -9,13 +9,17 @@ final class BlockGenerationGatewayImpl implements BlockGenerationGateway {
 
   @override
   Future<List<String>> generateToAddress(int count, String address) async {
-    final result = await _rpcClient.call(
-      'generatetoaddress',
-      [count, address],
-    );
+    try {
+      final result = await _rpcClient.call(
+        'generatetoaddress',
+        [count, address],
+      );
 
-    final list = result as List<Object?>;
+      final list = result as List<Object?>;
 
-    return list.cast<String>();
+      return list.cast<String>();
+    } catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
+    }
   }
 }

@@ -8,10 +8,10 @@ import 'package:transaction/transaction.dart';
 
 final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, TransactionDetailState>
     with ActionBlocMixin<TransactionDetailState, TransactionDetailAction> {
-  final GetTransactionDetailUseCase _getDetail;
+  final TransactionRepository _repository;
 
-  TransactionDetailBloc({required GetTransactionDetailUseCase getDetail})
-    : _getDetail = getDetail,
+  TransactionDetailBloc({required TransactionRepository repository})
+    : _repository = repository,
       super(const TransactionDetailState()) {
     on<TransactionDetailRequested>(_onRequested);
   }
@@ -22,7 +22,7 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
   ) async {
     emit(state.copyWith(status: FetchStatus.loading));
     try {
-      final detail = await _getDetail(event.txid, event.walletName);
+      final detail = await _repository.getTransactionDetail(event.txid, event.walletName);
       if (isClosed) return;
 
       emit(state.copyWith(status: FetchStatus.loaded, detail: detail));

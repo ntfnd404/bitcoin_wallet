@@ -41,7 +41,7 @@ class _RegtestMiningScopeState extends State<RegtestMiningScope> {
     final addressRepository = deps.wallet.addressRepository;
 
     _blocFactory = (walletId) => RegtestMiningBloc(
-      mineBlock: tx.mineBlock,
+      blockGenerationGateway: tx.blockGenerationGateway,
       eventBus: deps.eventBus,
       walletId: walletId,
       addressResolver: (wallet) => switch (wallet) {

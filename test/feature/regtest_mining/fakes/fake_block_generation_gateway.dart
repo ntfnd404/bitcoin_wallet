@@ -1,7 +1,6 @@
 import 'package:transaction/transaction.dart';
 
-/// Fake [BlockGenerationGateway] for constructing a real [MineBlockUseCase]
-/// in RegtestMiningBloc tests.
+/// Fake [BlockGenerationGateway] for [RegtestMiningBloc] tests.
 final class FakeBlockGenerationGateway implements BlockGenerationGateway {
   String? capturedAddress;
   int? capturedCount;

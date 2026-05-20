@@ -12,14 +12,14 @@ import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<UtxoState, UtxoAction> {
-  final GetUtxosUseCase _getUtxos;
+  final UtxoRepository _utxoRepository;
   late final StreamSubscription<Object> _eventSub;
   Wallet? _currentWallet;
 
   UtxoBloc({
-    required GetUtxosUseCase getUtxos,
+    required UtxoRepository utxoRepository,
     required AppEventBus eventBus,
-  }) : _getUtxos = getUtxos,
+  }) : _utxoRepository = utxoRepository,
        super(const UtxoState()) {
     on<UtxoListRequested>(_onUtxoListRequested);
     on<UtxoRefreshRequested>(_onUtxoRefreshRequested);
@@ -48,7 +48,7 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
     _currentWallet = event.wallet;
     emit(state.copyWith(status: FetchStatus.loading));
     try {
-      final utxos = await _getUtxos(event.wallet.name);
+      final utxos = await _utxoRepository.getUtxos(event.wallet.name);
       if (isClosed) return;
 
       emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));
@@ -68,7 +68,7 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
     Emitter<UtxoState> emit,
   ) async {
     try {
-      final utxos = await _getUtxos(event.wallet.name);
+      final utxos = await _utxoRepository.getUtxos(event.wallet.name);
       if (isClosed) return;
 
       emit(state.copyWith(utxos: utxos, status: FetchStatus.loaded));

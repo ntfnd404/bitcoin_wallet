@@ -12,21 +12,21 @@ import 'package:wallet/wallet.dart';
 
 final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBlocMixin<SigningState, SigningAction> {
   final AddressRepository _addressRepository;
-  final ScanUtxosUseCase _scanUtxos;
+  final UtxoScanGateway _utxoScanGateway;
   final SignTransactionUseCase _signTransaction;
-  final BroadcastTransactionUseCase _broadcastTransaction;
+  final BroadcastGateway _broadcastGateway;
   final AppEventBus _eventBus;
 
   SigningBloc({
     required AddressRepository addressRepository,
-    required ScanUtxosUseCase scanUtxos,
+    required UtxoScanGateway utxoScanGateway,
     required SignTransactionUseCase signTransaction,
-    required BroadcastTransactionUseCase broadcastTransaction,
+    required BroadcastGateway broadcastGateway,
     required AppEventBus eventBus,
   }) : _addressRepository = addressRepository,
-       _scanUtxos = scanUtxos,
+       _utxoScanGateway = utxoScanGateway,
        _signTransaction = signTransaction,
-       _broadcastTransaction = broadcastTransaction,
+       _broadcastGateway = broadcastGateway,
        _eventBus = eventBus,
        super(const SigningState()) {
     on<UtxoScanRequested>(_onScanRequested);
@@ -51,7 +51,7 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
       }
 
       final indexMap = {for (final a in segwit) a.value: a.index};
-      final utxos = await _scanUtxos(segwit.map((a) => a.value).toList());
+      final utxos = await _utxoScanGateway.scanForAddresses(segwit.map((a) => a.value).toList());
       if (isClosed) return;
 
       emit(SigningState(status: SigningStatus.scanned, utxos: utxos, addressIndexMap: indexMap));
@@ -111,10 +111,10 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
       );
       if (isClosed) return;
 
-      final txid = await _broadcastTransaction.broadcast(rawHex);
+      final txid = await _broadcastGateway.broadcast(rawHex);
       if (isClosed) return;
 
-      final broadcastedTx = await _broadcastTransaction.getTransaction(txid);
+      final broadcastedTx = await _broadcastGateway.getTransaction(txid);
       if (isClosed) return;
 
       emit(
