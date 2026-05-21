@@ -1,3 +1,4 @@
+import 'package:bitcoin_wallet/feature/address/view/widget/address_qr_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wallet/wallet.dart';
@@ -38,7 +39,7 @@ class AddressScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            const Text('[QR]', style: TextStyle(fontSize: 48)),
+            AddressQrCode(address: address.value),
             const SizedBox(height: 24),
             Text(address.derivationPath ?? 'Managed by Bitcoin Core'),
           ],

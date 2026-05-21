@@ -122,6 +122,32 @@ if (value == null) return;
 
 ---
 
+## Constructor field initialisation (Dart 3 / Flutter 3.44+)
+
+**Always** use initialising formals (`this._field`) instead of initialiser lists
+for simple field assignment. Enforced by `prefer_initializing_formals` via `dart fix`.
+
+```dart
+// ❌ Old — redundant initialiser list
+final class FooService {
+  final BarRepository _repository;
+  const FooService({required BarRepository repository}) : _repository = repository;
+}
+
+// ✅ New — initialising formal
+final class FooService {
+  final BarRepository _repository;
+  const FooService({required this._repository});
+}
+```
+
+This applies to public fields too (`this.field`), and to positional parameters.
+The only exception is when the parameter name must differ from the field name
+(e.g. a factory that renames for clarity), or when the initialiser list performs
+additional logic (`assert`, `super(...)`, derived assignments).
+
+---
+
 ## BLoC Classes
 
 1. Final repository/service fields

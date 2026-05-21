@@ -503,6 +503,7 @@ These are hard rules. Never violate them.
 - **Never** import app code from a workspace package
 - **Never** create top-level `components/` for business modules
 - **Never** create god-object BLoCs handling multiple flows — one BLoC per flow
+- **Never** use an initialiser list for simple field assignment when an initialising formal (`this._field`) suffices — use `dart fix --apply` to enforce
 
 ---
 
