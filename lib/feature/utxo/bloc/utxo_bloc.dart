@@ -17,10 +17,9 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
   Wallet? _currentWallet;
 
   UtxoBloc({
-    required UtxoRepository utxoRepository,
+    required this._utxoRepository,
     required AppEventBus eventBus,
-  }) : _utxoRepository = utxoRepository,
-       super(const UtxoState()) {
+  }) : super(const UtxoState()) {
     on<UtxoListRequested>(_onUtxoListRequested);
     on<UtxoRefreshRequested>(_onUtxoRefreshRequested);
 

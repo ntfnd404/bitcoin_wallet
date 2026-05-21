@@ -10,10 +10,9 @@ final class NodeAddressGenerationStrategy implements AddressGenerationStrategy {
   final AddressRepository _addressRepository;
 
   const NodeAddressGenerationStrategy({
-    required NodeAddressGateway remoteDataSource,
-    required AddressRepository addressRepository,
-  }) : _remoteDataSource = remoteDataSource,
-       _addressRepository = addressRepository;
+    required this._remoteDataSource,
+    required this._addressRepository,
+  });
 
   @override
   bool supports(Wallet wallet) => wallet is NodeWallet;

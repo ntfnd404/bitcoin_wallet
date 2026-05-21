@@ -69,6 +69,32 @@ Presentation (lib/feature/) → Application/Domain (packages/*) ← Infrastructu
 - **Design system** — `ui_kit`: Flutter-only, no domain knowledge.
 - **Shared kernel** — `shared_kernel`: tiny shared primitives (BitcoinNetwork, Failure, Result).
 
+### Package types
+
+| Type | Packages | Internal structure |
+|------|----------|--------------------|
+| **Business** | `transaction`, `keys`, `wallet` | `domain/` + `application/` + `data/` (Clean Architecture layers) |
+| **Infrastructure** | `bitcoin_node` | Organised by domain concept (`address/`, `transaction/`, `utxo/`, …) — no layer split because every file is a gateway adapter |
+| **Adapter** | `rpc_client`, `storage` | Flat or minimal; no business domain |
+| **UI** | `ui_kit` | By UI concern (`theme/`, `tokens/`, `typography/`) |
+| **Shared** | `shared_kernel` | Flat; pure primitives shared across all BCs |
+
+### `data/` subfolder rules (business packages only)
+
+`data/` subfolders **mirror `domain/` subfolders** — the subfolder name matches the type of interface being implemented:
+
+| `domain/` subfolder | `data/` subfolder | Contains |
+|---------------------|-------------------|----------|
+| `domain/repository/` | `data/repository/` | `*RepositoryImpl` + any mappers it uses |
+| `domain/service/` | `data/service/` | `*ServiceImpl` + any data files it uses |
+| `domain/data_source/` | `data/data_source/` | `*DataSourceImpl` + helpers |
+
+**Rules:**
+- Interface always in `domain/<subfolder>/`, implementation in `data/<subfolder>/`.
+- A mapper (`*Mapper`) lives alongside the `*RepositoryImpl` or `*DataSourceImpl` that uses it — never in a separate `mapper/` folder.
+- `crypto/` inside `keys/data/` is a private implementation detail of the crypto services; it has no corresponding `domain/crypto/` because it is never exposed as a contract.
+- Infrastructure packages (`bitcoin_node`) do NOT follow this rule — they organise by domain concept, not by layer.
+
 See [architecture.md — Project Structure](./architecture.md#project-structure) for the full folder tree.
 
 ### Package dependency graph
@@ -297,7 +323,7 @@ state.pendingHdWallet                // visible, testable, survives re-subscript
 
 - `abstract interface class` for interfaces; `Impl` suffix for implementations.
 - Doc comments on all interface methods.
-- **Repository** = storage contract (CRUD). No business logic. Interface in module `domain/`, implementation in module `data/`.
+- **Repository** = storage contract (CRUD). No business logic. Interface in module `domain/repository/`, implementation in module `data/repository/`.
 - **DataSource** = contract for storage or external system, **owned by the consumer module**. Interface in consumer's `domain/data_sources/`, implementation in `data/` or adapter package.
   - `WalletLocalDataSource` — in `wallet/domain/data_sources/`
   - `AddressLocalDataSource` — in `address/domain/data_sources/`

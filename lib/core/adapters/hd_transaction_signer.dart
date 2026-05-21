@@ -6,12 +6,13 @@ import 'package:transaction/transaction.dart' as tx show SigningInput, Transacti
 ///
 /// Extracted as a typedef so tests can inject a plain function without
 /// subclassing the `final` [SignTransactionUseCase].
-typedef SignTransaction = Future<String> Function({
-  required String walletId,
-  required List<SigningInputParam> inputs,
-  required List<SigningOutput> outputs,
-  required String bech32Hrp,
-});
+typedef SignTransaction =
+    Future<String> Function({
+      required String walletId,
+      required List<SigningInputParam> inputs,
+      required List<SigningOutput> outputs,
+      required String bech32Hrp,
+    });
 
 /// Composition adapter: bridges [tx.TransactionSigner] (owned by `transaction`)
 /// to [SignTransactionUseCase] (owned by `keys`).
@@ -27,9 +28,7 @@ typedef SignTransaction = Future<String> Function({
 final class HdTransactionSigner implements tx.TransactionSigner {
   final SignTransaction _signTransaction;
 
-  const HdTransactionSigner({
-    required SignTransaction signTransaction,
-  }) : _signTransaction = signTransaction;
+  const HdTransactionSigner({required this._signTransaction});
 
   @override
   Future<String> sign({

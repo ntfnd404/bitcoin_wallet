@@ -14,17 +14,12 @@ final class WalletBloc extends Bloc<WalletEvent, WalletState> with ActionBlocMix
   final RestoreHdWalletUseCase _restoreHdWallet;
 
   WalletBloc({
-    required WalletRepository walletRepository,
-    required GetSeedUseCase getSeed,
-    required CreateNodeWalletUseCase createNodeWallet,
-    required CreateHdWalletUseCase createHdWallet,
-    required RestoreHdWalletUseCase restoreHdWallet,
-  }) : _walletRepository = walletRepository,
-       _getSeed = getSeed,
-       _createNodeWallet = createNodeWallet,
-       _createHdWallet = createHdWallet,
-       _restoreHdWallet = restoreHdWallet,
-       super(const WalletState()) {
+    required this._walletRepository,
+    required this._getSeed,
+    required this._createNodeWallet,
+    required this._createHdWallet,
+    required this._restoreHdWallet,
+  }) : super(const WalletState()) {
     on<WalletListRequested>(_onWalletListRequested);
     on<NodeWalletCreateRequested>(_onNodeWalletCreateRequested);
     on<HdWalletCreateRequested>(_onHdWalletCreateRequested);

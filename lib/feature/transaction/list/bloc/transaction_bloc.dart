@@ -18,10 +18,9 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
   Wallet? _currentWallet;
 
   TransactionBloc({
-    required TransactionRepository repository,
+    required this._repository,
     required AppEventBus eventBus,
-  }) : _repository = repository,
-       super(const TransactionState()) {
+  }) : super(const TransactionState()) {
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
 

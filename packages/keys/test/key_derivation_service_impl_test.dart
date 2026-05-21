@@ -1,6 +1,6 @@
 import 'package:keys/src/data/crypto/bip32.dart';
 import 'package:keys/src/data/crypto/hash_utils.dart';
-import 'package:keys/src/data/key_derivation_service_impl.dart';
+import 'package:keys/src/data/service/key_derivation_service_impl.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:test/test.dart';

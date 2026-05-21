@@ -10,12 +10,10 @@ final class NodeSendWorkflow implements SendWorkflow {
   final String _walletName;
 
   const NodeSendWorkflow({
-    required PrepareNodeSendUseCase prepare,
-    required SendNodeTransactionUseCase send,
-    required String walletName,
-  }) : _prepare = prepare,
-       _send = send,
-       _walletName = walletName;
+    required this._prepare,
+    required this._send,
+    required this._walletName,
+  });
 
   @override
   Future<SendPreparation> prepare({

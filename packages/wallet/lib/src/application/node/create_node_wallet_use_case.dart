@@ -10,8 +10,7 @@ import 'package:wallet/src/domain/repository/node_wallet_repository.dart';
 final class CreateNodeWalletUseCase {
   final NodeWalletRepository _nodeWalletRepository;
 
-  const CreateNodeWalletUseCase({required NodeWalletRepository nodeWalletRepository})
-    : _nodeWalletRepository = nodeWalletRepository;
+  const CreateNodeWalletUseCase({required this._nodeWalletRepository});
 
   Future<NodeWallet> call(String name) => _nodeWalletRepository.createNodeWallet(name);
 }

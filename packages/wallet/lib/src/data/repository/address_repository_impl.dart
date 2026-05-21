@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:wallet/src/data/address_mapper.dart';
+import 'package:wallet/src/data/repository/address_mapper.dart';
 import 'package:wallet/src/domain/entity/address.dart';
 import 'package:wallet/src/domain/exception/address_exception.dart';
 import 'package:wallet/src/domain/repository/address_repository.dart';
@@ -13,10 +13,9 @@ final class AddressRepositoryImpl implements AddressRepository {
   final AddressMapper _mapper;
 
   const AddressRepositoryImpl({
-    required SecureStorage storage,
-    required AddressMapper mapper,
-  }) : _mapper = mapper,
-       _storage = storage;
+    required this._storage,
+    required this._mapper,
+  });
 
   @override
   Future<List<Address>> getAddresses(String walletId) async {

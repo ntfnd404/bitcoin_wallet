@@ -2,8 +2,9 @@ import 'package:transaction/src/application/hd/prepare_hd_send_use_case.dart';
 import 'package:transaction/src/application/hd/send_hd_transaction_use_case.dart';
 import 'package:transaction/src/application/node/prepare_node_send_use_case.dart';
 import 'package:transaction/src/application/node/send_node_transaction_use_case.dart';
-import 'package:transaction/src/data/transaction_repository_impl.dart';
-import 'package:transaction/src/data/utxo_repository_impl.dart';
+import 'package:transaction/src/application/node/send_op_return_use_case.dart';
+import 'package:transaction/src/data/repository/transaction_repository_impl.dart';
+import 'package:transaction/src/data/repository/utxo_repository_impl.dart';
 import 'package:transaction/src/domain/gateway/block_generation_gateway.dart';
 import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
 import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
@@ -31,6 +32,7 @@ final class TransactionAssembly {
   final PrepareHdSendUseCase prepareHdSend;
   final SendNodeTransactionUseCase sendNodeTransaction;
   final SendHdTransactionUseCase sendHdTransaction;
+  final SendOpReturnUseCase sendOpReturn;
 
   factory TransactionAssembly({
     required TransactionHistoryGateway transactionRemoteDataSource,
@@ -77,6 +79,12 @@ final class TransactionAssembly {
         signer: hdSigner,
         broadcastDataSource: broadcastDataSource,
       ),
+      sendOpReturn: SendOpReturnUseCase(
+        utxoRepository: utxoRepo,
+        nodeDataSource: nodeTransactionDataSource,
+        broadcastDataSource: broadcastDataSource,
+        feeEstimator: feeEstimator,
+      ),
     );
   }
 
@@ -90,5 +98,6 @@ final class TransactionAssembly {
     required this.prepareHdSend,
     required this.sendNodeTransaction,
     required this.sendHdTransaction,
+    required this.sendOpReturn,
   });
 }

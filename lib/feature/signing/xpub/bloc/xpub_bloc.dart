@@ -9,7 +9,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 final class XpubBloc extends Bloc<XpubEvent, XpubState> {
   final GetXpubUseCase _getXpub;
 
-  XpubBloc({required GetXpubUseCase getXpub}) : _getXpub = getXpub, super(const XpubState()) {
+  XpubBloc({required this._getXpub}) : super(const XpubState()) {
     on<XpubLoadRequested>(_onLoadRequested);
   }
 

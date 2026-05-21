@@ -27,16 +27,12 @@ final class PrepareHdSendUseCase {
   final UtxoEligibilityFilter _eligibilityFilter;
 
   const PrepareHdSendUseCase({
-    required AddressRepository addressRepository,
-    required UtxoScanGateway utxoScanDataSource,
-    required List<CoinSelector> selectors,
-    required FeeEstimator feeEstimator,
-    UtxoEligibilityFilter eligibilityFilter = const DefaultUtxoEligibilityFilter(),
-  }) : _addressRepository = addressRepository,
-       _utxoScanDataSource = utxoScanDataSource,
-       _selectors = selectors,
-       _feeEstimator = feeEstimator,
-       _eligibilityFilter = eligibilityFilter;
+    required this._addressRepository,
+    required this._utxoScanDataSource,
+    required this._selectors,
+    required this._feeEstimator,
+    this._eligibilityFilter = const DefaultUtxoEligibilityFilter(),
+  });
 
   Future<HdSendPreparation> call({
     required String walletId,

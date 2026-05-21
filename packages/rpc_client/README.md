@@ -1,10 +1,25 @@
 # rpc_client
 
-## Purpose
+## Package type: Adapter (transport)
 
-Low-level JSON-RPC transport for Bitcoin Core. The package sends HTTP requests
-to a Bitcoin Core node and deserialises the JSON-RPC envelope. It has no
-knowledge of domain entities; it only wraps the wire protocol.
+Low-level JSON-RPC transport for Bitcoin Core. Wraps HTTP + JSON-RPC envelope
+parsing. No business knowledge — only wire protocol.
+
+## Internal structure
+
+**Flat + exceptions subfolder.** Single-concern package; no layer split needed.
+
+```
+lib/src/
+  bitcoin_rpc_client.dart   ← HTTP JSON-RPC client
+  exceptions/
+    rpc_exception.dart      ← thrown on node error responses
+```
+
+### Why flat
+
+This package has exactly one responsibility (HTTP transport). A layered
+structure (`domain/`, `data/`) would be misleading — there is no domain here.
 
 ## Public API
 
@@ -20,21 +35,3 @@ Barrel: `package:rpc_client/rpc_client.dart`
 Workspace packages: none (leaf).
 Third-party: `http: 1.6.0`.
 SDK: Dart SDK only.
-
-## When to add here
-
-Add a symbol only when it is a direct concern of the JSON-RPC transport layer:
-raw request/response types, the HTTP client wrapper, exception types for
-transport and protocol errors. Never add domain entities, repositories, or
-business logic.
-
-## Layer layout
-
-```
-lib/
-  rpc_client.dart             # barrel
-  src/
-    bitcoin_rpc_client.dart
-    exceptions/
-      rpc_exception.dart
-```

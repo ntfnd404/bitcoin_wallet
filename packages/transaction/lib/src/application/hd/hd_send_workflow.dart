@@ -11,14 +11,11 @@ final class HdSendWorkflow implements SendWorkflow {
   final String _bech32Hrp;
 
   const HdSendWorkflow({
-    required PrepareHdSendUseCase prepare,
-    required SendHdTransactionUseCase send,
-    required String walletId,
-    required String bech32Hrp,
-  }) : _prepare = prepare,
-       _send = send,
-       _walletId = walletId,
-       _bech32Hrp = bech32Hrp;
+    required this._prepare,
+    required this._send,
+    required this._walletId,
+    required this._bech32Hrp,
+  });
 
   @override
   Future<SendPreparation> prepare({

@@ -12,9 +12,8 @@ final class TransactionDetailBloc extends Bloc<TransactionDetailEvent, Transacti
     with ActionBlocMixin<TransactionDetailState, TransactionDetailAction> {
   final TransactionRepository _repository;
 
-  TransactionDetailBloc({required TransactionRepository repository})
-    : _repository = repository,
-      super(const TransactionDetailState()) {
+  TransactionDetailBloc({required this._repository})
+    : super(const TransactionDetailState()) {
     on<TransactionDetailRequested>(_onRequested);
   }
 

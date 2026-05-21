@@ -1,4 +1,4 @@
-import 'package:keys/src/data/seed_repository_impl.dart';
+import 'package:keys/src/data/repository/seed_repository_impl.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
 import 'package:test/test.dart';
 

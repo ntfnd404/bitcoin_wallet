@@ -12,7 +12,7 @@ import 'package:wallet/wallet.dart';
 final class GenerateAddressUseCase {
   final List<AddressGenerationStrategy> _strategies;
 
-  const GenerateAddressUseCase({required List<AddressGenerationStrategy> strategies}) : _strategies = strategies;
+  const GenerateAddressUseCase({required this._strategies});
 
   // Strategies and AddressRepositoryImpl already throw AddressException
   // subtypes — nothing to translate here. Programmer errors (TypeError,

@@ -9,7 +9,7 @@ import 'package:keys/src/domain/repository/seed_repository.dart';
 final class GetSeedUseCase {
   final SeedRepository _repository;
 
-  const GetSeedUseCase({required SeedRepository repository}) : _repository = repository;
+  const GetSeedUseCase({required this._repository});
 
   Future<Mnemonic> call(String walletId) async {
     final mnemonic = await _repository.getSeed(walletId);

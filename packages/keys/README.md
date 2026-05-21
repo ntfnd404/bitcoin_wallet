@@ -1,93 +1,67 @@
 # keys
 
-## Purpose
+## Package type: Business
 
-BIP-standard key management module. Responsible for mnemonic generation and
-validation (BIP-39), hierarchical-deterministic key derivation (BIP-32/BIP-44),
-and PSBT transaction signing. Does not orchestrate HD wallet state; that
-responsibility belongs to the `wallet` package.
+Owns everything related to BIP-39 mnemonic management, BIP-32/84 HD key
+derivation, and transaction signing. The app layer never touches raw private
+key bytes — all cryptographic operations are encapsulated here.
 
-Assembly entry point: `package:keys/keys_assembly.dart` — `KeysAssembly`.
+## Why a separate package
+
+Signing boundary rule SB-7: `transaction` must not depend on `keys`. Keeping
+keys in its own package enforces this at the pub workspace level.
+
+## Internal structure
+
+**Clean Architecture layers** — `domain/`, `application/`, `data/`.
+
+```
+lib/src/
+  domain/
+    data_source/          ← (reserved for future storage contracts)
+    entity/               ← Mnemonic, AccountXpub, DerivedAddress, SigningInput/Output
+    exception/            ← KeysException subtypes
+    repository/           ← SeedRepository interface
+    service/              ← Bip39Service, KeyDerivationService, TransactionSigningService
+  application/            ← GetSeedUseCase, GetXpubUseCase, SignTransactionUseCase
+  data/
+    repository/           ← SeedRepositoryImpl
+    service/              ← Bip39ServiceImpl, KeyDerivationServiceImpl,
+    │                        TransactionSigningServiceImpl
+    │                        bip39_wordlist.dart (word data used only by Bip39ServiceImpl)
+    crypto/               ← private crypto primitives (BIP-32, ECDSA, sighash, tx builder)
+```
+
+### Why `data/` is split this way
+
+`data/` subfolders mirror `domain/` subfolders — the folder name matches the
+type of interface being implemented. `crypto/` has no domain interface; it is
+a private implementation detail of the service impls.
 
 ## Public API
 
 Barrel: `package:keys/keys.dart`
-
-### Use cases
-
-| Symbol | Kind | Description |
-|---|---|---|
-| `GetXpubUseCase` | class | Derives and returns the account-level xpub for a given wallet |
-| `SignTransactionUseCase` | class | Signs a PSBT using the stored seed |
-
-### Domain entities
+Assembly: `package:keys/keys_assembly.dart` — `KeysAssembly`
 
 | Symbol | Kind | Description |
 |---|---|---|
-| `AccountXpub` | class | Account-level extended public key value object |
-| `DerivedAddress` | class | Address derived from a specific derivation path |
-| `Mnemonic` | class | BIP-39 mnemonic phrase value object |
-| `SigningOutput` | class | Signed transaction result |
-
-### Domain repository
-
-| Symbol | Kind | Description |
-|---|---|---|
-| `SeedRepository` | abstract class | Persists and retrieves the encrypted seed |
-
-### Domain services
-
-| Symbol | Kind | Description |
-|---|---|---|
+| `GetSeedUseCase` | class | Retrieves the stored mnemonic |
+| `GetXpubUseCase` | class | Derives account xpub |
+| `SignTransactionUseCase` | class | Signs a P2WPKH transaction |
 | `Bip39Service` | abstract class | Mnemonic generation and validation |
-| `KeyDerivationService` | abstract class | BIP-32/BIP-44 key derivation |
-| `TransactionSigningService` | abstract class | Low-level PSBT signing |
+| `KeyDerivationService` | abstract class | BIP-32/84 key derivation |
+| `SeedRepository` | abstract class | Mnemonic persistence contract |
+| `Mnemonic` | class | BIP-39 mnemonic phrase |
+| `AccountXpub` | class | Account-level extended public key |
+| `KeysException` | sealed class | Base for all keys exceptions |
+| `KeysAssembly` | final class | DI factory |
 
-### Assembly
+## Signing boundary
 
-| Symbol | Kind | Description |
-|---|---|---|
-| `KeysAssembly` | final class | Wires all implementations; exposes `getXpub` and `signTransaction` |
+Raw private-key bytes never cross the package boundary. See `conventions.md`
+SB-1 through SB-7. Exception subtypes carry zero fields.
 
 ## Dependencies
 
-Workspace packages: `shared_kernel`.
-Third-party: `crypto: 3.0.7`, `pointycastle: 4.0.0`.
-SDK: Dart SDK only.
-
-## When to add here
-
-Add a symbol only when it is a BIP-standard cryptographic primitive, a key
-derivation concern, or a signing concern. Never add HD wallet orchestration
-(wallet creation, wallet persistence, address generation strategies) — those
-belong in `wallet`.
-
-## Layer layout
-
-```
-lib/
-  keys.dart                   # barrel
-  keys_assembly.dart          # DI factory
-  src/
-    application/
-      get_xpub_use_case.dart
-      sign_transaction_use_case.dart
-    data/
-      bip39_service_impl.dart
-      key_derivation_service_impl.dart
-      seed_repository_impl.dart
-      transaction_signing_service_impl.dart
-    domain/
-      entity/
-        account_xpub.dart
-        derived_address.dart
-        mnemonic.dart
-        signing_input.dart
-        signing_output.dart
-      repository/
-        seed_repository.dart
-      service/
-        bip39_service.dart
-        key_derivation_service.dart
-        transaction_signing_service.dart
-```
+Workspace packages: `shared_kernel`, `storage`.
+Third-party: `crypto`, `pointycastle`.

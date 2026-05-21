@@ -4,6 +4,7 @@ import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/screen/signing_d
 import 'package:bitcoin_wallet/feature/signing/xpub/view/screen/xpub_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/screen/transaction_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/view/screen/transaction_list_screen.dart';
+import 'package:bitcoin_wallet/feature/transaction/op_return/view/screen/op_return_screen.dart';
 import 'package:bitcoin_wallet/feature/utxo/view/screen/utxo_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/utxo/view/screen/utxo_list_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/detail/wallet_detail_screen.dart';
@@ -33,6 +34,7 @@ final class AppRouter {
   static const String xpub = '/wallet/xpub';
   static const String signingDemo = '/wallet/signing';
   static const String send = '/wallet/send';
+  static const String opReturn = '/wallet/op-return';
 
   const AppRouter._();
 
@@ -149,6 +151,15 @@ final class AppRouter {
       builder: (_) => SendScreen(wallet: wallet),
     ),
   );
+
+  static Future<void> toOpReturn(BuildContext context, NodeWallet wallet) =>
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          settings: const RouteSettings(name: opReturn),
+          builder: (_) => OpReturnScreen(wallet: wallet),
+        ),
+      );
 
   // ---------------------------------------------------------------------------
   // Private helpers

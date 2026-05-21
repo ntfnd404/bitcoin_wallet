@@ -3,7 +3,7 @@ description: Bitcoin Core RPC adapter — implements remote data source interfac
 publish_to: none
 
 environment:
-  sdk: ^3.11.3
+  sdk: ^3.12.0
 
 resolution: workspace
 

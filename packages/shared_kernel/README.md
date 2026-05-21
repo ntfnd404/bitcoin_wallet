@@ -1,10 +1,26 @@
 # shared_kernel
 
-## Purpose
+## Package type: Shared kernel
 
-Leaf package that holds the smallest possible set of primitives shared by every
-other workspace package. It carries zero business logic and has no workspace
-dependencies of its own.
+The smallest possible set of primitives shared by every other workspace package.
+Zero business logic, zero workspace dependencies.
+
+## Internal structure
+
+**Flat.** All symbols are at the same abstraction level — no subfolders needed.
+
+```
+lib/src/
+  address_type.dart     ← AddressType enum
+  bitcoin_network.dart  ← BitcoinNetwork enum
+  satoshi.dart          ← Satoshi value object
+  secure_storage.dart   ← SecureStorage abstract interface
+```
+
+### Why flat
+
+Every file is an independent primitive with no internal hierarchy. Subfolders
+would only add navigation depth without conveying structure.
 
 ## Public API
 
@@ -12,37 +28,18 @@ Barrel: `package:shared_kernel/shared_kernel.dart`
 
 | Symbol | Kind | Description |
 |---|---|---|
-| `AddressType` | enum | P2PKH / P2WPKH / P2TR address type discriminant |
-| `BitcoinNetwork` | enum | `mainnet` / `testnet` / `regtest` network tag |
-| `Satoshi` | typedef | `int` alias used for all satoshi amounts |
-| `SecureStorage` | abstract class | Key-value storage contract used by `storage` and `keys` |
+| `AddressType` | enum | `legacy` / `wrappedSegwit` / `nativeSegwit` / `taproot` |
+| `BitcoinNetwork` | enum | `mainnet` / `testnet` / `regtest` |
+| `Satoshi` | final class | Satoshi value object with `btcAmount`, `btcDisplay`, `fromBtc` |
+| `SecureStorage` | abstract class | Key-value storage contract |
+
+## Rule for adding here
+
+A symbol belongs here only when: (1) needed by ≥ 2 packages, (2) carries zero
+business logic, (3) is a primitive type, enum, or abstract contract.
 
 ## Dependencies
 
 Workspace packages: none (leaf).
 Third-party: none.
 SDK: Dart SDK only.
-
-## When to add here
-
-Add a symbol only when all of the following are true:
-
-- It is needed by at least two other packages.
-- It carries zero business logic (no entities, no repositories, no use cases, no
-  module-specific types).
-- It is a primitive type alias, enum, or abstract contract.
-
-Never add entities, repositories, use cases, or types that belong to a single
-domain module.
-
-## Layer layout
-
-```
-lib/
-  shared_kernel.dart          # barrel
-  src/
-    address_type.dart
-    bitcoin_network.dart
-    satoshi.dart
-    secure_storage.dart
-```

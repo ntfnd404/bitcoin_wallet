@@ -17,11 +17,9 @@ final class CreateHdWalletUseCase {
 
   const CreateHdWalletUseCase({
     required Bip39Service bip39Service,
-    required SeedRepository seedRepository,
-    required HdWalletRepository hdWalletRepository,
-  }) : _bip39 = bip39Service,
-       _seedRepository = seedRepository,
-       _hdWalletRepository = hdWalletRepository;
+    required this._seedRepository,
+    required this._hdWalletRepository,
+  }) : _bip39 = bip39Service;
 
   Future<(HdWallet, Mnemonic)> call(String name, {int wordCount = 12}) async {
     try {

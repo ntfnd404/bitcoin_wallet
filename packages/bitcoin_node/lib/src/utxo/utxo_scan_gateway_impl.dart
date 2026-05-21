@@ -10,7 +10,7 @@ import 'package:transaction/transaction.dart';
 final class UtxoScanGatewayImpl implements UtxoScanGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoScanGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const UtxoScanGatewayImpl({required this._rpcClient});
 
   @override
   Future<List<ScannedUtxo>> scanForAddresses(List<String> addresses) async {
@@ -43,7 +43,7 @@ final class UtxoScanGatewayImpl implements UtxoScanGateway {
     return ScannedUtxo(
       txid: raw['txid'] as String,
       vout: (raw['vout'] as num).toInt(),
-      amountSat: Satoshi((btcAmount * 100000000).round()),
+      amountSat: Satoshi.fromBtc(btcAmount),
       scriptPubKeyHex: raw['scriptPubKey'] as String? ?? '',
       height: (raw['height'] as num?)?.toInt() ?? 0,
       address: _parseAddress(raw['desc'] as String?),

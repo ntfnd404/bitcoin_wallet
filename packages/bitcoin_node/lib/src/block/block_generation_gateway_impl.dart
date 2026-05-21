@@ -5,7 +5,7 @@ import 'package:transaction/transaction.dart';
 final class BlockGenerationGatewayImpl implements BlockGenerationGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const BlockGenerationGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const BlockGenerationGatewayImpl({required this._rpcClient});
 
   @override
   Future<List<String>> generateToAddress(int count, String address) async {

@@ -10,7 +10,7 @@ import 'package:transaction/transaction.dart';
 final class UtxoGatewayImpl implements UtxoGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const UtxoGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const UtxoGatewayImpl({required this._rpcClient});
 
   @override
   Future<List<Utxo>> getUtxos(String walletName) async {
@@ -79,5 +79,5 @@ final class UtxoGatewayImpl implements UtxoGateway {
   ///
   /// Uses rounding to avoid floating-point precision errors.
   /// e.g. 0.001 BTC → Satoshi(100000)
-  static Satoshi _btcToSat(num btc) => Satoshi((btc * 100000000).round());
+  static Satoshi _btcToSat(num btc) => Satoshi.fromBtc(btc);
 }
