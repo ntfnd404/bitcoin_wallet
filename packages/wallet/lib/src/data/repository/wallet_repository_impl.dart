@@ -1,5 +1,5 @@
 import 'package:uuid/uuid.dart';
-import 'package:wallet/src/data/wallet_local_data_source.dart';
+import 'package:wallet/src/domain/data_source/wallet_local_data_source.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
 import 'package:wallet/src/domain/exception/wallet_exception.dart';
 import 'package:wallet/src/domain/gateway/node_wallet_gateway.dart';
@@ -22,10 +22,9 @@ final class WalletRepositoryImpl implements NodeWalletRepository, HdWalletReposi
   final NodeWalletGateway _remoteDataSource;
 
   const WalletRepositoryImpl({
-    required WalletLocalDataSource localDataSource,
-    required NodeWalletGateway remoteDataSource,
-  }) : _localDataSource = localDataSource,
-       _remoteDataSource = remoteDataSource;
+    required this._localDataSource,
+    required this._remoteDataSource,
+  });
 
   @override
   Future<NodeWallet> createNodeWallet(String name) async {

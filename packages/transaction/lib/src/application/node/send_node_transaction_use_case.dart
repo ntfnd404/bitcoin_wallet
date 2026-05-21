@@ -3,6 +3,7 @@ import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
 import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
+import 'package:transaction/src/domain/value_object/tx_output.dart';
 
 /// Builds, signs (via Bitcoin Core), and broadcasts a Node-wallet transaction.
 ///
@@ -16,10 +17,9 @@ final class SendNodeTransactionUseCase {
   final BroadcastGateway _broadcastDataSource;
 
   const SendNodeTransactionUseCase({
-    required NodeTransactionGateway nodeDataSource,
-    required BroadcastGateway broadcastDataSource,
-  }) : _nodeDataSource = nodeDataSource,
-       _broadcastDataSource = broadcastDataSource;
+    required this._nodeDataSource,
+    required this._broadcastDataSource,
+  });
 
   /// Returns the txid of the broadcast transaction.
   Future<String> call({
@@ -36,13 +36,17 @@ final class SendNodeTransactionUseCase {
     try {
       final inputs = result.inputs.map((c) => (txid: c.txid, vout: c.vout)).toList();
 
-      final outputs = <String, double>{
-        recipientAddress: amountSat.value / 100000000,
-      };
-
-      if (result.changeSat.value > 0) {
-        outputs[preparation.changeAddress] = result.changeSat.value / 100000000;
-      }
+      final outputs = <TxOutput>[
+        AddressOutput(
+          address: recipientAddress,
+          amountBtc: amountSat.btcAmount,
+        ),
+        if (result.changeSat.value > 0)
+          AddressOutput(
+            address: preparation.changeAddress,
+            amountBtc: result.changeSat.btcAmount,
+          ),
+      ];
 
       final hexUnsigned = await _nodeDataSource.createRawTransaction(
         inputs: inputs,

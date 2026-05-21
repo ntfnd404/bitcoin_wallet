@@ -11,7 +11,7 @@ import 'package:transaction/transaction.dart';
 final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const TransactionHistoryGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const TransactionHistoryGatewayImpl({required this._rpcClient});
 
   @override
   Future<List<Transaction>> getTransactions(String walletName) async {
@@ -135,5 +135,5 @@ final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
   ///
   /// Uses rounding to avoid floating-point precision errors.
   /// e.g. 0.001 BTC → Satoshi(100000)
-  static Satoshi _btcToSat(num btc) => Satoshi((btc * 100000000).round());
+  static Satoshi _btcToSat(num btc) => Satoshi.fromBtc(btc);
 }

@@ -13,7 +13,7 @@ final class FakeCoinSelector implements CoinSelector {
   @override
   bool get isStochastic => false;
 
-  FakeCoinSelector({String name = 'fake'}) : _name = name;
+  FakeCoinSelector({this._name = 'fake'});
 
   @override
   CoinSelectionResult select(CoinSelectionRequest request) {

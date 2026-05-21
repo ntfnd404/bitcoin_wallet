@@ -25,15 +25,11 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
   final Future<String> Function(Wallet wallet) _addressResolver;
 
   RegtestMiningBloc({
-    required BlockGenerationGateway blockGenerationGateway,
-    required AppEventBus eventBus,
-    required String walletId,
-    required Future<String> Function(Wallet wallet) addressResolver,
-  }) : _blockGenerationGateway = blockGenerationGateway,
-       _eventBus = eventBus,
-       _walletId = walletId,
-       _addressResolver = addressResolver,
-       super(const RegtestMiningState()) {
+    required this._blockGenerationGateway,
+    required this._eventBus,
+    required this._walletId,
+    required this._addressResolver,
+  }) : super(const RegtestMiningState()) {
     on<MineBlockRequested>(_onMineBlockRequested);
     on<MineBlockWithWallet>(_onMineBlockWithWallet);
   }

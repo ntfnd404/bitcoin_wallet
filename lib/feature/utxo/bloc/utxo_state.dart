@@ -7,7 +7,7 @@ final class UtxoState {
 
   const UtxoState({
     this.utxos = const [],
-    this.status = FetchStatus.initial,
+    this.status = FetchStatus.idle,
   });
 
   UtxoState copyWith({

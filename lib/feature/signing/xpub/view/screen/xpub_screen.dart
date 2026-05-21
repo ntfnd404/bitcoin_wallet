@@ -27,14 +27,14 @@ class XpubScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Account xpubs')),
       body: BlocBuilder<XpubBloc, XpubState>(
         builder: (context, state) {
-          if (state.status == FetchStatus.loading || state.status == FetchStatus.initial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           if (state.failure != null) {
             return Center(
               child: Text(state.failure?.toString() ?? 'Failed to load xpubs'),
             );
+          }
+
+          if (state.status == FetchStatus.processing || state.xpubs.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           return ListView(

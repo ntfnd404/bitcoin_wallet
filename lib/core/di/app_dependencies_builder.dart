@@ -25,14 +25,11 @@ final class AppDependenciesBuilder {
   final RpcClientFactory _rpcClientFactory;
 
   AppDependenciesBuilder._({
-    required AppEnvironment environment,
-    required void Function(AppDependencies dependencies) builder,
-    required void Function(Object error, StackTrace stack) onError,
-    required RpcClientFactory rpcClientFactory,
-  }) : _builder = builder,
-       _environment = environment,
-       _onError = onError,
-       _rpcClientFactory = rpcClientFactory;
+    required this._environment,
+    required this._builder,
+    required this._onError,
+    required this._rpcClientFactory,
+  });
 
   static void create({
     required AppEnvironment environment,

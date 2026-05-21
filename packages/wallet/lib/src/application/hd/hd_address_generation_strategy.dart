@@ -11,12 +11,10 @@ final class HdAddressGenerationStrategy implements AddressGenerationStrategy {
   final AddressRepository _addressRepository;
 
   const HdAddressGenerationStrategy({
-    required SeedRepository seedRepository,
-    required KeyDerivationService keyDerivationService,
-    required AddressRepository addressRepository,
-  }) : _seedRepository = seedRepository,
-       _keyDerivationService = keyDerivationService,
-       _addressRepository = addressRepository;
+    required this._seedRepository,
+    required this._keyDerivationService,
+    required this._addressRepository,
+  });
 
   @override
   bool supports(Wallet wallet) => wallet is HdWallet;

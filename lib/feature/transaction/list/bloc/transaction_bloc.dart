@@ -18,10 +18,9 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
   Wallet? _currentWallet;
 
   TransactionBloc({
-    required TransactionRepository repository,
+    required this._repository,
     required AppEventBus eventBus,
-  }) : _repository = repository,
-       super(const TransactionState()) {
+  }) : super(const TransactionState()) {
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
 
@@ -47,20 +46,20 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
     Emitter<TransactionState> emit,
   ) async {
     _currentWallet = event.wallet;
-    emit(state.copyWith(status: FetchStatus.loading));
+    emit(state.copyWith(status: FetchStatus.processing));
     try {
       final transactions = await _repository.getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
+      emit(state.copyWith(transactions: transactions, status: FetchStatus.idle));
     } on TransactionException catch (e) {
       if (isClosed) return;
       emitAction(TransactionErrorOccurredAction(exception: e));
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     }
   }
 
@@ -72,15 +71,15 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       final transactions = await _repository.getTransactions(event.wallet.name);
       if (isClosed) return;
 
-      emit(state.copyWith(transactions: transactions, status: FetchStatus.loaded));
+      emit(state.copyWith(transactions: transactions, status: FetchStatus.idle));
     } on TransactionException catch (e) {
       if (isClosed) return;
       emitAction(TransactionErrorOccurredAction(exception: e));
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     } catch (e, stack) {
       addError(e, stack);
       if (isClosed) return;
-      emit(state.copyWith(status: FetchStatus.initial));
+      emit(state.copyWith(status: FetchStatus.idle));
     }
   }
 }

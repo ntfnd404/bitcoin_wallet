@@ -10,7 +10,7 @@ import 'package:transaction/transaction.dart';
 final class BroadcastGatewayImpl implements BroadcastGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const BroadcastGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const BroadcastGatewayImpl({required this._rpcClient});
 
   @override
   Future<String> broadcast(String rawHex) async {

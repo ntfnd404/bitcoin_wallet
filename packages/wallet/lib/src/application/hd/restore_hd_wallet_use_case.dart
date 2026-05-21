@@ -15,11 +15,9 @@ final class RestoreHdWalletUseCase {
 
   const RestoreHdWalletUseCase({
     required Bip39Service bip39Service,
-    required SeedRepository seedRepository,
-    required HdWalletRepository hdWalletRepository,
-  }) : _bip39 = bip39Service,
-       _seedRepository = seedRepository,
-       _hdWalletRepository = hdWalletRepository;
+    required this._seedRepository,
+    required this._hdWalletRepository,
+  }) : _bip39 = bip39Service;
 
   Future<HdWallet> call(String name, Mnemonic mnemonic) async {
     if (!_bip39.validateMnemonic(mnemonic)) {

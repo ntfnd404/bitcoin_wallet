@@ -18,17 +18,12 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
   final AppEventBus _eventBus;
 
   SigningBloc({
-    required AddressRepository addressRepository,
-    required UtxoScanGateway utxoScanGateway,
-    required SignTransactionUseCase signTransaction,
-    required BroadcastGateway broadcastGateway,
-    required AppEventBus eventBus,
-  }) : _addressRepository = addressRepository,
-       _utxoScanGateway = utxoScanGateway,
-       _signTransaction = signTransaction,
-       _broadcastGateway = broadcastGateway,
-       _eventBus = eventBus,
-       super(const SigningState()) {
+    required this._addressRepository,
+    required this._utxoScanGateway,
+    required this._signTransaction,
+    required this._broadcastGateway,
+    required this._eventBus,
+  }) : super(const SigningState()) {
     on<UtxoScanRequested>(_onScanRequested);
     on<SignAndBroadcastRequested>(_onSignAndBroadcast);
   }

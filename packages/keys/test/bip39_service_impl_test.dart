@@ -1,5 +1,5 @@
-import 'package:keys/src/data/bip39_service_impl.dart';
-import 'package:keys/src/data/bip39_wordlist.dart';
+import 'package:keys/src/data/service/bip39_service_impl.dart';
+import 'package:keys/src/data/service/bip39_wordlist.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
 import 'package:test/test.dart';
 

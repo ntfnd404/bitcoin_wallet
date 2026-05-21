@@ -1,0 +1,1 @@
+enum OpReturnStatus { idle, processing }

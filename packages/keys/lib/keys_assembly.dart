@@ -1,8 +1,8 @@
 import 'package:keys/keys.dart';
-import 'package:keys/src/data/bip39_service_impl.dart';
-import 'package:keys/src/data/key_derivation_service_impl.dart';
-import 'package:keys/src/data/seed_repository_impl.dart';
-import 'package:keys/src/data/transaction_signing_service_impl.dart';
+import 'package:keys/src/data/repository/seed_repository_impl.dart';
+import 'package:keys/src/data/service/bip39_service_impl.dart';
+import 'package:keys/src/data/service/key_derivation_service_impl.dart';
+import 'package:keys/src/data/service/transaction_signing_service_impl.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 
 final class KeysAssembly {

@@ -25,16 +25,12 @@ final class PrepareNodeSendUseCase {
   final UtxoEligibilityFilter _eligibilityFilter;
 
   const PrepareNodeSendUseCase({
-    required UtxoRepository utxoRepository,
-    required NodeTransactionGateway nodeDataSource,
-    required List<CoinSelector> selectors,
-    required FeeEstimator feeEstimator,
-    UtxoEligibilityFilter eligibilityFilter = const DefaultUtxoEligibilityFilter(),
-  }) : _utxoRepository = utxoRepository,
-       _nodeDataSource = nodeDataSource,
-       _selectors = selectors,
-       _feeEstimator = feeEstimator,
-       _eligibilityFilter = eligibilityFilter;
+    required this._utxoRepository,
+    required this._nodeDataSource,
+    required this._selectors,
+    required this._feeEstimator,
+    this._eligibilityFilter = const DefaultUtxoEligibilityFilter(),
+  });
 
   Future<NodeSendPreparation> call({
     required String walletName,

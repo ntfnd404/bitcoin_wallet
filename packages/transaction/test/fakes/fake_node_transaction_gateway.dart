@@ -23,7 +23,7 @@ final class FakeNodeTransactionGateway implements NodeTransactionGateway {
   @override
   Future<String> createRawTransaction({
     required List<({String txid, int vout})> inputs,
-    required Map<String, double> outputs,
+    required List<TxOutput> outputs,
   }) async {
     final t = createRawTxThrows;
     if (t != null) throw t;

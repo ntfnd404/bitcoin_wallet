@@ -9,8 +9,8 @@ final class UtxoRepositoryImpl implements UtxoRepository {
   final UtxoGateway _remoteDataSource;
 
   const UtxoRepositoryImpl({
-    required UtxoGateway remoteDataSource,
-  }) : _remoteDataSource = remoteDataSource;
+    required this._remoteDataSource,
+  });
 
   @override
   Future<List<Utxo>> getUtxos(String walletName) => _remoteDataSource.getUtxos(walletName);

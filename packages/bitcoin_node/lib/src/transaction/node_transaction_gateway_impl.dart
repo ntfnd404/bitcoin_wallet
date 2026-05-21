@@ -11,7 +11,7 @@ import 'package:transaction/transaction.dart';
 final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const NodeTransactionGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const NodeTransactionGatewayImpl({required this._rpcClient});
 
   /// Generates a new bech32 (P2WPKH) address in [walletName].
   @override
@@ -30,19 +30,22 @@ final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
   }
 
   /// Builds an unsigned raw transaction via `createrawtransaction`.
-  ///
-  /// [outputs] maps each recipient address to a BTC amount (8 decimal places).
   @override
   Future<String> createRawTransaction({
     required List<({String txid, int vout})> inputs,
-    required Map<String, double> outputs,
+    required List<TxOutput> outputs,
   }) async {
     try {
       final rpcInputs = inputs.map((i) => {'txid': i.txid, 'vout': i.vout}).toList();
 
+      final rpcOutputs = outputs.map((o) => switch (o) {
+        AddressOutput(:final address, :final amountBtc) => {address: amountBtc},
+        OpReturnOutput(:final dataHex) => {'data': dataHex},
+      }).toList();
+
       final result = await _rpcClient.call(
         'createrawtransaction',
-        [rpcInputs, outputs],
+        [rpcInputs, rpcOutputs],
       );
 
       return result as String;

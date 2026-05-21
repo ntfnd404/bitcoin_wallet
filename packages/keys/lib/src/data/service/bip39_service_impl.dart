@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:keys/src/data/bip39_wordlist.dart';
+import 'package:keys/src/data/service/bip39_wordlist.dart';
 import 'package:keys/src/domain/entity/mnemonic.dart';
 import 'package:keys/src/domain/service/bip39_service.dart';
 

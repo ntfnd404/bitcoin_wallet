@@ -10,8 +10,8 @@ final class TransactionRepositoryImpl implements TransactionRepository {
   final TransactionHistoryGateway _remoteDataSource;
 
   const TransactionRepositoryImpl({
-    required TransactionHistoryGateway remoteDataSource,
-  }) : _remoteDataSource = remoteDataSource;
+    required this._remoteDataSource,
+  });
 
   @override
   Future<List<Transaction>> getTransactions(String walletName) => _remoteDataSource.getTransactions(walletName);

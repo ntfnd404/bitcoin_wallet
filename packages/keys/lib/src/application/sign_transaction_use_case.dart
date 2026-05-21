@@ -21,12 +21,10 @@ final class SignTransactionUseCase {
   final TransactionSigningService _signing;
 
   const SignTransactionUseCase({
-    required SeedRepository seedRepository,
-    required KeyDerivationService derivation,
-    required TransactionSigningService signing,
-  }) : _seedRepository = seedRepository,
-       _derivation = derivation,
-       _signing = signing;
+    required this._seedRepository,
+    required this._derivation,
+    required this._signing,
+  });
 
   Future<String> call({
     required String walletId,

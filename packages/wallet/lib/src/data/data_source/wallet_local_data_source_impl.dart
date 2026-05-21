@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:wallet/src/data/wallet_local_data_source.dart';
-import 'package:wallet/src/data/wallet_mapper.dart';
+import 'package:wallet/src/data/repository/wallet_mapper.dart';
+import 'package:wallet/src/domain/data_source/wallet_local_data_source.dart';
 import 'package:wallet/src/domain/entity/wallet.dart';
 import 'package:wallet/src/domain/exception/wallet_exception.dart';
 
@@ -19,10 +19,9 @@ final class WalletLocalDataSourceImpl implements WalletLocalDataSource {
   final WalletMapper _mapper;
 
   const WalletLocalDataSourceImpl({
-    required SecureStorage storage,
-    required WalletMapper mapper,
-  }) : _storage = storage,
-       _mapper = mapper;
+    required this._storage,
+    required this._mapper,
+  });
 
   @override
   Future<List<Wallet>> getWallets() async {

@@ -22,15 +22,11 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
   final CoinSelectionRecommender _recommender;
 
   SendBloc({
-    required SendWorkflow workflow,
-    required AppEventBus eventBus,
-    required String walletId,
-    CoinSelectionRecommender recommender = const DefaultCoinSelectionRecommender(),
-  }) : _workflow = workflow,
-       _eventBus = eventBus,
-       _walletId = walletId,
-       _recommender = recommender,
-       super(const SendState()) {
+    required this._workflow,
+    required this._eventBus,
+    required this._walletId,
+    this._recommender = const DefaultCoinSelectionRecommender(),
+  }) : super(const SendState()) {
     on<SendFormSubmitted>(_onFormSubmitted);
     on<SendStrategySelected>(_onStrategySelected);
     on<SendSelectionModeChanged>(_onSelectionModeChanged);

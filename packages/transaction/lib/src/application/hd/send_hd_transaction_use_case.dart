@@ -17,10 +17,9 @@ final class SendHdTransactionUseCase {
   final BroadcastGateway _broadcastDataSource;
 
   const SendHdTransactionUseCase({
-    required TransactionSigner signer,
-    required BroadcastGateway broadcastDataSource,
-  }) : _signer = signer,
-       _broadcastDataSource = broadcastDataSource;
+    required this._signer,
+    required this._broadcastDataSource,
+  });
 
   /// Returns the txid of the broadcast transaction.
   Future<String> call({

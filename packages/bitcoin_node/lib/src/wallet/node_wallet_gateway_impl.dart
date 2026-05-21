@@ -9,7 +9,7 @@ import 'package:wallet/wallet.dart';
 final class NodeWalletGatewayImpl implements NodeWalletGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const NodeWalletGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const NodeWalletGatewayImpl({required this._rpcClient});
 
   @override
   Future<void> createWallet(String walletName) async {

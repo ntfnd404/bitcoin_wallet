@@ -4,6 +4,7 @@ import 'package:bitcoin_wallet/feature/signing/manual_utxo/di/manual_utxo_scope.
 import 'package:bitcoin_wallet/feature/signing/xpub/di/xpub_scope.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/di/transaction_detail_scope.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/di/transaction_list_scope.dart';
+import 'package:bitcoin_wallet/feature/transaction/op_return/di/op_return_scope.dart';
 import 'package:bitcoin_wallet/feature/utxo/di/utxo_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/di/wallet_scope.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/list/wallet_list_screen.dart';
@@ -27,17 +28,19 @@ final class AppRouterDelegate extends RouterDelegate<Object>
           child: UtxoScope(
             child: XpubScope(
               child: ManualUtxoScope(
-                child: SendScope(
-                  child: Navigator(
-                    key: navigatorKey,
-                    onGenerateInitialRoutes: (navigator, initialRoute) => [
-                      MaterialPageRoute<void>(
-                        settings: const RouteSettings(name: '/'),
+                child: OpReturnScope(
+                  child: SendScope(
+                    child: Navigator(
+                      key: navigatorKey,
+                      onGenerateInitialRoutes: (navigator, initialRoute) => [
+                        MaterialPageRoute<void>(
+                          settings: const RouteSettings(name: '/'),
+                          builder: (_) => const WalletListScreen(),
+                        ),
+                      ],
+                      onUnknownRoute: (_) => MaterialPageRoute<void>(
                         builder: (_) => const WalletListScreen(),
                       ),
-                    ],
-                    onUnknownRoute: (_) => MaterialPageRoute<void>(
-                      builder: (_) => const WalletListScreen(),
                     ),
                   ),
                 ),

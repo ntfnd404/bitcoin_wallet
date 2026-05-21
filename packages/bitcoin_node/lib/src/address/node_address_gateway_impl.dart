@@ -9,7 +9,7 @@ import 'package:wallet/wallet.dart';
 final class NodeAddressGatewayImpl implements NodeAddressGateway {
   final BitcoinRpcClient _rpcClient;
 
-  const NodeAddressGatewayImpl({required BitcoinRpcClient rpcClient}) : _rpcClient = rpcClient;
+  const NodeAddressGatewayImpl({required this._rpcClient});
 
   @override
   Future<String> generateAddress(String walletName, AddressType type) async {
