@@ -10,10 +10,18 @@ import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
+/// Callable type for signing a transaction — accepts [SignTransactionUseCase.call].
+typedef SignTransactionFn = Future<String> Function({
+  required String walletId,
+  required List<SigningInputParam> inputs,
+  required List<SigningOutput> outputs,
+  required String bech32Hrp,
+});
+
 final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBlocMixin<SigningState, SigningAction> {
   final AddressRepository _addressRepository;
   final UtxoScanGateway _utxoScanGateway;
-  final SignTransactionUseCase _signTransaction;
+  final SignTransactionFn _signTransaction;
   final BroadcastGateway _broadcastGateway;
   final AppEventBus _eventBus;
 
@@ -109,17 +117,25 @@ final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBloc
       final txid = await _broadcastGateway.broadcast(rawHex);
       if (isClosed) return;
 
-      final broadcastedTx = await _broadcastGateway.getTransaction(txid);
-      if (isClosed) return;
+      // Step 1 — txid preserved from this point; emit before getTransaction.
+      emit(state.copyWith(status: SigningStatus.signing, txid: txid));
 
-      emit(
-        state.copyWith(
-          status: SigningStatus.broadcasted,
-          txid: txid,
-          broadcastedTx: broadcastedTx,
-        ),
-      );
-      _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
+      try {
+        final broadcastedTx = await _broadcastGateway.getTransaction(txid);
+        if (isClosed) return;
+
+        emit(state.copyWith(status: SigningStatus.broadcasted, broadcastedTx: broadcastedTx));
+        _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: event.walletId));
+      } on TransactionException {
+        if (isClosed) return;
+        emitAction(SigningVerificationFailedAction());
+        emit(state.copyWith(status: SigningStatus.broadcasted));
+      } catch (e, stack) {
+        emitAction(SigningVerificationFailedAction());
+        addError(e, stack);
+        if (isClosed) return;
+        emit(state.copyWith(status: SigningStatus.broadcasted));
+      }
     } on KeysException catch (e) {
       if (isClosed) return;
       emitAction(SigningKeysFailedAction(exception: e));

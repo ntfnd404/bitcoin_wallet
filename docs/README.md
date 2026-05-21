@@ -5,7 +5,7 @@ This repository uses two documentation layers:
 - `docs/project/` — persistent process and architecture knowledge
 - `docs/BW-000N/` — branch-local feature workspace
 
-Workflow version: `3`
+Workflow document version: `3.1` (artifact metadata field stays at `3`)
 
 ---
 

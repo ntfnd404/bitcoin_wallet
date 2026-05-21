@@ -22,3 +22,8 @@ final class SigningTransactionFailedAction extends SigningAction {
 
   SigningTransactionFailedAction({required this.exception});
 }
+
+/// Transaction was broadcast successfully but getrawtransaction verification failed.
+///
+/// The txid is still visible in state; hex and confirmations are absent.
+final class SigningVerificationFailedAction extends SigningAction {}

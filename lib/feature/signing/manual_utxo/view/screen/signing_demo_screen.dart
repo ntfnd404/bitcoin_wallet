@@ -59,6 +59,12 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(exception.toString())),
               );
+            case SigningVerificationFailedAction():
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Transaction broadcast — verification details could not be fetched.'),
+                ),
+              );
           }
         },
         builder: (context, state) => SingleChildScrollView(

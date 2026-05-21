@@ -27,6 +27,17 @@ class SigningBroadcastResult extends StatelessWidget {
           title: 'Confirmations',
           child: Text('${tx.confirmations}'),
         ),
+        const SizedBox(height: 12),
+        const Text(
+          'Raw transaction returned by getrawtransaction — '
+          'confirms the node accepted the broadcast.',
+          style: TextStyle(fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        DetailSection(
+          title: 'Raw Hex',
+          child: CopyableText(text: tx.hex),
+        ),
       ],
     ],
   );
