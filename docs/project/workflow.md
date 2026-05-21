@@ -5,7 +5,17 @@ Claude-Native Enterprise AIDD for complex products built with Claude Code.
 - `docs/project/` is the persistent source of truth
 - `docs/BW-000N/` is the branch-local feature workspace
 
-Workflow version: `3`
+Workflow document version: `3.1` (minor).
+
+Artifact metadata `Workflow Version:` field stays at `3` — contracts and validator regex are unchanged.
+
+Changes since `3.0`:
+
+- New layer: **External Agent Skills** (Flutter team, Dart team) integrated into the gate model.
+- New section: [External Agent Skills](#external-agent-skills) with install command, doctrine, and override priorities.
+- Updated section: [Gate Model](#gate-model) annotates each gate with the optional skills that can be invoked inside it.
+- Updated section: [Execution Stack](#execution-stack) distinguishes AIDD skills (manual), external skills (auto), and domain skills (path-scoped).
+- Gates and roles unchanged. No template or validator changes required.
 
 ## Defaults
 
@@ -26,7 +36,9 @@ Claude Code runtime for this repository is defined by:
 
 - `.claude/settings.json`
 - `.claude/agents/*.md`
-- `.claude/skills/*/SKILL.md`
+- `.claude/skills/aidd-*/SKILL.md` — workflow skills (manual)
+- `.claude/skills/{flutter,dart}-*/SKILL.md` — external skills (auto)
+- `.claude/skills/<domain>/SKILL.md` — domain skills (path-scoped)
 - `CLAUDE.md`
 
 Local overrides belong in `.claude/settings.local.json` and must not redefine the shared workflow.
@@ -41,6 +53,25 @@ IDEA_READY → PRD_READY → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
 ```
 
 Each gate is blocking. The next role starts only after the current gate is satisfied.
+
+### Gate → external skill mapping
+
+External skills (Flutter/Dart) execute *inside* a gate; they never replace the role that closes it.
+
+| Gate | Closing role | AIDD skill | Optional external skills |
+|------|--------------|------------|--------------------------|
+| `IDEA_READY → PRD_READY` | analyst | `/aidd-new-ticket`, `/aidd-new-phase` | — |
+| `PRD_READY → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
+| `RESEARCH_DONE → VISION_APPROVED` | researcher | — | `flutter-apply-architecture-best-practices` |
+| `VISION_APPROVED → PLAN_APPROVED` | planner | — | `dart-resolve-package-conflicts`, `flutter-setup-declarative-routing`, `flutter-setup-localization` |
+| `PLAN_APPROVED → TASKLIST_READY` | planner | `/aidd-new-phase` | — |
+| `TASKLIST_READY → IMPLEMENT_STEP_OK` | implementer | `/aidd-start-phase`, `/aidd-run-checks` | `flutter-add-widget-test`, `flutter-add-widget-preview`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-implement-json-serialization`, `dart-add-unit-test`, `dart-generate-test-mocks`, `dart-use-pattern-matching`, `dart-fix-runtime-errors`, `dart-run-static-analysis` |
+| `IMPLEMENT_STEP_OK → REVIEW_OK` | reviewer | — | `dart-run-static-analysis` |
+| `REVIEW_OK → SECURITY_REVIEW_OK` | security-reviewer | — | — (no external skill substitutes for security review) |
+| `… → QA_PASS` | qa | `/aidd-complete-phase` | `flutter-add-integration-test`, `dart-collect-coverage` (Critical), `dart-add-unit-test` |
+| `QA_PASS → RELEASE_READY → DOCS_UPDATED` | orchestrator | `/aidd-ship-feature`, `/aidd-validate` | — |
+
+External skill output must be recorded in the phase summary when invoked in a `Critical` phase.
 
 ## Branch Strategy
 
@@ -168,13 +199,15 @@ Role rules:
 
 ## Execution Stack
 
-| Mechanism | Status | Purpose |
-|-----------|--------|---------|
-| `Skills` | Mandatory | explicit workflow commands |
-| `Project subagents` | Mandatory | SDLC role separation |
-| `Claude hooks` | Mandatory | guardrails, blocking, context reinjection |
-| `MCP` | Mandatory when available | deterministic tooling: format, analyze, test, lookup |
-| `Agent teams` | Selective | multi-stream orchestration for large or critical work |
+| Mechanism | Status | Purpose | Invocation |
+|-----------|--------|---------|------------|
+| `AIDD skills` | Mandatory | explicit workflow commands (`/aidd-*`) | manual (`disable-model-invocation: true`) |
+| `External skills` | Optional, recommended | task-specific recipes for Flutter / Dart work | auto (Claude selects by description) |
+| `Domain skills` | Selective | project-specific (e.g. `bitcoin-rpc-learning`) | by `paths:` glob |
+| `Project subagents` | Mandatory | SDLC role separation | role-driven |
+| `Claude hooks` | Mandatory | guardrails, blocking, context reinjection | event-driven |
+| `MCP` | Mandatory when available | deterministic tooling: format, analyze, test, lookup | tool-call |
+| `Agent teams` | Selective | multi-stream orchestration for large or critical work | flag-driven (`AIDD_TEAM_MODE=1`) |
 
 Rules:
 
@@ -183,6 +216,7 @@ Rules:
 - team mode stays off by default
 - use team mode only for 3+ phases or cleanly separable workstreams
 - keep the critical implementation path in the main context
+- external skills execute *inside* a gate — they never close it; the role does
 
 ## Claude Hook Layer
 
@@ -217,6 +251,16 @@ Implementation:
 
 ## Skills
 
+Three skill layers coexist under `.claude/skills/`:
+
+| Layer | Prefix | Auto-invoke | Source of truth |
+|-------|--------|-------------|------------------|
+| AIDD workflow | `aidd-*` | no — manual via `/aidd-*` | this workflow |
+| External (vendor) | `flutter-*`, `dart-*` | yes | `github.com/flutter/skills`, `github.com/dart-lang/skills` |
+| Domain | project-specific (`bitcoin-*`, `regtest-*`, …) | by `paths:` glob | this repository |
+
+### AIDD workflow skills
+
 Workflow commands are namespaced and manual-first:
 
 - `/aidd-new-ticket`
@@ -229,6 +273,57 @@ Workflow commands are namespaced and manual-first:
 - `/aidd-init`
 
 Workflow control commands must remain explicit-use only. `/aidd-init` is the bootstrap entry point for new projects or workflow upgrades.
+
+## External Agent Skills
+
+Vendor-maintained recipes for stack-specific tasks. Installed from `flutter/skills` and `dart-lang/skills`.
+
+### Installation
+
+```bash
+# With node/npx
+npx skills add flutter/skills    --skill '*' --agent universal
+npx skills add dart-lang/skills  --skill '*' --agent universal
+
+# Without node — direct git copy
+cd /tmp && \
+  git clone --depth 1 https://github.com/flutter/skills.git flutter-skills && \
+  git clone --depth 1 https://github.com/dart-lang/skills.git  dart-skills && \
+  cd <project>/.claude/skills && \
+  for d in /tmp/flutter-skills/skills/* /tmp/dart-skills/skills/*; do \
+    rm -rf "$(basename $d)" && cp -R "$d" "$(basename $d)"; \
+  done
+```
+
+### Active set in this repository
+
+19 skills installed: 10 Flutter + 9 Dart. Per-skill applicability is documented in the AIDD vault at `Tech Adaptors/Flutter-Dart/external-skills-overlay.md`. Highlights for this project:
+
+- **Core set** (always applicable): `dart-run-static-analysis`, `dart-add-unit-test`, `dart-generate-test-mocks`, `dart-collect-coverage`, `dart-fix-runtime-errors`, `dart-use-pattern-matching`, `flutter-add-widget-test`, `flutter-add-integration-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`.
+- **One-shot** (used once, then irrelevant): `flutter-setup-declarative-routing`, `flutter-setup-localization`.
+- **Constrained**: `flutter-implement-json-serialization` — never for signed transactions, keys, or any sensitive payload; only for plain DTO mapping.
+- **Not applicable to this repo**: `flutter-use-http-package` (use `rpc_client` workspace package), `dart-build-cli-app` (Flutter app, not CLI), `dart-migrate-to-checks-package` (project uses `package:test`).
+
+### Conflict resolution
+
+When an external skill conflicts with project conventions, the project wins. Priority order:
+
+1. `docs/project/conventions.md`
+2. `docs/project/adr/*`
+3. `docs/project/code-style-guide.md`
+4. External skill
+5. Framework default
+
+The implementer must apply project post-processing on top of any skill output: no relative imports (`code-style-guide.md:19`), empty line before `return`, BLoC-only state management, test helpers in separate files under `test/helpers/`, selective catches in use cases.
+
+### Updating
+
+```bash
+npx skills update   # if node available
+# or repeat the git copy above
+```
+
+Re-run `/aidd-validate` after updates. Bump `Workflow Version` only if a gate–skill contract changes, not on every upstream refresh.
 
 ## Execution Cadence
 

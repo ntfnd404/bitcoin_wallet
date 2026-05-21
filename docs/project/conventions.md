@@ -277,19 +277,33 @@ BLoC constructors receive **use cases** (from module application layer). When no
 
 ## Side-Effect Channels
 
-Two distinct channels for effects that don't belong in state:
+Two distinct channels for effects that don't belong in state. One-line distinction:
 
-| Channel | API | Use when |
-|---|---|---|
-| **Action stream** | `emitAction(XxxAction(...))` in BLoC, `ActionBlocConsumer`/`ActionBlocListener` in UI | One-shot UI effects for the **same** feature: SnackBar, navigation, focus, clipboard, dialog |
-| **Event bus** | `_eventBus.emit(XxxEvent(...))` in BLoC, subscribed in another BLoC's constructor | **Cross-feature** notifications: a transaction broadcast triggers the UTXO list to refresh |
+> **Action = "the feature talks to its own UI."**
+> **EventBus = "the feature talks to another feature, without knowing which."**
+
+| Channel | API | Direction | Use when |
+|---|---|---|---|
+| **Action stream** | `emitAction(XxxAction(...))` in BLoC, `ActionBlocConsumer`/`ActionBlocListener` in UI | BLoC → UI of the **same** feature | One-shot UI effects: SnackBar, navigation, focus, clipboard, dialog |
+| **Event bus** | `_eventBus.emit(XxxEvent(...))` in BLoC; `_eventBus.on<XxxEvent>().listen(...)` in another BLoC's constructor (unsubscribe in `close()`) | BLoC → **another BLoC**, cross-feature | Broadcast → refresh; cross-feature notifications |
+
+Why both exist:
+- **Action stream** keeps presentation effects out of state, so widget rebuild does not retrigger SnackBars / navigation. The action is consumed once and gone.
+- **EventBus** keeps BLoCs out of each other's import graph. Emitter does not know who subscribes; subscribers do not know who emits. Coupling is only through the typed `sealed class AppEvent` hierarchy.
 
 Rules:
 - `emitAction` — transient, consumed once, not stored in state. Use for everything that fires-and-forgets within the current screen/feature.
 - `AppEventBus.emit` — for signals that cross feature boundaries. The emitting BLoC does not know which other BLoCs listen.
-- **Never** route UI effects (SnackBar, navigation) through `AppEventBus` — that couples presentation to the bus.
-- **Never** route cross-feature notifications through `emitAction` — actions are scoped to one BLoC's widget subtree.
+- **Never** route UI effects (SnackBar, navigation) through `AppEventBus` — that couples presentation to the bus and inverts dependency direction.
+- **Never** route cross-feature notifications through `emitAction` — actions are scoped to one BLoC's widget subtree; another feature will never see them.
+- **Never** use `BlocListener<OtherFeatureBloc, …>` across features — it couples presentation to a concrete BLoC of another feature, requires a direct import across feature boundaries, and breaks the dependency direction. Use `AppEventBus` instead.
 - BLoC state carries only **persistent render signals**: status enums, data lists, typed failure fields. No `Exception? exception`.
+
+Decision procedure for any side-effect or cross-feature interaction — three questions in order:
+
+1. Is the effect in the UI of the **same** feature? → Action stream.
+2. Do I need to notify **another** feature? → EventBus.
+3. Tempted to write `BlocListener<OtherFeatureBloc, …>` in this feature? → **No.** Rewrite as EventBus subscription.
 
 ### Status enum design
 
