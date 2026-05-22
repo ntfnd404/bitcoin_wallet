@@ -56,6 +56,5 @@ final class CoinCandidate {
   ///
   /// May be negative for dust UTXOs — eligibility filter must remove such
   /// candidates before they reach any selector (G5).
-  int effectiveSatoshis(int feeRateSatPerVbyte, int inputVbytes) =>
-      amountSat.value - inputVbytes * feeRateSatPerVbyte;
+  int effectiveSatoshis(int feeRateSatPerVbyte, int inputVbytes) => amountSat.value - inputVbytes * feeRateSatPerVbyte;
 }

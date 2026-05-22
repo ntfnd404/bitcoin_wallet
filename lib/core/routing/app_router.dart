@@ -1,12 +1,15 @@
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
+import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
 import 'package:bitcoin_wallet/feature/send/view/screen/send_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/screen/signing_demo_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/view/screen/xpub_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/view/screen/transaction_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/view/screen/transaction_list_screen.dart';
 import 'package:bitcoin_wallet/feature/transaction/op_return/view/screen/op_return_screen.dart';
+import 'package:bitcoin_wallet/feature/utxo/di/utxo_picker_scope.dart';
 import 'package:bitcoin_wallet/feature/utxo/view/screen/utxo_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/utxo/view/screen/utxo_list_screen.dart';
+import 'package:bitcoin_wallet/feature/utxo/view/screen/utxo_picker_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/detail/wallet_detail_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/create_wallet_screen.dart';
 import 'package:bitcoin_wallet/feature/wallet/view/screen/setup/restore_wallet_screen.dart';
@@ -35,6 +38,8 @@ final class AppRouter {
   static const String signingDemo = '/wallet/signing';
   static const String send = '/wallet/send';
   static const String opReturn = '/wallet/op-return';
+  static const String utxoPicker = '/wallet/utxo-picker';
+  static const String sendWithPinnedInputs = '/wallet/send-pinned';
 
   const AppRouter._();
 
@@ -148,7 +153,10 @@ final class AppRouter {
     context,
     MaterialPageRoute(
       settings: const RouteSettings(name: send),
-      builder: (_) => SendScreen(wallet: wallet),
+      builder: (ctx) => SendScreen(
+        wallet: wallet,
+        workflow: SendScope.buildWorkflow(ctx, wallet),
+      ),
     ),
   );
 
@@ -160,6 +168,32 @@ final class AppRouter {
           builder: (_) => OpReturnScreen(wallet: wallet),
         ),
       );
+
+  static Future<void> toUtxoPicker(BuildContext context, NodeWallet wallet) =>
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          settings: const RouteSettings(name: utxoPicker),
+          builder: (ctx) => UtxoPickerScope(
+            child: UtxoPickerScreen(wallet: wallet),
+          ),
+        ),
+      );
+
+  static Future<void> toSendWithPinnedInputs(
+    BuildContext context,
+    NodeWallet wallet,
+    List<Utxo> pinnedInputs,
+  ) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      settings: const RouteSettings(name: sendWithPinnedInputs),
+      builder: (ctx) => SendScreen(
+        wallet: wallet,
+        workflow: SendScope.buildPinnedWorkflow(ctx, wallet, pinnedInputs),
+      ),
+    ),
+  );
 
   // ---------------------------------------------------------------------------
   // Private helpers

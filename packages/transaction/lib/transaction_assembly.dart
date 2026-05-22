@@ -1,5 +1,6 @@
 import 'package:transaction/src/application/hd/prepare_hd_send_use_case.dart';
 import 'package:transaction/src/application/hd/send_hd_transaction_use_case.dart';
+import 'package:transaction/src/application/node/prepare_node_pinned_send_use_case.dart';
 import 'package:transaction/src/application/node/prepare_node_send_use_case.dart';
 import 'package:transaction/src/application/node/send_node_transaction_use_case.dart';
 import 'package:transaction/src/application/node/send_op_return_use_case.dart';
@@ -20,7 +21,7 @@ import 'package:wallet/wallet.dart';
 
 /// Dependency injection factory for the transaction bounded context.
 ///
-/// Exposes repositories and gateways for direct use by BLoCs.
+/// Exposes repositories, gateways, and use cases for direct use by BLoCs.
 /// Use cases that contain no logic beyond delegation are not wrapped here.
 final class TransactionAssembly {
   final TransactionRepository transactionRepository;
@@ -28,7 +29,13 @@ final class TransactionAssembly {
   final UtxoScanGateway utxoScanGateway;
   final BroadcastGateway broadcastGateway;
   final BlockGenerationGateway blockGenerationGateway;
+
+  /// Fee estimator — exposed for features that need fee estimation outside
+  /// of a send use case (e.g. the UTXO picker running total).
+  final FeeEstimator feeEstimator;
+
   final PrepareNodeSendUseCase prepareNodeSend;
+  final PrepareNodePinnedSendUseCase prepareNodePinnedSend;
   final PrepareHdSendUseCase prepareHdSend;
   final SendNodeTransactionUseCase sendNodeTransaction;
   final SendHdTransactionUseCase sendHdTransaction;
@@ -59,8 +66,14 @@ final class TransactionAssembly {
       utxoScanGateway: utxoScanDataSource,
       broadcastGateway: broadcastDataSource,
       blockGenerationGateway: blockGenerationDataSource,
+      feeEstimator: feeEstimator,
       prepareNodeSend: PrepareNodeSendUseCase(
         utxoRepository: utxoRepo,
+        nodeDataSource: nodeTransactionDataSource,
+        selectors: coinSelectors,
+        feeEstimator: feeEstimator,
+      ),
+      prepareNodePinnedSend: PrepareNodePinnedSendUseCase(
         nodeDataSource: nodeTransactionDataSource,
         selectors: coinSelectors,
         feeEstimator: feeEstimator,
@@ -94,7 +107,9 @@ final class TransactionAssembly {
     required this.utxoScanGateway,
     required this.broadcastGateway,
     required this.blockGenerationGateway,
+    required this.feeEstimator,
     required this.prepareNodeSend,
+    required this.prepareNodePinnedSend,
     required this.prepareHdSend,
     required this.sendNodeTransaction,
     required this.sendHdTransaction,

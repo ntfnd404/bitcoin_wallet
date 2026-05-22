@@ -1,27 +1,29 @@
 import 'package:action_bloc/action_bloc.dart';
+import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_bloc.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/di/regtest_mining_scope.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
-import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/broadcast_result.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/send_form.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/send_summary.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/strategy_comparison.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:transaction/transaction.dart' show SendWorkflow;
 import 'package:wallet/wallet.dart';
 
 /// Two-step send flow: form → strategy comparison → confirm → broadcast.
 ///
-/// Creates its own [SendBloc] via [SendScope] — lifecycle is managed by
-/// [BlocProvider].
+/// [workflow] determines the coin-selection strategy. The caller is responsible
+/// for building the correct [SendWorkflow] before pushing this screen.
 class SendScreen extends StatefulWidget {
-  const SendScreen({super.key, required this.wallet});
+  const SendScreen({super.key, required this.wallet, required this.workflow});
 
   final Wallet wallet;
+  final SendWorkflow workflow;
 
   @override
   State<SendScreen> createState() => _SendScreenState();
@@ -43,7 +45,11 @@ class _SendScreenState extends State<SendScreen> {
 
   @override
   Widget build(BuildContext context) => BlocProvider<SendBloc>(
-    create: (_) => SendScope.newSendBloc(context, widget.wallet),
+    create: (ctx) => SendBloc(
+      workflow: widget.workflow,
+      eventBus: AppScope.of(ctx).eventBus,
+      walletId: widget.wallet.id,
+    ),
     child: Scaffold(
       appBar: AppBar(title: const Text('Send')),
       body: ActionBlocConsumer<SendBloc, SendState, SendAction>(
@@ -77,8 +83,7 @@ class _SendScreenState extends State<SendScreen> {
                   wallet: widget.wallet,
                   isLoading: state.status == SendStatus.preparing,
                 ),
-              if (state.status == SendStatus.awaitingConfirmation ||
-                  state.status == SendStatus.sending) ...[
+              if (state.status == SendStatus.awaitingConfirmation || state.status == SendStatus.sending) ...[
                 StrategyComparison(state: state),
                 const SizedBox(height: 24),
                 SendSummary(state: state, wallet: widget.wallet),

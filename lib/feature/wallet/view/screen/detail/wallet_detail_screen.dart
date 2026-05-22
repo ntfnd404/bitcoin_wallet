@@ -108,6 +108,15 @@ class WalletDetailScreen extends StatelessWidget {
                     onTap: () => AppRouter.toSend(context, wallet),
                   ),
                   const Divider(height: 1),
+                  if (wallet is NodeWallet) ...[
+                    ListTile(
+                      title: const Text('Send with manual UTXO selection'),
+                      leading: const Icon(Icons.checklist_outlined),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => AppRouter.toUtxoPicker(context, wallet as NodeWallet),
+                    ),
+                    const Divider(height: 1),
+                  ],
                   RegtestMiningScope(
                     child: BlocProvider<RegtestMiningBloc>(
                       create: (ctx) => RegtestMiningScope.newBloc(ctx, wallet.id),
