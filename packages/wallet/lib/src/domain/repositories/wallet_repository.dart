@@ -1,4 +1,4 @@
-import 'package:wallet/src/domain/entity/wallet.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
 
 /// Read-only contract for listing all stored wallets.
 ///

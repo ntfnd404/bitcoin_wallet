@@ -1,4 +1,4 @@
-import 'package:wallet/src/domain/entity/wallet.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
 
 /// Maps [Wallet] subtypes to and from their JSON-compatible [Map]
 /// representation used for persistence.
