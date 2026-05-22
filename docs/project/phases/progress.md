@@ -12,6 +12,7 @@ Checklist items are closed when the Flutter app implements the feature, not when
 | BW-0001 | 01, 02, 03 | closed |
 | BW-0002 | 04, 05 | closed |
 | BW-0003 | 06 | closed |
+| BW-0016 | 05 (manual UTXO selection) | closed |
 
 ## Current status
 
@@ -82,7 +83,7 @@ Flutter app constructs, signs, and broadcasts transactions with user-controlled 
 - [x] App implements minimize-inputs strategy (fewest UTXOs to cover amount).
 - [x] App implements minimize-change strategy (closest match to minimize change output).
 - [x] App compares strategies side by side: estimated fee, input count, change amount.
-- [ ] App allows manual UTXO selection for a transaction.
+- [x] App allows manual UTXO selection for a transaction.
 - [x] App broadcasts raw transaction via `sendrawtransaction`.
 - [x] App displays TXID after successful broadcast.
 - [x] App exposes "Mine block" action (`generatetoaddress`) to confirm pending transactions.

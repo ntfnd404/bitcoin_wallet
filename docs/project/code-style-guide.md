@@ -148,6 +148,90 @@ additional logic (`assert`, `super(...)`, derived assignments).
 
 ---
 
+## Test file structure
+
+**`main()` is always the first declaration in a test file.** Private helper
+functions and factory methods come AFTER `main()`.
+
+```dart
+// ✅ Correct
+void main() {
+  test('...', () async {
+    final x = _makeSubject();
+    ...
+  });
+}
+
+// Helpers below main
+SubjectUnderTest _makeSubject() => SubjectUnderTest(...);
+```
+
+```dart
+// ❌ Wrong — helpers before main
+SubjectUnderTest _makeSubject() => SubjectUnderTest(...);
+
+void main() { ... }
+```
+
+---
+
+## Private helper methods vs top-level functions
+
+**Prefer private instance methods over top-level file-private functions** when
+the function is only used by one class.
+
+```dart
+// ❌ Top-level function living next to a class it only serves
+CoinCandidate _utxoToCandidate(Utxo u) => ...;
+
+final class PrepareNodePinnedSendUseCase {
+  Future<...> call(...) {
+    final candidates = pinnedInputs.map(_utxoToCandidate).toList();
+  }
+}
+
+// ✅ Private instance method on the class it belongs to
+final class PrepareNodePinnedSendUseCase {
+  Future<...> call(...) {
+    final candidates = pinnedInputs.map(_toCandidate).toList();
+  }
+
+  CoinCandidate _toCandidate(Utxo u) => ...;
+}
+```
+
+Do not mark such helpers `static` — Dart resolves tear-offs from instance
+methods just as cleanly, and `static` adds noise without changing behaviour.
+Use `static` only when the helper is genuinely called without an instance.
+
+Top-level functions are appropriate only for utilities shared across multiple
+classes or files.
+
+---
+
+## Exception catch boundary in use cases
+
+In use cases at infrastructure layer boundaries, use `on Exception catch` to
+let Dart `Error` subclasses (programmer errors: `TypeError`, `AssertionError`,
+etc.) propagate to the zone handler while catching unexpected runtime exceptions.
+
+```dart
+} on InsufficientFundsException {
+  rethrow;                        // domain-typed — caller handles
+} on TransactionException {
+  rethrow;                        // domain-typed — caller handles
+} on Exception catch (_, stack) {
+  // Infrastructure exception (RPC, network, parse) → translate to BC language
+  Error.throwWithStackTrace(const TransactionPreparationException(), stack);
+}
+// Error subclasses (TypeError, AssertionError) propagate automatically ✅
+```
+
+`catch (e, stack)` (no type) would also catch `Error` subclasses and hide
+programmer mistakes. `on Exception` is the correct selective boundary here.
+
+---
+
 ## BLoC Classes
 
 1. Final repository/service fields
