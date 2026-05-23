@@ -62,7 +62,7 @@ Presentation (lib/feature/) → Application/Domain (packages/*) ← Infrastructu
 ```
 
 - **Feature** — Flutter UI + BLoC per flow. `lib/feature/`. Depends on module public API only.
-- **Module domain** — entities + repository/service/data source interfaces. Pure Dart. `packages/<module>/src/domain/`.
+- **Module domain** — entities + repository/service/gateway interfaces. Pure Dart. `packages/<module>/src/domain/`. (DataSource interfaces live in `data/data_sources/`, not here — see § Repositories, DataSources, and Use Cases.)
 - **Module application** — use cases, query APIs. `packages/<module>/src/application/`.
 - **Module data** — implementations. `packages/<module>/src/data/`.
 - **Infrastructure** — `bitcoin_node`, `rpc_client`, `storage`: each wraps one external system or platform boundary.
