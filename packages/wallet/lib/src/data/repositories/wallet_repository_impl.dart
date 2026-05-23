@@ -1,5 +1,5 @@
 import 'package:uuid/uuid.dart';
-import 'package:wallet/src/domain/data_source/wallet_local_data_source.dart';
+import 'package:wallet/src/data/data_sources/wallet_local_data_source.dart';
 import 'package:wallet/src/domain/entities/wallet.dart';
 import 'package:wallet/src/domain/exceptions/wallet_exception.dart';
 import 'package:wallet/src/domain/gateways/node_wallet_gateway.dart';
