@@ -62,7 +62,7 @@ Presentation (lib/feature/) → Application/Domain (packages/*) ← Infrastructu
 ```
 
 - **Feature** — Flutter UI + BLoC per flow. `lib/feature/`. Depends on module public API only.
-- **Module domain** — entities + repository/service/data source interfaces. Pure Dart. `packages/<module>/src/domain/`.
+- **Module domain** — entities + repository/service/gateway interfaces. Pure Dart. `packages/<module>/src/domain/`. (DataSource interfaces live in `data/data_sources/`, not here — see § Repositories, DataSources, and Use Cases.)
 - **Module application** — use cases, query APIs. `packages/<module>/src/application/`.
 - **Module data** — implementations. `packages/<module>/src/data/`.
 - **Infrastructure** — `bitcoin_node`, `rpc_client`, `storage`: each wraps one external system or platform boundary.
@@ -81,17 +81,18 @@ Presentation (lib/feature/) → Application/Domain (packages/*) ← Infrastructu
 
 ### `data/` subfolder rules (business packages only)
 
-`data/` subfolders **mirror `domain/` subfolders** — the subfolder name matches the type of interface being implemented:
+`data/` subfolders mirror the type of artifact they contain:
 
 | `domain/` subfolder | `data/` subfolder | Contains |
 |---------------------|-------------------|----------|
-| `domain/repository/` | `data/repository/` | `*RepositoryImpl` + any mappers it uses |
-| `domain/service/` | `data/service/` | `*ServiceImpl` + any data files it uses |
-| `domain/data_source/` | `data/data_source/` | `*DataSourceImpl` + helpers |
+| `domain/repositories/` | `data/repositories/` | `*RepositoryImpl` + any mappers it uses |
+| `domain/services/` | `data/services/` | `*ServiceImpl` + any data files it uses |
+| _(no counterpart)_ | `data/data_sources/` | `*DataSource` interface **and** `*DataSourceImpl` — fully internal to the data layer |
 
 **Rules:**
-- Interface always in `domain/<subfolder>/`, implementation in `data/<subfolder>/`.
-- A mapper (`*Mapper`) lives alongside the `*RepositoryImpl` or `*DataSourceImpl` that uses it — never in a separate `mapper/` folder.
+- Repository and service interfaces live in `domain/<subfolder>/`, implementations in `data/<subfolder>/`.
+- **DataSource interfaces do NOT live in `domain/`** — they are an infrastructure detail owned by the data layer. Both the interface and implementation reside in `data/data_sources/`.
+- A mapper (`*Mapper`) lives alongside the `*RepositoryImpl` that uses it — never in a separate `mapper/` folder.
 - `crypto/` inside `keys/data/` is a private implementation detail of the crypto services; it has no corresponding `domain/crypto/` because it is never exposed as a contract.
 - Infrastructure packages (`bitcoin_node`) do NOT follow this rule — they organise by domain concept, not by layer.
 
@@ -143,12 +144,25 @@ See [architecture.md — Dependency Graph](./architecture.md#dependency-graph) f
 
 ### Gateway and Repository ownership
 
-- **Repository** (`*Repository`) — domain contract for accessing aggregates/entities. Lives in `domain/repository/`.
-- **Gateway** (`*Gateway`) — outbound port to an external system (Bitcoin Core RPC, network). Lives in `domain/gateway/`. Owned by the consumer module, not the adapter.
-  - Example: `NodeAddressGateway` lives in `address/domain/gateway/`, `bitcoin_node` implements it.
-  - This is DIP: high-level module defines the contract, low-level module implements it.
-- **DataSource** (`*DataSource`) — infrastructure detail (raw storage, HTTP client). Lives in `data/` as an internal detail of a repository or gateway implementation. Never in `domain/`.
-- App code imports package barrels only. `package:<module>/src/*` deep imports from `lib/` or `test/` are forbidden.
+**Guiding principle:** an interface lives in the layer of its **caller**. If domain code calls it, the interface belongs to `domain/`. If only data-layer code calls it, the interface belongs to `data/`.
+
+| | Repository | Gateway | DataSource |
+|---|---|---|---|
+| **What it hides** | Access to an aggregate/entity (storage of *our* data) | An external system / another bounded context (Bitcoin Core RPC, payment provider, foreign service) | Raw storage technology inside our own context (Hive, SQLite, SharedPreferences, HTTP client) |
+| **Contract language** | Domain entities, aggregate semantics | Domain language of the consumer module (e.g. `createWallet(name)`, not `bitcoind.createwallet`) | Close to the storage technology, but in terms of our entities |
+| **Who calls it** | Use cases (application layer) | Use cases or repositories | Only `*RepositoryImpl` / `*GatewayImpl` inside the same `data/` layer |
+| **Where the interface lives** | `domain/repositories/` | `domain/gateways/` (it is an outbound port) | `data/data_sources/` (internal implementation detail) |
+| **Where the implementation lives** | `data/repositories/` | Separate infra/adapter package (e.g. `bitcoin_node/`) — DIP: consumer owns the contract, adapter implements it | `data/data_sources/` (next to the interface) |
+| **Reason to swap** | Different aggregate persistence strategy | Different node/provider/bounded context | Different DB or cache technology |
+
+**Examples in this repo:**
+- `WalletRepository` (interface in [wallet/domain/repositories/](../../packages/wallet/lib/src/domain/repositories/)) → `WalletRepositoryImpl` in [wallet/data/repositories/](../../packages/wallet/lib/src/data/repositories/).
+- `NodeWalletGateway` (interface in [wallet/domain/gateways/](../../packages/wallet/lib/src/domain/gateways/)) → `NodeWalletGatewayImpl` in [bitcoin_node/](../../packages/bitcoin_node/lib/src/wallet/) — the adapter package depends on `wallet`, not vice versa.
+- `WalletLocalDataSource` (interface + impl both in [wallet/data/data_sources/](../../packages/wallet/lib/src/data/data_sources/)) — never referenced from `domain/`.
+
+**Mental model:** Repository = «what» (domain language, aggregate). Gateway = «where outward» (port to the outside world). DataSource = «how to store here» (repository's internal detail).
+
+App code imports package barrels only. `package:<module>/src/*` deep imports from `lib/` or `test/` are forbidden.
 
 ### `lib/core/` mandate
 
@@ -267,8 +281,8 @@ BLoC constructors receive **use cases** (from module application layer). When no
 ## Event Bus
 
 - `AppEventBus` lives in `core/event_bus/` — no business module owns it
-- `StreamController<AppEvent>.broadcast()` — multiple subscribers
-- Typed events: `sealed class AppEvent` → `WalletCreated`, `AddressGenerated`, etc.
+- `StreamController<DomainEvent>.broadcast()` — multiple subscribers
+- Typed events: `abstract base class DomainEvent` → `sealed class TransactionDomainEvent` → `TransactionBroadcasted`, `BlockMined`, etc.
 - BLoCs subscribe in constructor, unsubscribe in `close()`
 - Full decoupling: emitter doesn't know consumers exist
 - Cross-feature only — intra-feature communication stays within BLoC
@@ -289,7 +303,7 @@ Two distinct channels for effects that don't belong in state. One-line distincti
 
 Why both exist:
 - **Action stream** keeps presentation effects out of state, so widget rebuild does not retrigger SnackBars / navigation. The action is consumed once and gone.
-- **EventBus** keeps BLoCs out of each other's import graph. Emitter does not know who subscribes; subscribers do not know who emits. Coupling is only through the typed `sealed class AppEvent` hierarchy.
+- **EventBus** keeps BLoCs out of each other's import graph. Emitter does not know who subscribes; subscribers do not know who emits. Coupling is only through the typed `DomainEvent` hierarchy.
 
 Rules:
 - `emitAction` — transient, consumed once, not stored in state. Use for everything that fires-and-forgets within the current screen/feature.
@@ -338,10 +352,10 @@ state.pendingHdWallet                // visible, testable, survives re-subscript
 - `abstract interface class` for interfaces; `Impl` suffix for implementations.
 - Doc comments on all interface methods.
 - **Repository** = storage contract (CRUD). No business logic. Interface in module `domain/repository/`, implementation in module `data/repository/`.
-- **DataSource** = contract for storage or external system, **owned by the consumer module**. Interface in consumer's `domain/data_sources/`, implementation in `data/` or adapter package.
-  - `WalletLocalDataSource` — in `wallet/domain/data_sources/`
-  - `AddressLocalDataSource` — in `address/domain/data_sources/`
-  - `BitcoinCoreRemoteDataSource` — in `wallet/domain/data_sources/`, implemented in `bitcoin_node/`
+- **DataSource** = infrastructure contract for raw storage or external system. Fully internal to the data layer — both interface and implementation live in `data/data_sources/`. Never placed in `domain/`.
+  - `WalletLocalDataSource` (interface + impl) — in `wallet/data/data_sources/`
+  - `AddressLocalDataSource` (interface + impl) — in `address/data/data_sources/`
+  - Remote data sources that cross to an adapter package declare the interface in the consumer's `data/data_sources/` and implement it in the adapter package (e.g. `bitcoin_node/`)
 - **Use Cases** — Application layer, live in `packages/<module>/src/application/`. Orchestrate repositories, services, and data sources; produce and return domain entities.
 - Every package exposes one public barrel `package:<module>/<module>.dart` and may expose an optional `package:<module>/<module>_assembly.dart`. Treat everything under `src/` as internal.
 - **Thin use case rule** — do not create a use case that only delegates to a single repository or gateway method with no added logic. Call the repository / gateway directly. A use case is justified when it orchestrates multiple calls, translates between bounded contexts, enforces a domain rule, or handles scenario-specific exceptions.

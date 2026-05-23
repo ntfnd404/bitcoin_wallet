@@ -1,6 +1,6 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_action.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_event.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/bloc/signing_state.dart';
@@ -11,12 +11,13 @@ import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 /// Callable type for signing a transaction — accepts [SignTransactionUseCase.call].
-typedef SignTransactionFn = Future<String> Function({
-  required String walletId,
-  required List<SigningInputParam> inputs,
-  required List<SigningOutput> outputs,
-  required String bech32Hrp,
-});
+typedef SignTransactionFn =
+    Future<String> Function({
+      required String walletId,
+      required List<SigningInputParam> inputs,
+      required List<SigningOutput> outputs,
+      required String bech32Hrp,
+    });
 
 final class SigningBloc extends Bloc<SigningEvent, SigningState> with ActionBlocMixin<SigningState, SigningAction> {
   final AddressRepository _addressRepository;

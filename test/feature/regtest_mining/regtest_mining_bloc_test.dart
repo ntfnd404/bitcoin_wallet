@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_action.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_bloc.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_event.dart';
@@ -41,28 +41,22 @@ void main() {
   });
 
   // T2
-  test(
-      'MineBlockRequested success emits processing then successful and fires BlockMined on event bus',
-      () async {
+  test('MineBlockRequested success emits processing then successful and fires BlockMined on event bus', () async {
     final busEvents = <dynamic>[];
-    final sub = eventBus.stream.listen(busEvents.add);
+    final sub = eventBus.on().listen(busEvents.add);
 
     unawaited(
       expectLater(
         bloc.stream,
         emitsInOrder([
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.processing),
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.successful),
+          isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.processing),
+          isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.successful),
         ]),
       ),
     );
 
     bloc.add(const MineBlockRequested(toAddress: 'bcrt1qmine'));
-    await bloc.stream
-        .firstWhere((s) => s.status == RegtestMiningStatus.successful)
-        .timeout(const Duration(seconds: 2));
+    await bloc.stream.firstWhere((s) => s.status == RegtestMiningStatus.successful).timeout(const Duration(seconds: 2));
     await Future<void>.delayed(Duration.zero);
     await sub.cancel();
 
@@ -74,73 +68,65 @@ void main() {
 
   // T3
   test(
-      'MineBlockRequested with TransactionException emits RegtestMiningFailedAction action and resets to idle',
-      () async {
-    fakeGateway.throwsValue = const TransactionBroadcastException();
+    'MineBlockRequested with TransactionException emits RegtestMiningFailedAction action and resets to idle',
+    () async {
+      fakeGateway.throwsValue = const TransactionBroadcastException();
 
-    final actions = <RegtestMiningAction>[];
-    final sub = bloc.actionStream.listen(actions.add);
+      final actions = <RegtestMiningAction>[];
+      final sub = bloc.actionStream.listen(actions.add);
 
-    unawaited(
-      expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.processing),
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.idle),
-        ]),
-      ),
-    );
+      unawaited(
+        expectLater(
+          bloc.stream,
+          emitsInOrder([
+            isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.processing),
+            isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.idle),
+          ]),
+        ),
+      );
 
-    bloc.add(const MineBlockRequested(toAddress: 'bcrt1qfail'));
-    await bloc.stream
-        .firstWhere((s) => s.status == RegtestMiningStatus.idle)
-        .timeout(const Duration(seconds: 2));
-    await Future<void>.delayed(Duration.zero);
-    await sub.cancel();
+      bloc.add(const MineBlockRequested(toAddress: 'bcrt1qfail'));
+      await bloc.stream.firstWhere((s) => s.status == RegtestMiningStatus.idle).timeout(const Duration(seconds: 2));
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
 
-    expect(actions, hasLength(1));
-    expect(actions.first, isA<RegtestMiningFailedAction>());
-  });
+      expect(actions, hasLength(1));
+      expect(actions.first, isA<RegtestMiningFailedAction>());
+    },
+  );
 
   // T4
   test(
-      'MineBlockRequested with non-TransactionException emits RegtestMiningUnexpectedFailedAction and resets to idle',
-      () async {
-    fakeGateway.throwsValue = StateError('unexpected programmer error');
+    'MineBlockRequested with non-TransactionException emits RegtestMiningUnexpectedFailedAction and resets to idle',
+    () async {
+      fakeGateway.throwsValue = StateError('unexpected programmer error');
 
-    final actions = <RegtestMiningAction>[];
-    final sub = bloc.actionStream.listen(actions.add);
+      final actions = <RegtestMiningAction>[];
+      final sub = bloc.actionStream.listen(actions.add);
 
-    unawaited(
-      expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.processing),
-          isA<RegtestMiningState>()
-              .having((s) => s.status, 'status', RegtestMiningStatus.idle),
-        ]),
-      ),
-    );
+      unawaited(
+        expectLater(
+          bloc.stream,
+          emitsInOrder([
+            isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.processing),
+            isA<RegtestMiningState>().having((s) => s.status, 'status', RegtestMiningStatus.idle),
+          ]),
+        ),
+      );
 
-    bloc.add(const MineBlockRequested(toAddress: 'bcrt1qerr'));
-    await bloc.stream
-        .firstWhere((s) => s.status == RegtestMiningStatus.idle)
-        .timeout(const Duration(seconds: 2));
-    await Future<void>.delayed(Duration.zero);
-    await sub.cancel();
+      bloc.add(const MineBlockRequested(toAddress: 'bcrt1qerr'));
+      await bloc.stream.firstWhere((s) => s.status == RegtestMiningStatus.idle).timeout(const Duration(seconds: 2));
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
 
-    expect(bloc.state.status, equals(RegtestMiningStatus.idle));
-    expect(actions, hasLength(1));
-    expect(actions.first, isA<RegtestMiningUnexpectedFailedAction>());
-  });
+      expect(bloc.state.status, equals(RegtestMiningStatus.idle));
+      expect(actions, hasLength(1));
+      expect(actions.first, isA<RegtestMiningUnexpectedFailedAction>());
+    },
+  );
 
   // T5 — interaction test: verifies gateway is called once per event via Mock
-  test(
-      'second MineBlockRequested while processing is queued — gateway called exactly twice sequentially',
-      () async {
+  test('second MineBlockRequested while processing is queued — gateway called exactly twice sequentially', () async {
     final completer = Completer<void>();
     final mockGateway = MockBlockGenerationGateway();
 

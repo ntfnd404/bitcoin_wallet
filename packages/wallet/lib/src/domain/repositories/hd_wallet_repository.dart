@@ -1,5 +1,5 @@
-import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/repository/wallet_repository.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
+import 'package:wallet/src/domain/repositories/wallet_repository.dart';
 
 /// Write contract for HD wallet operations.
 ///

@@ -1,8 +1,8 @@
 import 'package:keys/keys.dart';
 import 'package:uuid/uuid.dart';
-import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/exception/wallet_exception.dart';
-import 'package:wallet/src/domain/repository/hd_wallet_repository.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
+import 'package:wallet/src/domain/exceptions/wallet_exception.dart';
+import 'package:wallet/src/domain/repositories/hd_wallet_repository.dart';
 
 /// Creates a new HD wallet: generates a mnemonic, stores the seed,
 /// persists wallet metadata, and returns both.

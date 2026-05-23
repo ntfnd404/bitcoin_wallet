@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:bitcoin_wallet/core/event_bus/app_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/domain_event.dart';
 
 /// Application-wide broadcast event bus for cross-feature communication.
 ///
@@ -20,11 +20,11 @@ import 'package:bitcoin_wallet/core/event_bus/app_event.dart';
 /// });
 /// ```
 final class AppEventBus {
-  final _controller = StreamController<AppEvent>.broadcast();
+  final _controller = StreamController<DomainEvent>.broadcast();
 
-  Stream<AppEvent> get stream => _controller.stream;
+  Stream<T> on<T extends DomainEvent>() => _controller.stream.where((e) => e is T).cast<T>();
 
-  void emit(AppEvent event) => _controller.add(event);
+  void emit(DomainEvent event) => _controller.add(event);
 
   void dispose() => _controller.close();
 }

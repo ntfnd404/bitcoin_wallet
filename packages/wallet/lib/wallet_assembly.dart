@@ -7,15 +7,15 @@ import 'package:wallet/src/application/hd/hd_address_generation_strategy.dart';
 import 'package:wallet/src/application/hd/restore_hd_wallet_use_case.dart';
 import 'package:wallet/src/application/node/create_node_wallet_use_case.dart';
 import 'package:wallet/src/application/node/node_address_generation_strategy.dart';
-import 'package:wallet/src/data/data_source/wallet_local_data_source_impl.dart';
-import 'package:wallet/src/data/repository/address_mapper.dart';
-import 'package:wallet/src/data/repository/address_repository_impl.dart';
-import 'package:wallet/src/data/repository/wallet_mapper.dart';
-import 'package:wallet/src/data/repository/wallet_repository_impl.dart';
-import 'package:wallet/src/domain/gateway/node_address_gateway.dart';
-import 'package:wallet/src/domain/gateway/node_wallet_gateway.dart';
-import 'package:wallet/src/domain/repository/address_repository.dart';
-import 'package:wallet/src/domain/repository/wallet_repository.dart';
+import 'package:wallet/src/data/data_sources/wallet_local_data_source_impl.dart';
+import 'package:wallet/src/data/repositories/address_mapper.dart';
+import 'package:wallet/src/data/repositories/address_repository_impl.dart';
+import 'package:wallet/src/data/repositories/wallet_mapper.dart';
+import 'package:wallet/src/data/repositories/wallet_repository_impl.dart';
+import 'package:wallet/src/domain/gateways/node_address_gateway.dart';
+import 'package:wallet/src/domain/gateways/node_wallet_gateway.dart';
+import 'package:wallet/src/domain/repositories/address_repository.dart';
+import 'package:wallet/src/domain/repositories/wallet_repository.dart';
 
 final class WalletAssembly {
   final WalletRepository walletRepository;

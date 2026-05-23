@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:wallet/src/data/repository/address_mapper.dart';
-import 'package:wallet/src/domain/entity/address.dart';
-import 'package:wallet/src/domain/exception/address_exception.dart';
-import 'package:wallet/src/domain/repository/address_repository.dart';
+import 'package:wallet/src/data/repositories/address_mapper.dart';
+import 'package:wallet/src/domain/entities/address.dart';
+import 'package:wallet/src/domain/exceptions/address_exception.dart';
+import 'package:wallet/src/domain/repositories/address_repository.dart';
 
 final class AddressRepositoryImpl implements AddressRepository {
   static const String _keyPrefix = 'address_';

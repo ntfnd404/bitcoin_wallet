@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/op_return/bloc/op_return_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/op_return/bloc/op_return_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/op_return/bloc/op_return_state.dart';
@@ -37,16 +37,16 @@ final class OpReturnBloc extends Bloc<OpReturnEvent, OpReturnState>
     final bytes = utf8.encode(event.text);
     final byteCount = bytes.length;
     final isValid = byteCount >= 1 && byteCount <= 80;
-    final hexPreview = isValid
-        ? buildOpReturnScript(Uint8List.fromList(bytes))
-        : '';
+    final hexPreview = isValid ? buildOpReturnScript(Uint8List.fromList(bytes)) : '';
 
-    emit(state.copyWith(
-      text: event.text,
-      byteCount: byteCount,
-      isValid: isValid,
-      hexPreview: hexPreview,
-    ));
+    emit(
+      state.copyWith(
+        text: event.text,
+        byteCount: byteCount,
+        isValid: isValid,
+        hexPreview: hexPreview,
+      ),
+    );
   }
 
   void _onFeeRateChanged(

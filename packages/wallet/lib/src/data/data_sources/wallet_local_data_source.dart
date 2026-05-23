@@ -1,4 +1,4 @@
-import 'package:wallet/src/domain/entity/wallet.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
 
 abstract interface class WalletLocalDataSource {
   Future<List<Wallet>> getWallets();

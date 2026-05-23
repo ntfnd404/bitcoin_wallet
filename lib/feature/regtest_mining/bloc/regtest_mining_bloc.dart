@@ -1,6 +1,6 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_action.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_event.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_state.dart';

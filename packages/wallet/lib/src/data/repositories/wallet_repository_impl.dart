@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
-import 'package:wallet/src/domain/data_source/wallet_local_data_source.dart';
-import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/exception/wallet_exception.dart';
-import 'package:wallet/src/domain/gateway/node_wallet_gateway.dart';
-import 'package:wallet/src/domain/repository/hd_wallet_repository.dart';
-import 'package:wallet/src/domain/repository/node_wallet_repository.dart';
+import 'package:wallet/src/data/data_sources/wallet_local_data_source.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
+import 'package:wallet/src/domain/exceptions/wallet_exception.dart';
+import 'package:wallet/src/domain/gateways/node_wallet_gateway.dart';
+import 'package:wallet/src/domain/repositories/hd_wallet_repository.dart';
+import 'package:wallet/src/domain/repositories/node_wallet_repository.dart';
 
 /// Unified implementation of [NodeWalletRepository] and [HdWalletRepository].
 ///

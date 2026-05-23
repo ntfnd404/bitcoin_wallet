@@ -1,5 +1,5 @@
-import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/repository/node_wallet_repository.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
+import 'package:wallet/src/domain/repositories/node_wallet_repository.dart';
 
 /// Creates a new Node wallet in Bitcoin Core and persists the metadata locally.
 ///

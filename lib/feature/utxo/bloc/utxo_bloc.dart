@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart' as bus;
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_action.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_event.dart';
 import 'package:bitcoin_wallet/feature/utxo/bloc/utxo_state.dart';
@@ -13,7 +13,7 @@ import 'package:wallet/wallet.dart';
 
 final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<UtxoState, UtxoAction> {
   final UtxoRepository _utxoRepository;
-  late final StreamSubscription<Object> _eventSub;
+  late final StreamSubscription<TransactionDomainEvent> _eventSub;
   Wallet? _currentWallet;
 
   UtxoBloc({
@@ -23,9 +23,7 @@ final class UtxoBloc extends Bloc<UtxoEvent, UtxoState> with ActionBlocMixin<Utx
     on<UtxoListRequested>(_onUtxoListRequested);
     on<UtxoRefreshRequested>(_onUtxoRefreshRequested);
 
-    _eventSub = eventBus.stream.listen((event) {
-      if (event is! bus.TransactionEvent) return;
-
+    _eventSub = eventBus.on<TransactionDomainEvent>().listen((event) {
       final wallet = _currentWallet;
       if (wallet == null || wallet.id != event.walletId) return;
 

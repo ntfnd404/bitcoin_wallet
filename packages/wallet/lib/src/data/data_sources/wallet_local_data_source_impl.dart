@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:shared_kernel/shared_kernel.dart';
-import 'package:wallet/src/data/repository/wallet_mapper.dart';
-import 'package:wallet/src/domain/data_source/wallet_local_data_source.dart';
-import 'package:wallet/src/domain/entity/wallet.dart';
-import 'package:wallet/src/domain/exception/wallet_exception.dart';
+import 'package:wallet/src/data/data_sources/wallet_local_data_source.dart';
+import 'package:wallet/src/data/repositories/wallet_mapper.dart';
+import 'package:wallet/src/domain/entities/wallet.dart';
+import 'package:wallet/src/domain/exceptions/wallet_exception.dart';
 
 /// Persists wallet metadata in [SecureStorage].
 ///
