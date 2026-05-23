@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/common/fetch_status.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart' as bus;
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_action.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_event.dart';
 import 'package:bitcoin_wallet/feature/transaction/list/bloc/transaction_state.dart';
@@ -24,9 +24,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
 
-    _eventSub = eventBus.stream.listen((event) {
-      if (event is! bus.TransactionEvent) return;
-
+    _eventSub = eventBus.on<TransactionDomainEvent>().listen((event) {
       final wallet = _currentWallet;
       if (wallet == null || wallet.id != event.walletId) return;
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
@@ -13,57 +13,6 @@ import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
 
 import 'fakes/fake_send_workflow.dart';
-
-// ---------------------------------------------------------------------------
-// Test data factories
-// ---------------------------------------------------------------------------
-
-CoinSelectionResult _fakeCoinResult({int fee = 1000, int change = 49000}) =>
-    CoinSelectionResult(
-      inputs: const [
-        CoinCandidate(txid: 'abc', vout: 0, amountSat: Satoshi(100000), age: 1),
-      ],
-      totalInputSat: const Satoshi(100000),
-      changeSat: Satoshi(change),
-      feeSat: Satoshi(fee),
-    );
-
-CoinSelectionStrategyResult _fakeStrategy(
-  String name, {
-  int fee = 1000,
-  int change = 49000,
-}) => CoinSelectionStrategyResult(
-  name: name,
-  isStochastic: false,
-  result: _fakeCoinResult(fee: fee, change: change),
-);
-
-/// Builds a test [SendPreparation] for BLoC tests.
-///
-/// Uses [SendPreparation.forTest] to avoid depending on internal subtypes
-/// ([NodeSendResult]/[HdSendResult]) from the test layer.
-SendPreparation _fakePrep([String strategyName = 'fifo']) =>
-    SendPreparation.forTest(
-      strategies: [_fakeStrategy(strategyName)],
-      changeAddress: 'bcrt1qchange',
-    );
-
-/// Multi-strategy prep. With feeRate=10 (used in tests):
-/// - fifo:       score = 2000 + 68*10 = 2680
-/// - lifo:       score = 1500 + 68*10 = 2180
-/// - min_change: score = 1000 + 68*10 = 1680  ← recommended
-SendPreparation _fakeMultiPrep() => SendPreparation.forTest(
-  strategies: [
-    _fakeStrategy('fifo', fee: 2000, change: 48000),
-    _fakeStrategy('lifo', fee: 1500, change: 48500),
-    _fakeStrategy('min_change'),
-  ],
-  changeAddress: 'bcrt1qchange',
-);
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 void main() {
   late FakeSendWorkflow fakeWorkflow;
@@ -159,9 +108,7 @@ void main() {
         ),
       );
 
-      await bloc.stream
-          .firstWhere((s) => s.status == SendStatus.idle)
-          .timeout(const Duration(seconds: 2));
+      await bloc.stream.firstWhere((s) => s.status == SendStatus.idle).timeout(const Duration(seconds: 2));
 
       await sub.cancel();
       expect(actions, hasLength(1));
@@ -183,9 +130,7 @@ void main() {
         ),
       );
 
-      await bloc.stream
-          .firstWhere((s) => s.status == SendStatus.idle)
-          .timeout(const Duration(seconds: 2));
+      await bloc.stream.firstWhere((s) => s.status == SendStatus.idle).timeout(const Duration(seconds: 2));
 
       await sub.cancel();
       expect(actions, hasLength(1));
@@ -256,8 +201,7 @@ void main() {
     }
 
     // BA1
-    test('after prepare, selectionMode is auto and selectedStrategy is recommended',
-        () async {
+    test('after prepare, selectionMode is auto and selectedStrategy is recommended', () async {
       await prepareMulti();
 
       expect(bloc.state.selectionMode, equals(CoinSelectionMode.auto));
@@ -283,8 +227,7 @@ void main() {
     });
 
     // BA3
-    test('SendSelectionModeChanged(manual) preserves current selectedStrategy',
-        () async {
+    test('SendSelectionModeChanged(manual) preserves current selectedStrategy', () async {
       await prepareMulti();
       final before = bloc.state.selectedStrategy;
 
@@ -318,8 +261,8 @@ void main() {
       await prepareBloc();
       fakeWorkflow.confirmResult = 'txid_broadcast_001';
 
-      final events = <dynamic>[];
-      final sub = eventBus.stream.listen(events.add);
+      final events = <TransactionBroadcasted>[];
+      final sub = eventBus.on<TransactionBroadcasted>().listen(events.add);
 
       unawaited(
         expectLater(
@@ -332,9 +275,7 @@ void main() {
       );
 
       bloc.add(const SendConfirmed());
-      await bloc.stream
-          .firstWhere((s) => s.status == SendStatus.successful)
-          .timeout(const Duration(seconds: 2));
+      await bloc.stream.firstWhere((s) => s.status == SendStatus.successful).timeout(const Duration(seconds: 2));
       // Yield to the microtask queue so the eventBus.emit call that follows
       // the bloc state emit in _onConfirmed has a chance to deliver to listeners.
       await Future<void>.delayed(Duration.zero);
@@ -342,7 +283,7 @@ void main() {
 
       expect(events, hasLength(1));
       expect(events.first, isA<TransactionBroadcasted>());
-      expect((events.first as TransactionBroadcasted).txid, equals('txid_broadcast_001'));
+      expect((events.first).txid, equals('txid_broadcast_001'));
     });
 
     // B7
@@ -351,9 +292,7 @@ void main() {
       fakeWorkflow.confirmResult = 'txid_002';
 
       bloc.add(const SendConfirmed());
-      await bloc.stream
-          .firstWhere((s) => s.status == SendStatus.successful)
-          .timeout(const Duration(seconds: 2));
+      await bloc.stream.firstWhere((s) => s.status == SendStatus.successful).timeout(const Duration(seconds: 2));
 
       expect(fakeWorkflow.capturedConfirmStrategyName, equals('fifo'));
       expect(fakeWorkflow.capturedConfirmRecipientAddress, equals('bcrt1qrecipient'));
@@ -369,9 +308,7 @@ void main() {
       final sub = bloc.actionStream.listen(actions.add);
 
       bloc.add(const SendConfirmed());
-      await bloc.stream
-          .firstWhere((s) => s.status == SendStatus.idle)
-          .timeout(const Duration(seconds: 2));
+      await bloc.stream.firstWhere((s) => s.status == SendStatus.idle).timeout(const Duration(seconds: 2));
 
       await sub.cancel();
       expect(actions, hasLength(1));
@@ -391,5 +328,49 @@ void main() {
       expect(states, isEmpty);
     });
   });
-
 }
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+CoinSelectionResult _fakeCoinResult({int fee = 1000, int change = 49000}) => CoinSelectionResult(
+  inputs: const [
+    CoinCandidate(txid: 'abc', vout: 0, amountSat: Satoshi(100000), age: 1),
+  ],
+  totalInputSat: const Satoshi(100000),
+  changeSat: Satoshi(change),
+  feeSat: Satoshi(fee),
+);
+
+CoinSelectionStrategyResult _fakeStrategy(
+  String name, {
+  int fee = 1000,
+  int change = 49000,
+}) => CoinSelectionStrategyResult(
+  name: name,
+  isStochastic: false,
+  result: _fakeCoinResult(fee: fee, change: change),
+);
+
+/// Builds a test [SendPreparation] for BLoC tests.
+///
+/// Uses [SendPreparation.forTest] to avoid depending on internal subtypes
+/// ([NodeSendResult]/[HdSendResult]) from the test layer.
+SendPreparation _fakePrep([String strategyName = 'fifo']) => SendPreparation.forTest(
+  strategies: [_fakeStrategy(strategyName)],
+  changeAddress: 'bcrt1qchange',
+);
+
+/// Multi-strategy prep. With feeRate=10 (used in tests):
+/// - fifo:       score = 2000 + 68*10 = 2680
+/// - lifo:       score = 1500 + 68*10 = 2180
+/// - min_change: score = 1000 + 68*10 = 1680  ← recommended
+SendPreparation _fakeMultiPrep() => SendPreparation.forTest(
+  strategies: [
+    _fakeStrategy('fifo', fee: 2000, change: 48000),
+    _fakeStrategy('lifo', fee: 1500, change: 48500),
+    _fakeStrategy('min_change'),
+  ],
+  changeAddress: 'bcrt1qchange',
+);

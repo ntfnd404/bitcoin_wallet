@@ -1,6 +1,6 @@
 import 'package:action_bloc/action_bloc.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
-import 'package:bitcoin_wallet/core/event_bus/events/transaction_event.dart';
+import 'package:bitcoin_wallet/core/event_bus/events/transaction_domain_event.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/coin_selection_mode.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_event.dart';
@@ -9,6 +9,7 @@ import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_kernel/shared_kernel.dart';
 import 'package:transaction/transaction.dart';
+
 /// Orchestrates the two-step send flow: prepare (coin selection) → confirm (broadcast).
 ///
 /// Delegates wallet-specific logic entirely to [SendWorkflow], which captures
@@ -88,10 +89,12 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
     final strategies = state.strategies;
     if (strategies == null || !strategies.any((e) => e.name == event.strategyName)) return;
 
-    emit(state.copyWith(
-      selectedStrategy: event.strategyName,
-      selectionMode: CoinSelectionMode.manual,
-    ));
+    emit(
+      state.copyWith(
+        selectedStrategy: event.strategyName,
+        selectionMode: CoinSelectionMode.manual,
+      ),
+    );
   }
 
   void _onSelectionModeChanged(
@@ -107,10 +110,12 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
 
           return;
         }
-        emit(state.copyWith(
-          selectionMode: CoinSelectionMode.auto,
-          selectedStrategy: _recommender.recommend(strategies, feeRate),
-        ));
+        emit(
+          state.copyWith(
+            selectionMode: CoinSelectionMode.auto,
+            selectedStrategy: _recommender.recommend(strategies, feeRate),
+          ),
+        );
       case CoinSelectionMode.manual:
         emit(state.copyWith(selectionMode: CoinSelectionMode.manual));
     }
