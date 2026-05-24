@@ -49,3 +49,25 @@ final class TransactionUtxoScanException extends TransactionException {
   @override
   String toString() => 'UTXO scan failed';
 }
+
+/// A pinned input references an address not known to the HD wallet, so no
+/// private key can be derived for it. Carries the offending input's identity
+/// so the UI can surface a precise error.
+///
+/// Lives in the same library as [TransactionException] because Dart 3
+/// forbids extending a `sealed` type across libraries.
+final class UnknownPinnedInputAddressException extends TransactionException {
+  final String txid;
+  final int vout;
+  final String address;
+
+  const UnknownPinnedInputAddressException({
+    required this.txid,
+    required this.vout,
+    required this.address,
+  });
+
+  @override
+  String toString() =>
+      'UnknownPinnedInputAddressException(txid: $txid, vout: $vout, address: $address)';
+}
