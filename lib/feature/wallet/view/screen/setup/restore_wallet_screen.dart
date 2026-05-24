@@ -64,7 +64,7 @@ class _RestoreWalletScreenState extends State<RestoreWalletScreen> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Restore Wallet')),
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
-      listener: (context, action) {
+      actionListener: (context, _, action) {
         switch (action) {
           case WalletRestoredAction(:final wallet):
             AppRouter.toWalletDetail(context, wallet);

@@ -24,7 +24,7 @@ class OpReturnScreen extends StatelessWidget {
     child: Scaffold(
       appBar: AppBar(title: const Text('OP_RETURN Transaction')),
       body: ActionBlocConsumer<OpReturnBloc, OpReturnState, OpReturnAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case OpReturnBroadcastedAction(:final txid):
               ScaffoldMessenger.of(context).showSnackBar(

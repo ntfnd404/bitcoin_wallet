@@ -27,7 +27,7 @@ class UtxoPickerScreen extends StatelessWidget {
     child: Scaffold(
       appBar: AppBar(title: const Text('Select UTXOs')),
       body: ActionBlocConsumer<UtxoPickerBloc, UtxoPickerState, UtxoPickerAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case UtxoPickerLoadFailedAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(

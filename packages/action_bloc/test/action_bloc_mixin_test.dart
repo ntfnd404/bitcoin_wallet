@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:action_bloc/action_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -74,7 +75,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(observer.records, [
-        (bloc: bloc, action: 'hello'),
+        (bloc: bloc, change: const ActionChange<Object?>(current: 'hello')),
       ]);
     });
 

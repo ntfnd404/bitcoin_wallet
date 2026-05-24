@@ -19,7 +19,7 @@ class BroadcastResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ActionBlocConsumer<RegtestMiningBloc, RegtestMiningState, RegtestMiningAction>(
-    listener: (context, action) {
+    actionListener: (context, _, action) {
       switch (action) {
         case RegtestMiningFailedAction(:final exception):
           ScaffoldMessenger.of(context).showSnackBar(

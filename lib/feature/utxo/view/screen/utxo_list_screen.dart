@@ -26,7 +26,7 @@ class UtxoListScreen extends StatelessWidget {
     child: Scaffold(
       appBar: AppBar(title: const Text('Unspent Outputs')),
       body: ActionBlocConsumer<UtxoBloc, UtxoState, UtxoAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case UtxoErrorOccurredAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(

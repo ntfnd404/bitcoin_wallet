@@ -38,10 +38,11 @@ class ActionBlocListener<B extends BlocBase<S>, S, A> extends SingleChildStatefu
   /// Called on the main isolate for each emitted action.
   final void Function(BuildContext context, A action) listener;
 
-  /// Optional filter. When null, all actions are forwarded.
+  /// Optional filter for actions. Return false to suppress the listener call.
+  /// When null, every action is forwarded.
   ///
-  /// Unlike [BlocListener.listenWhen], there is no previous action —
-  /// actions are one-shot and not stored.
+  /// Unlike [BlocListener.listenWhen], there is no previous-action argument —
+  /// actions are fire-and-forget events, not cumulative state transitions.
   final bool Function(A action)? listenWhen;
 
   @override
@@ -53,6 +54,12 @@ class ActionBlocListener<B extends BlocBase<S>, S, A> extends SingleChildStatefu
         ObjectFlagProperty<void Function(BuildContext, A)>.has(
           'listener',
           listener,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<bool Function(A)?>.has(
+          'listenWhen',
+          listenWhen,
         ),
       );
   }

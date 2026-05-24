@@ -10,9 +10,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// here before reaching crash reporters (Sentry, Firebase Crashlytics).
 ///
 /// Registered in [AppBootstrap.initialize].
-final class AppBlocObserver extends BlocObserver implements ActionBlocObserver {
+final class AppBlocObserver extends BlocObserver with ActionBlocObserver {
   @override
-  void onEvent(Bloc<dynamic, dynamic> bloc, Object? event) {
+  void onEvent(Bloc<Object?, Object?> bloc, Object? event) {
     log(
       '${bloc.runtimeType}: $event',
       name: 'BlocObserver.event',
@@ -22,15 +22,15 @@ final class AppBlocObserver extends BlocObserver implements ActionBlocObserver {
   }
 
   @override
-  void onAction(BlocBase<dynamic> bloc, Object? action) {
+  void onAction(BlocBase<Object?> bloc, ActionChange<Object?> change) {
     log(
-      '${bloc.runtimeType}: $action',
+      '${bloc.runtimeType}: ${change.current}',
       name: 'BlocObserver.action',
     );
   }
 
   @override
-  void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
+  void onError(BlocBase<Object?> bloc, Object error, StackTrace stackTrace) {
     log(
       '${bloc.runtimeType}: $error\n$stackTrace',
       name: 'BlocObserver',

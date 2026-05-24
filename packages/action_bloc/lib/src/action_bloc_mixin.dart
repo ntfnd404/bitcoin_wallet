@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:action_bloc/src/action_bloc_observer.dart';
 import 'package:action_bloc/src/action_bloc_streamable.dart';
+import 'package:action_bloc/src/action_change.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Adds a one-shot action stream to any [BlocBase].
@@ -16,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// ```
 mixin ActionBlocMixin<S, A> on BlocBase<S> implements ActionBlocStateStreamable<S, A> {
   final StreamController<A> _actionController = StreamController<A>.broadcast();
+  A? _currentAction;
 
   /// Broadcast stream of one-shot UI actions.
   ///
@@ -25,14 +27,22 @@ mixin ActionBlocMixin<S, A> on BlocBase<S> implements ActionBlocStateStreamable<
 
   /// Emits [action] to all current [actionStream] subscribers.
   ///
-  /// No-op if the BLoC is already closed.
+  /// **Closed-BLoC contract:** deliberate no-op when the BLoC is already
+  /// closed. Callers do not need to guard against a closed BLoC before calling
+  /// [emitAction]. This differs from [Bloc.emit], which throws on a closed
+  /// BLoC, because actions are fire-and-forget effects — missing one during
+  /// teardown is harmless.
   void emitAction(A action) {
     if (!isClosed) {
       final observer = Bloc.observer;
       if (observer case final ActionBlocObserver actionObserver) {
-        actionObserver.onAction(this, action);
+        actionObserver.onAction(
+          this,
+          ActionChange(previous: _currentAction, current: action),
+        );
       }
       _actionController.add(action);
+      _currentAction = action;
     }
   }
 

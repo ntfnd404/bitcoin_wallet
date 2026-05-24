@@ -27,7 +27,7 @@ class TransactionListScreen extends StatelessWidget {
     child: Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
       body: ActionBlocConsumer<TransactionBloc, TransactionState, TransactionAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case TransactionErrorOccurredAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(

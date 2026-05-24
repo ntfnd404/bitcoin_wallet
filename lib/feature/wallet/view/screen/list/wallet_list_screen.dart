@@ -39,7 +39,7 @@ class _WalletListScreenState extends State<WalletListScreen> {
       ),
     ),
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
-      listener: (context, action) {
+      actionListener: (context, _, action) {
         switch (action) {
           case WalletErrorOccurredAction(:final exception):
             ScaffoldMessenger.of(context).showSnackBar(

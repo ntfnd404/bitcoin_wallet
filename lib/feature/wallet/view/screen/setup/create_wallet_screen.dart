@@ -44,7 +44,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Create Wallet')),
     body: ActionBlocConsumer<WalletBloc, WalletState, WalletAction>(
-      listener: (context, action) {
+      actionListener: (context, _, action) {
         switch (action) {
           case WalletNodeCreatedAction(:final wallet):
             AppRouter.toWalletDetail(context, wallet);

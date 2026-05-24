@@ -19,7 +19,7 @@ class MineBlockTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ActionBlocConsumer<RegtestMiningBloc, RegtestMiningState, RegtestMiningAction>(
-    listener: (context, action) {
+    actionListener: (context, _, action) {
       switch (action) {
         case RegtestMiningFailedAction(:final exception):
           ScaffoldMessenger.of(context).showSnackBar(
@@ -36,9 +36,7 @@ class MineBlockTile extends StatelessWidget {
 
       return ListTile(
         title: Text(
-          state.status == RegtestMiningStatus.successful
-              ? 'Block mined!'
-              : 'Mine 1 block (dev)',
+          state.status == RegtestMiningStatus.successful ? 'Block mined!' : 'Mine 1 block (dev)',
         ),
         leading: isProcessing
             ? const SizedBox(

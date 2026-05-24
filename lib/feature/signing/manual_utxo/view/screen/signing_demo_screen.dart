@@ -41,7 +41,7 @@ class _SigningDemoScreenState extends State<SigningDemoScreen> {
     child: Scaffold(
       appBar: AppBar(title: const Text('Sign & Send')),
       body: ActionBlocConsumer<SigningBloc, SigningState, SigningAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case SigningNoAddressesFoundAction():
               ScaffoldMessenger.of(context).showSnackBar(

@@ -53,7 +53,7 @@ class _SendScreenState extends State<SendScreen> {
     child: Scaffold(
       appBar: AppBar(title: const Text('Send')),
       body: ActionBlocConsumer<SendBloc, SendState, SendAction>(
-        listener: (context, action) {
+        actionListener: (context, _, action) {
           switch (action) {
             case SendInsufficientFundsAction():
               ScaffoldMessenger.of(context).showSnackBar(
