@@ -16,11 +16,23 @@ Dart formatting and naming rules. Enforced by `flutter analyze --fatal-infos --f
 
 ## Imports
 
-**Always** use `package:` imports. **Never** use relative imports.
+**In `lib/`** — always `package:` imports, never relative.
 
 ```dart
 // ❌  import '../constants/app_constants.dart';
 // ✅  import 'package:bitcoin_wallet/core/constants/app_constants.dart';
+```
+
+**In `test/`** — relative imports between test files are allowed (and
+required for cross-test references), because `package:` URIs resolve only
+to a package's `lib/` directory. Imports of production code from tests
+still use `package:`.
+
+```dart
+// ✅  in test/feature/foo/foo_test.dart
+import 'package:bitcoin_wallet/feature/foo/foo_bloc.dart';   // production
+import 'fakes/fake_repository.dart';                          // sibling test helper
+import '../helpers/test_data.dart';                           // cross-test helper
 ```
 
 ---
