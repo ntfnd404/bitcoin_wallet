@@ -26,10 +26,30 @@ Workspace packages: `address`, `bitcoin_node`, `keys`, `rpc_client`,
 
 ## Runtime Defaults
 
-- Workflow document version: `3.1` (artifact metadata field stays at `3`)
+- Workflow document version: `3.2` (artifact metadata field stays at `3`)
+- Workflow Minor: 3.2
 - Runtime model: `Claude-native`
 - Default lane: `Professional`
 - Mandatory `Critical` lane for wallet, seed, keys, auth, crypto, signing, storage migration, or API contract work
+- `Trivial` lane available for narrow short-path edits. Canonical definition lives in vault `Methodology/Lanes.md`. Entry criteria (translated from that source):
+
+  > ## Trivial
+  >
+  > Use only for:
+  > - Typo fixes
+  > - Renames
+  > - Minor configuration changes
+  > - Local single-file changes without architectural impact
+  >
+  > Flow: `edit → review`
+  >
+  > Do NOT use Trivial if any of the following applies:
+  > - Public behavior changes
+  > - Multiple modules are affected
+  > - There is regression risk
+  > - There are security/privacy/storage consequences
+
+  Commit-trace rule: every Trivial commit must carry the `trivial:` prefix OR an issue link, so the short path stays auditable.
 
 Runtime sources of truth:
 

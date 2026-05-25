@@ -5,7 +5,7 @@ Claude-Native Enterprise AIDD for complex products built with Claude Code.
 - `docs/project/` is the persistent source of truth
 - `docs/BW-000N/` is the branch-local feature workspace
 
-Workflow document version: `3.1` (minor).
+Workflow document version: `3.2` (minor).
 
 Artifact metadata `Workflow Version:` field stays at `3` — contracts and validator regex are unchanged.
 
@@ -30,6 +30,28 @@ The default mode is intentionally professional. Process quality comes from clear
 Repository default: `Professional`  
 Security-sensitive default: `Critical`
 
+### Trivial lane — canonical reference
+
+Canonical definition lives in the AIDD methodology vault: `Methodology/Lanes.md`. Project text reproduces the entry criteria from `Methodology/Lanes.md:3-10` (translated to English to match project documentation language):
+
+> ## Trivial
+>
+> Use only for:
+> - Typo fixes
+> - Renames
+> - Minor configuration changes
+> - Local single-file changes without architectural impact
+>
+> Flow: `edit → review`
+>
+> Do NOT use Trivial if any of the following applies:
+> - Public behavior changes
+> - Multiple modules are affected
+> - There is regression risk
+> - There are security/privacy/storage consequences
+
+Commit-trace rule: every Trivial commit must carry the `trivial:` prefix OR an issue link in the commit message. Without one of those two markers the short path is not auditable and the commit must be reclassified to `Professional`.
+
 ## Runtime Sources Of Truth
 
 Claude Code runtime for this repository is defined by:
@@ -46,13 +68,15 @@ Local overrides belong in `.claude/settings.local.json` and must not redefine th
 ## Gate Model
 
 ```text
-IDEA_READY → PRD_READY → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
+IDEA_READY → PRD_READY → SPEC_CRITIQUED → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
 → TASKLIST_READY → IMPLEMENT_STEP_OK → REVIEW_OK
 → SECURITY_REVIEW_OK (Critical only) → QA_PASS
 → RELEASE_READY → DOCS_UPDATED
 ```
 
 Each gate is blocking. The next role starts only after the current gate is satisfied.
+
+`SPEC_CRITIQUED` is declared in v3.2; the enforcing `spec-critic` agent ships in Phase 2 of BW-META-001. Until then the token is reserved (declared, not enforced) and `PRD_READY` flows directly into `RESEARCH_DONE` as before.
 
 ### Gate → external skill mapping
 
@@ -61,7 +85,8 @@ External skills (Flutter/Dart) execute *inside* a gate; they never replace the r
 | Gate | Closing role | AIDD skill | Optional external skills |
 |------|--------------|------------|--------------------------|
 | `IDEA_READY → PRD_READY` | analyst | `/aidd-new-ticket`, `/aidd-new-phase` | — |
-| `PRD_READY → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
+| `PRD_READY → SPEC_CRITIQUED` | spec-critic *(declared in v3.2; agent ships in Phase 2)* | — | — |
+| `SPEC_CRITIQUED → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `RESEARCH_DONE → VISION_APPROVED` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `VISION_APPROVED → PLAN_APPROVED` | planner | — | `dart-resolve-package-conflicts`, `flutter-setup-declarative-routing`, `flutter-setup-localization` |
 | `PLAN_APPROVED → TASKLIST_READY` | planner | `/aidd-new-phase` | — |
@@ -183,7 +208,8 @@ One artifact owns one responsibility.
 | Agent | Input | Output | Gate |
 |-------|-------|--------|------|
 | `analyst` | `idea` | `prd` | `IDEA_READY → PRD_READY` |
-| `researcher` | `idea`, `prd`, codebase | `vision`, `research` | `PRD_READY → RESEARCH_DONE / VISION_APPROVED` |
+| `spec-critic` *(declared in v3.2; agent ships in Phase 2)* | `prd` | spec critique | `PRD_READY → SPEC_CRITIQUED` |
+| `researcher` | `idea`, `prd`, codebase | `vision`, `research` | `SPEC_CRITIQUED → RESEARCH_DONE / VISION_APPROVED` |
 | `planner` | `vision`, `prd`, `research` | `plan`, `phase`, `tasklist` | `RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY` |
 | `implementer` | `phase`, `plan`, `prd` | code + task updates | `TASKLIST_READY → IMPLEMENT_STEP_OK` |
 | `reviewer` | diff + `plan` + `prd` + `phase` | phase summary | `IMPLEMENT_STEP_OK → REVIEW_OK` |
