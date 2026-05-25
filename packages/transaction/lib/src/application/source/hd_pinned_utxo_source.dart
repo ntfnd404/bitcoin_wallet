@@ -25,12 +25,10 @@ final class HdPinnedUtxoSource implements UtxoSource {
   final AddressRepository _addressRepository;
 
   const HdPinnedUtxoSource({
-    required String walletId,
-    required List<Utxo> pinnedInputs,
-    required AddressRepository addressRepository,
-  })  : _walletId = walletId,
-        _pinnedInputs = pinnedInputs,
-        _addressRepository = addressRepository;
+    required this._walletId,
+    required this._pinnedInputs,
+    required this._addressRepository,
+  });
 
   @override
   Future<UtxoSourceResult> resolve() async {
@@ -93,5 +91,3 @@ final class HdPinnedUtxoSource implements UtxoSource {
     }
   }
 }
-// ignore_for_file: prefer_initializing_formals
-

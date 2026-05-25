@@ -26,14 +26,10 @@ final class NodeAutoUtxoSource implements UtxoSource {
   final NodeTransactionGateway _nodeTransactionGateway;
 
   const NodeAutoUtxoSource({
-    required String walletName,
-    required UtxoRepository utxoRepository,
-    required NodeTransactionGateway nodeTransactionGateway,
-  }) : _walletName = walletName,
-       _utxoRepository = utxoRepository,
-       _nodeTransactionGateway = nodeTransactionGateway;
-  // ignore_for_file: prefer_initializing_formals
-
+    required this._walletName,
+    required this._utxoRepository,
+    required this._nodeTransactionGateway,
+  });
 
   @override
   Future<UtxoSourceResult> resolve() async {

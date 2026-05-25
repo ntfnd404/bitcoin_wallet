@@ -18,12 +18,10 @@ final class NodePinnedUtxoSource implements UtxoSource {
   final NodeTransactionGateway _nodeTransactionGateway;
 
   const NodePinnedUtxoSource({
-    required String walletName,
-    required List<Utxo> pinnedInputs,
-    required NodeTransactionGateway nodeTransactionGateway,
-  })  : _walletName = walletName,
-        _pinnedInputs = pinnedInputs,
-        _nodeTransactionGateway = nodeTransactionGateway;
+    required this._walletName,
+    required this._pinnedInputs,
+    required this._nodeTransactionGateway,
+  });
 
   @override
   Future<UtxoSourceResult> resolve() async {
@@ -53,5 +51,3 @@ final class NodePinnedUtxoSource implements UtxoSource {
     confirmations: u.confirmations,
   );
 }
-// ignore_for_file: prefer_initializing_formals
-

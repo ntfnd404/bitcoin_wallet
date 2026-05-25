@@ -19,16 +19,12 @@ final class EligibilityFilteringUtxoSource implements UtxoSource {
   final int _feeRateSatPerVbyte;
 
   const EligibilityFilteringUtxoSource({
-    required UtxoSource inner,
-    required EligibilityPolicy policy,
-    required UtxoEligibilityFilter filter,
-    required FeeEstimator feeEstimator,
-    required int feeRateSatPerVbyte,
-  })  : _inner = inner,
-        _policy = policy,
-        _filter = filter,
-        _feeEstimator = feeEstimator,
-        _feeRateSatPerVbyte = feeRateSatPerVbyte;
+    required this._inner,
+    required this._policy,
+    required this._filter,
+    required this._feeEstimator,
+    required this._feeRateSatPerVbyte,
+  });
 
   @override
   Future<UtxoSourceResult> resolve() async {
@@ -47,5 +43,3 @@ final class EligibilityFilteringUtxoSource implements UtxoSource {
     );
   }
 }
-// ignore_for_file: prefer_initializing_formals
-

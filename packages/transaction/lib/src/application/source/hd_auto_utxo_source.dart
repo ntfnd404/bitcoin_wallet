@@ -26,12 +26,10 @@ final class HdAutoUtxoSource implements UtxoSource {
   final UtxoScanGateway _utxoScanGateway;
 
   const HdAutoUtxoSource({
-    required String walletId,
-    required AddressRepository addressRepository,
-    required UtxoScanGateway utxoScanGateway,
-  })  : _walletId = walletId,
-        _addressRepository = addressRepository,
-        _utxoScanGateway = utxoScanGateway;
+    required this._walletId,
+    required this._addressRepository,
+    required this._utxoScanGateway,
+  });
 
   @override
   Future<UtxoSourceResult> resolve() async {
@@ -94,5 +92,3 @@ final class HdAutoUtxoSource implements UtxoSource {
     }
   }
 }
-// ignore_for_file: prefer_initializing_formals
-
