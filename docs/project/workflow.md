@@ -76,7 +76,7 @@ IDEA_READY → PRD_READY → SPEC_CRITIQUED → RESEARCH_DONE → VISION_APPROVE
 
 Each gate is blocking. The next role starts only after the current gate is satisfied.
 
-`SPEC_CRITIQUED` is declared in v3.2; the enforcing `spec-critic` agent ships in Phase 2 of BW-META-001. Until then the token is reserved (declared, not enforced) and `PRD_READY` flows directly into `RESEARCH_DONE` as before.
+`SPEC_CRITIQUED` is an enforced gate. After the `analyst` produces a PRD, the `spec-critic` agent runs against that PRD file (and only that file) and emits a critique with at least three observations. The PRD `Status` header flips from `PRD_READY` to `SPEC_CRITIQUED` only when the critic returns a positive verdict. A `SPEC_BLOCKED` verdict — triggered by any Blocking observation — sends the PRD back to the analyst for revision and a critic re-run. The `researcher` MUST refuse a PRD that is still at `PRD_READY`; `RESEARCH_DONE` is only reachable from `SPEC_CRITIQUED`.
 
 ### Gate → external skill mapping
 
@@ -85,7 +85,7 @@ External skills (Flutter/Dart) execute *inside* a gate; they never replace the r
 | Gate | Closing role | AIDD skill | Optional external skills |
 |------|--------------|------------|--------------------------|
 | `IDEA_READY → PRD_READY` | analyst | `/aidd-new-ticket`, `/aidd-new-phase` | — |
-| `PRD_READY → SPEC_CRITIQUED` | spec-critic *(declared in v3.2; agent ships in Phase 2)* | — | — |
+| `PRD_READY → SPEC_CRITIQUED` | spec-critic | — | — |
 | `SPEC_CRITIQUED → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `RESEARCH_DONE → VISION_APPROVED` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `VISION_APPROVED → PLAN_APPROVED` | planner | — | `dart-resolve-package-conflicts`, `flutter-setup-declarative-routing`, `flutter-setup-localization` |
@@ -208,7 +208,7 @@ One artifact owns one responsibility.
 | Agent | Input | Output | Gate |
 |-------|-------|--------|------|
 | `analyst` | `idea` | `prd` | `IDEA_READY → PRD_READY` |
-| `spec-critic` *(declared in v3.2; agent ships in Phase 2)* | `prd` | spec critique | `PRD_READY → SPEC_CRITIQUED` |
+| `spec-critic` | `prd` | spec critique | `PRD_READY → SPEC_CRITIQUED` |
 | `researcher` | `idea`, `prd`, codebase | `vision`, `research` | `SPEC_CRITIQUED → RESEARCH_DONE / VISION_APPROVED` |
 | `planner` | `vision`, `prd`, `research` | `plan`, `phase`, `tasklist` | `RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY` |
 | `implementer` | `phase`, `plan`, `prd` | code + task updates | `TASKLIST_READY → IMPLEMENT_STEP_OK` |
