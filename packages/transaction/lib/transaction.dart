@@ -12,6 +12,7 @@ export 'src/application/node/send_op_return_use_case.dart';
 export 'src/application/send_preparation.dart' show SendPreparation;
 export 'src/application/send_workflow.dart';
 export 'src/application/source/eligibility_filtering_utxo_source.dart';
+export 'src/domain/contract/signer.dart';
 export 'src/domain/contract/utxo_source.dart';
 export 'src/domain/entity/broadcasted_tx.dart';
 export 'src/domain/entity/scanned_utxo.dart';

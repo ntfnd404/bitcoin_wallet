@@ -68,6 +68,24 @@ final class UnknownPinnedInputAddressException extends TransactionException {
   });
 
   @override
-  String toString() =>
-      'UnknownPinnedInputAddressException(txid: $txid, vout: $vout, address: $address)';
+  String toString() => 'UnknownPinnedInputAddressException(txid: $txid, vout: $vout, address: $address)';
+}
+
+/// A chosen [CoinCandidate] has no matching entry in
+/// [HdSigningContext.inputs] — the signer cannot produce a signature for it.
+///
+/// Carries only `(txid, vout)` to identify the offending input. The
+/// candidate's address and BIP-32 derivation index are deliberately **not**
+/// included (PRD BW-0018 Phase 2 security requirements #2, #3, #4).
+///
+/// Lives in the same library as [TransactionException] because Dart 3
+/// forbids extending a `sealed` type across libraries.
+final class MissingSigningInputException extends TransactionException {
+  final String txid;
+  final int vout;
+
+  const MissingSigningInputException({required this.txid, required this.vout});
+
+  @override
+  String toString() => 'MissingSigningInputException(txid: $txid, vout: $vout)';
 }

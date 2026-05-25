@@ -7,6 +7,7 @@ final class FakeTransactionSigner implements TransactionSigner {
 
   String? capturedWalletId;
   String? capturedBech32Hrp;
+  List<SigningInput>? capturedInputs;
 
   @override
   Future<String> sign({
@@ -20,6 +21,7 @@ final class FakeTransactionSigner implements TransactionSigner {
   }) async {
     capturedWalletId = walletId;
     capturedBech32Hrp = bech32Hrp;
+    capturedInputs = List.unmodifiable(inputs);
 
     final t = signThrows;
     if (t != null) throw t;
