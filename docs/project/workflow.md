@@ -158,7 +158,7 @@ chore(BW-XXXX): short description
 - `idea-TICKET.md`
 - `vision-TICKET.md`
 - `tasklist-TICKET.md`
-- `phase/TICKET/phase-N.md`
+- `phase/phase-N.md`
 - `plan/TICKET-phase-N.md`
 - `prd/TICKET-phase-N.prd.md`
 - `research/TICKET-phase-N.md`
@@ -202,6 +202,16 @@ One artifact owns one responsibility.
 | `security review` | security findings and go/no-go | generic style review |
 | `qa` | scenario evidence and pass/fail | architecture redesign |
 | `tasklist` | cross-phase progress and release readiness | plan prose |
+
+### Discovery artifact
+
+A `discovery` artifact is **purely optional**. Analysts may produce one
+during the Clarification round (or earlier exploration) to record rejected
+alternatives, but neither the validator nor the workflow gates require it.
+Authored by `analyst`; lives at
+`docs/<TICKET>/discovery/<TICKET>-phase-<N>-discovery.md`. When present, the
+PRD links to it from `## Alternatives` (or equivalent). Existing tickets
+that pre-date Phase 3 do NOT retroactively need a discovery file.
 
 ## Roles
 
