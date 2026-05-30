@@ -73,7 +73,7 @@ Run these in Claude Code when starting or debugging the environment:
 ## Before Code Changes
 
 1. Read `docs/<TICKET>/.active_ticket`
-2. Read `docs/<TICKET>/phase/<TICKET>/phase-N.md`
+2. Read `docs/<TICKET>/phase/phase-N.md`
 3. Read `docs/<TICKET>/plan/<TICKET>-phase-N.md`
 4. Read `docs/<TICKET>/prd/<TICKET>-phase-N.prd.md`
 5. Check lane and gate requirements in the current phase
@@ -85,7 +85,7 @@ Run these in Claude Code when starting or debugging the environment:
 
 1. Run `/aidd-run-checks`
 2. Run the phase checks required by the lane
-3. Update `phase/<TICKET>/phase-N.md` and `tasklist-<TICKET>.md`
+3. Update `phase/phase-N.md` and `tasklist-<TICKET>.md`
 4. Show the diff and explain the completed batch
 5. Stop on a meaningful boundary
 
