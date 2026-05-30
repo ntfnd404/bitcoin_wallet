@@ -15,7 +15,19 @@ Changes since `3.0`:
 - New section: [External Agent Skills](#external-agent-skills) with install command, doctrine, and override priorities.
 - Updated section: [Gate Model](#gate-model) annotates each gate with the optional skills that can be invoked inside it.
 - Updated section: [Execution Stack](#execution-stack) distinguishes AIDD skills (manual), external skills (auto), and domain skills (path-scoped).
-- Gates and roles unchanged. No template or validator changes required.
+
+Changes since `3.1` (delivered by BW-META-001 v3.2):
+
+- New gate: `SPEC_CRITIQUED` between `PRD_READY` and `RESEARCH_DONE`, enforced by the new `spec-critic` role + critique artifact contract.
+- New analyst step: `Clarification round` before PRD generation (3-5 questions or ≥3-item rejection stub).
+- New artifact format: Verifiable AC (`test:` / `command:` / `manual:` prefixes), enforced by `aidd_validate.sh`.
+- New artifacts: `docs/project/vision.md`, `docs/project/roadmap.md`, and optional per-phase `discovery` files.
+- New rule: phase brief is self-contained (mandatory `## Carried context` section).
+- New rule: Trivial lane formally adopted (typo / rename / minor config; `trivial:` commit prefix).
+- New structural change: phase workspace directory flattened from `docs/<TICKET>/phase/<TICKET>/` to `docs/<TICKET>/phase/` (validator carries dual-path matcher until in-flight tickets opt in).
+- New rule: docs-sync manual gate at merge (this section).
+- New section: [Retrospective triggers](#retrospective-triggers) with three concrete trigger conditions and v3.2 seed inputs.
+- Validator additions: `check_verifiable_ac`, `check_spec_critique`, `check_clarification_round`. New Workflow Minor field (`Workflow Minor: 3.2`) in artifact metadata.
 
 ## Defaults
 
@@ -109,6 +121,15 @@ One ticket = one feature branch. No exceptions.
 - `main` only ever contains `docs/project/` (persistent docs) — never `docs/BW-XXXX/` (branch-local)
 - Code changes are committed to the feature branch throughout implementation
 - The ticket is closed by merging the feature branch into `main`
+
+### Docs-sync rule (manual gate at merge)
+
+Before merging a feature branch into `main`, the implementer/reviewer must
+verify: did the implementation introduce, remove, or change behavior that is
+documented in `docs/project/` (conventions, code-style, architecture,
+workflow, guidelines, ADRs)? If yes, the corresponding `docs/project/` file
+MUST be updated in the same PR. The check is recorded in the phase summary's
+§Docs-sync row (PASS / N/A) and is part of the `REVIEW_OK` exit.
 
 ### Ticket lifecycle
 
@@ -432,6 +453,43 @@ direct edit → review
 ```
 
 `Trivial` is the exception path, not the default engineering mode.
+
+## Retrospective triggers
+
+A methodology retrospective is held when ANY of these conditions occur first:
+
+1. Every closed `Critical` lane ticket — retrospective immediately on QA_PASS.
+2. Any phase reaching `SPEC_BLOCKED` with cumulative ≥ 2 Blocking findings
+   across all spec-critic passes (cumulative Blocking count) — retrospective
+   at end of phase. The cumulative count resets when the phase reaches
+   `QA_PASS`.
+3. After every 3 closed `Professional` or `Critical` tickets, whichever
+   accumulates first.
+
+The retrospective reviews: deferred findings (Improvement/Nit), classes of
+recurring critique (e.g. brittle literal-token AC), methodology friction the
+team noticed mid-flight, and any v3.2 → v3.3 candidate changes. Inputs read
+include phase summaries of the closing ticket (or batch of three), all
+critique artifacts (spec-critic outputs), all security reviews (especially
+INFO-level non-blocking observations), and the deferred F-finding log.
+Output is one summary file per retrospective at the recommended path
+`docs/project/retrospectives/YYYY-MM-DD-<n>.md` — or an ADR / new
+meta-ticket (e.g. BW-META-NNN) carrying the proposed methodology revision.
+
+The first retrospective for v3.2 is seeded by Phase 3 of BW-META-001:
+deferred findings from the spec-critic critique cycle (see
+`docs/BW-META-001/critique/BW-META-001-phase-3-critique.md`):
+
+- F11 — brittle literal-token AC pattern (carries over from Phase 2).
+- F12 — anti-leak compound-pipeline blind spot.
+- F13 — narrow exclusion pattern in validator regex.
+- F14 — durability-sugar in PRD scaffolds.
+- F15 — minor critique-trail wording gap.
+- F16 — Improvement / Nit aggregation backlog entry.
+
+Plus 2 security-reviewer INFO recommendations (literal-anchor inline
+comment; sensitive-discovery sub-rule — see
+`docs/BW-META-001/security/BW-META-001-phase-3-security-review.md`).
 
 ## Team Mode
 
