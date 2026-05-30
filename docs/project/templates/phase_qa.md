@@ -5,6 +5,7 @@ Ticket: <TICKET-ID>
 Phase: N
 Lane: Professional
 Workflow Version: 3
+Workflow Minor: 3.2
 Owner: QA
 Date: YYYY-MM-DD
 

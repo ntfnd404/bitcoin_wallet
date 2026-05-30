@@ -5,6 +5,7 @@ Ticket: <TICKET-ID>
 Phase: feature
 Lane: Professional
 Workflow Version: 3
+Workflow Minor: 3.2
 Owner: Product / Architect
 Date: YYYY-MM-DD
 Depends On: []
@@ -48,8 +49,19 @@ Blocked Until: none
 
 ## Acceptance Criteria
 
+<!--
+Verification format rule (Workflow Minor 3.2):
+Every Verification cell MUST start with one of three prefixes:
+  - `test:`     - automated test name or path
+  - `command:`  - shell command that produces a verifiable result
+  - `manual:`   - human-executed check with recorded evidence
+Prose verifications ("works correctly", "looks good") are forbidden and will
+be flagged FAIL by `.claude/bin/aidd_validate.sh`.
+-->
+
 | Criterion | Verification |
 |-----------|--------------|
+| Example AC | command: `grep -q foo file.txt` |
 | | |
 
 ---

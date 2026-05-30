@@ -5,7 +5,7 @@ Claude-Native Enterprise AIDD for complex products built with Claude Code.
 - `docs/project/` is the persistent source of truth
 - `docs/BW-000N/` is the branch-local feature workspace
 
-Workflow document version: `3.1` (minor).
+Workflow document version: `3.2` (minor).
 
 Artifact metadata `Workflow Version:` field stays at `3` — contracts and validator regex are unchanged.
 
@@ -15,7 +15,19 @@ Changes since `3.0`:
 - New section: [External Agent Skills](#external-agent-skills) with install command, doctrine, and override priorities.
 - Updated section: [Gate Model](#gate-model) annotates each gate with the optional skills that can be invoked inside it.
 - Updated section: [Execution Stack](#execution-stack) distinguishes AIDD skills (manual), external skills (auto), and domain skills (path-scoped).
-- Gates and roles unchanged. No template or validator changes required.
+
+Changes since `3.1` (delivered by BW-META-001 v3.2):
+
+- New gate: `SPEC_CRITIQUED` between `PRD_READY` and `RESEARCH_DONE`, enforced by the new `spec-critic` role + critique artifact contract.
+- New analyst step: `Clarification round` before PRD generation (3-5 questions or ≥3-item rejection stub).
+- New artifact format: Verifiable AC (`test:` / `command:` / `manual:` prefixes), enforced by `aidd_validate.sh`.
+- New artifacts: `docs/project/vision.md`, `docs/project/roadmap.md`, and optional per-phase `discovery` files.
+- New rule: phase brief is self-contained (mandatory `## Carried context` section).
+- New rule: Trivial lane formally adopted (typo / rename / minor config; `trivial:` commit prefix).
+- New structural change: phase workspace directory flattened from `docs/<TICKET>/phase/<TICKET>/` to `docs/<TICKET>/phase/` (validator carries dual-path matcher until in-flight tickets opt in).
+- New rule: docs-sync manual gate at merge (this section).
+- New section: [Retrospective triggers](#retrospective-triggers) with three concrete trigger conditions and v3.2 seed inputs.
+- Validator additions: `check_verifiable_ac`, `check_spec_critique`, `check_clarification_round`. New Workflow Minor field (`Workflow Minor: 3.2`) in artifact metadata.
 
 ## Defaults
 
@@ -29,6 +41,28 @@ The default mode is intentionally professional. Process quality comes from clear
 
 Repository default: `Professional`  
 Security-sensitive default: `Critical`
+
+### Trivial lane — canonical reference
+
+Canonical definition lives in the AIDD methodology vault: `Methodology/Lanes.md`. Project text reproduces the entry criteria from `Methodology/Lanes.md:3-10` (translated to English to match project documentation language):
+
+> ## Trivial
+>
+> Use only for:
+> - Typo fixes
+> - Renames
+> - Minor configuration changes
+> - Local single-file changes without architectural impact
+>
+> Flow: `edit → review`
+>
+> Do NOT use Trivial if any of the following applies:
+> - Public behavior changes
+> - Multiple modules are affected
+> - There is regression risk
+> - There are security/privacy/storage consequences
+
+Commit-trace rule: every Trivial commit must carry the `trivial:` prefix OR an issue link in the commit message. Without one of those two markers the short path is not auditable and the commit must be reclassified to `Professional`.
 
 ## Runtime Sources Of Truth
 
@@ -46,13 +80,15 @@ Local overrides belong in `.claude/settings.local.json` and must not redefine th
 ## Gate Model
 
 ```text
-IDEA_READY → PRD_READY → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
+IDEA_READY → PRD_READY → SPEC_CRITIQUED → RESEARCH_DONE → VISION_APPROVED → PLAN_APPROVED
 → TASKLIST_READY → IMPLEMENT_STEP_OK → REVIEW_OK
 → SECURITY_REVIEW_OK (Critical only) → QA_PASS
 → RELEASE_READY → DOCS_UPDATED
 ```
 
 Each gate is blocking. The next role starts only after the current gate is satisfied.
+
+`SPEC_CRITIQUED` is an enforced gate. After the `analyst` produces a PRD, the `spec-critic` agent runs against that PRD file (and only that file) and emits a critique with at least three observations. The PRD `Status` header flips from `PRD_READY` to `SPEC_CRITIQUED` only when the critic returns a positive verdict. A `SPEC_BLOCKED` verdict — triggered by any Blocking observation — sends the PRD back to the analyst for revision and a critic re-run. The `researcher` MUST refuse a PRD that is still at `PRD_READY`; `RESEARCH_DONE` is only reachable from `SPEC_CRITIQUED`.
 
 ### Gate → external skill mapping
 
@@ -61,7 +97,8 @@ External skills (Flutter/Dart) execute *inside* a gate; they never replace the r
 | Gate | Closing role | AIDD skill | Optional external skills |
 |------|--------------|------------|--------------------------|
 | `IDEA_READY → PRD_READY` | analyst | `/aidd-new-ticket`, `/aidd-new-phase` | — |
-| `PRD_READY → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
+| `PRD_READY → SPEC_CRITIQUED` | spec-critic | — | — |
+| `SPEC_CRITIQUED → RESEARCH_DONE` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `RESEARCH_DONE → VISION_APPROVED` | researcher | — | `flutter-apply-architecture-best-practices` |
 | `VISION_APPROVED → PLAN_APPROVED` | planner | — | `dart-resolve-package-conflicts`, `flutter-setup-declarative-routing`, `flutter-setup-localization` |
 | `PLAN_APPROVED → TASKLIST_READY` | planner | `/aidd-new-phase` | — |
@@ -84,6 +121,15 @@ One ticket = one feature branch. No exceptions.
 - `main` only ever contains `docs/project/` (persistent docs) — never `docs/BW-XXXX/` (branch-local)
 - Code changes are committed to the feature branch throughout implementation
 - The ticket is closed by merging the feature branch into `main`
+
+### Docs-sync rule (manual gate at merge)
+
+Before merging a feature branch into `main`, the implementer/reviewer must
+verify: did the implementation introduce, remove, or change behavior that is
+documented in `docs/project/` (conventions, code-style, architecture,
+workflow, guidelines, ADRs)? If yes, the corresponding `docs/project/` file
+MUST be updated in the same PR. The check is recorded in the phase summary's
+§Docs-sync row (PASS / N/A) and is part of the `REVIEW_OK` exit.
 
 ### Ticket lifecycle
 
@@ -133,7 +179,7 @@ chore(BW-XXXX): short description
 - `idea-TICKET.md`
 - `vision-TICKET.md`
 - `tasklist-TICKET.md`
-- `phase/TICKET/phase-N.md`
+- `phase/phase-N.md`
 - `plan/TICKET-phase-N.md`
 - `prd/TICKET-phase-N.prd.md`
 - `research/TICKET-phase-N.md`
@@ -178,12 +224,23 @@ One artifact owns one responsibility.
 | `qa` | scenario evidence and pass/fail | architecture redesign |
 | `tasklist` | cross-phase progress and release readiness | plan prose |
 
+### Discovery artifact
+
+A `discovery` artifact is **purely optional**. Analysts may produce one
+during the Clarification round (or earlier exploration) to record rejected
+alternatives, but neither the validator nor the workflow gates require it.
+Authored by `analyst`; lives at
+`docs/<TICKET>/discovery/<TICKET>-phase-<N>-discovery.md`. When present, the
+PRD links to it from `## Alternatives` (or equivalent). Existing tickets
+that pre-date Phase 3 do NOT retroactively need a discovery file.
+
 ## Roles
 
 | Agent | Input | Output | Gate |
 |-------|-------|--------|------|
 | `analyst` | `idea` | `prd` | `IDEA_READY → PRD_READY` |
-| `researcher` | `idea`, `prd`, codebase | `vision`, `research` | `PRD_READY → RESEARCH_DONE / VISION_APPROVED` |
+| `spec-critic` | `prd` | spec critique | `PRD_READY → SPEC_CRITIQUED` |
+| `researcher` | `idea`, `prd`, codebase | `vision`, `research` | `SPEC_CRITIQUED → RESEARCH_DONE / VISION_APPROVED` |
 | `planner` | `vision`, `prd`, `research` | `plan`, `phase`, `tasklist` | `RESEARCH_DONE → PLAN_APPROVED → TASKLIST_READY` |
 | `implementer` | `phase`, `plan`, `prd` | code + task updates | `TASKLIST_READY → IMPLEMENT_STEP_OK` |
 | `reviewer` | diff + `plan` + `prd` + `phase` | phase summary | `IMPLEMENT_STEP_OK → REVIEW_OK` |
@@ -396,6 +453,43 @@ direct edit → review
 ```
 
 `Trivial` is the exception path, not the default engineering mode.
+
+## Retrospective triggers
+
+A methodology retrospective is held when ANY of these conditions occur first:
+
+1. Every closed `Critical` lane ticket — retrospective immediately on QA_PASS.
+2. Any phase reaching `SPEC_BLOCKED` with cumulative ≥ 2 Blocking findings
+   across all spec-critic passes (cumulative Blocking count) — retrospective
+   at end of phase. The cumulative count resets when the phase reaches
+   `QA_PASS`.
+3. After every 3 closed `Professional` or `Critical` tickets, whichever
+   accumulates first.
+
+The retrospective reviews: deferred findings (Improvement/Nit), classes of
+recurring critique (e.g. brittle literal-token AC), methodology friction the
+team noticed mid-flight, and any v3.2 → v3.3 candidate changes. Inputs read
+include phase summaries of the closing ticket (or batch of three), all
+critique artifacts (spec-critic outputs), all security reviews (especially
+INFO-level non-blocking observations), and the deferred F-finding log.
+Output is one summary file per retrospective at the recommended path
+`docs/project/retrospectives/YYYY-MM-DD-<n>.md` — or an ADR / new
+meta-ticket (e.g. BW-META-NNN) carrying the proposed methodology revision.
+
+The first retrospective for v3.2 is seeded by Phase 3 of BW-META-001:
+deferred findings from the spec-critic critique cycle (see
+`docs/BW-META-001/critique/BW-META-001-phase-3-critique.md`):
+
+- F11 — brittle literal-token AC pattern (carries over from Phase 2).
+- F12 — anti-leak compound-pipeline blind spot.
+- F13 — narrow exclusion pattern in validator regex.
+- F14 — durability-sugar in PRD scaffolds.
+- F15 — minor critique-trail wording gap.
+- F16 — Improvement / Nit aggregation backlog entry.
+
+Plus 2 security-reviewer INFO recommendations (literal-anchor inline
+comment; sensitive-discovery sub-rule — see
+`docs/BW-META-001/security/BW-META-001-phase-3-security-review.md`).
 
 ## Team Mode
 

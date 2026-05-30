@@ -5,6 +5,7 @@ Ticket: <TICKET-ID> | none
 Phase: feature | N | project
 Lane: Professional | Critical
 Workflow Version: 3
+Workflow Minor: 3.2
 Owner: Architect
 Date: YYYY-MM-DD
 
