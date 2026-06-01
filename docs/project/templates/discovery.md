@@ -4,7 +4,7 @@ Status: `DISCOVERY_DRAFT` | `DISCOVERY_FINAL`
 Ticket: <TICKET>
 Phase: <N>
 Workflow Version: 3
-Workflow Minor: 3.2
+Workflow Minor: 3.3
 Owner: Analyst
 Date: YYYY-MM-DD
 

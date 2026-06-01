@@ -26,8 +26,8 @@ Workspace packages: `address`, `bitcoin_node`, `keys`, `rpc_client`,
 
 ## Runtime Defaults
 
-- Workflow document version: `3.2` (artifact metadata field stays at `3`)
-- Workflow Minor: 3.2
+- Workflow document version: `3.3` (artifact metadata field stays at `3`)
+- Workflow Minor: 3.3
 - Runtime model: `Claude-native`
 - Default lane: `Professional`
 - Mandatory `Critical` lane for wallet, seed, keys, auth, crypto, signing, storage migration, or API contract work
