@@ -5,7 +5,7 @@ Ticket: <TICKET-ID>
 Phase: feature
 Lane: Professional
 Workflow Version: 3
-Workflow Minor: 3.2
+Workflow Minor: 3.3
 Owner: Planner
 Context: Idea `docs/<TICKET>/idea-<TICKET>.md` · Vision `docs/<TICKET>/vision-<TICKET>.md`
 

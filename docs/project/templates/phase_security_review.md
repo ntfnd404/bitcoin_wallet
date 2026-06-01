@@ -5,7 +5,7 @@ Ticket: <TICKET-ID>
 Phase: N
 Lane: Critical
 Workflow Version: 3
-Workflow Minor: 3.2
+Workflow Minor: 3.3
 Owner: Security Reviewer
 Date: YYYY-MM-DD
 

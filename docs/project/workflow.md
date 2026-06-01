@@ -5,29 +5,9 @@ Claude-Native Enterprise AIDD for complex products built with Claude Code.
 - `docs/project/` is the persistent source of truth
 - `docs/BW-000N/` is the branch-local feature workspace
 
-Workflow document version: `3.2` (minor).
+Workflow document version: `3.3` (minor).
 
 Artifact metadata `Workflow Version:` field stays at `3` — contracts and validator regex are unchanged.
-
-Changes since `3.0`:
-
-- New layer: **External Agent Skills** (Flutter team, Dart team) integrated into the gate model.
-- New section: [External Agent Skills](#external-agent-skills) with install command, doctrine, and override priorities.
-- Updated section: [Gate Model](#gate-model) annotates each gate with the optional skills that can be invoked inside it.
-- Updated section: [Execution Stack](#execution-stack) distinguishes AIDD skills (manual), external skills (auto), and domain skills (path-scoped).
-
-Changes since `3.1` (delivered by BW-META-001 v3.2):
-
-- New gate: `SPEC_CRITIQUED` between `PRD_READY` and `RESEARCH_DONE`, enforced by the new `spec-critic` role + critique artifact contract.
-- New analyst step: `Clarification round` before PRD generation (3-5 questions or ≥3-item rejection stub).
-- New artifact format: Verifiable AC (`test:` / `command:` / `manual:` prefixes), enforced by `aidd_validate.sh`.
-- New artifacts: `docs/project/vision.md`, `docs/project/roadmap.md`, and optional per-phase `discovery` files.
-- New rule: phase brief is self-contained (mandatory `## Carried context` section).
-- New rule: Trivial lane formally adopted (typo / rename / minor config; `trivial:` commit prefix).
-- New structural change: phase workspace directory flattened from `docs/<TICKET>/phase/<TICKET>/` to `docs/<TICKET>/phase/` (validator carries dual-path matcher until in-flight tickets opt in).
-- New rule: docs-sync manual gate at merge (this section).
-- New section: [Retrospective triggers](#retrospective-triggers) with three concrete trigger conditions and v3.2 seed inputs.
-- Validator additions: `check_verifiable_ac`, `check_spec_critique`, `check_clarification_round`. New Workflow Minor field (`Workflow Minor: 3.2`) in artifact metadata.
 
 ## Defaults
 
@@ -89,6 +69,10 @@ IDEA_READY → PRD_READY → SPEC_CRITIQUED → RESEARCH_DONE → VISION_APPROVE
 Each gate is blocking. The next role starts only after the current gate is satisfied.
 
 `SPEC_CRITIQUED` is an enforced gate. After the `analyst` produces a PRD, the `spec-critic` agent runs against that PRD file (and only that file) and emits a critique with at least three observations. The PRD `Status` header flips from `PRD_READY` to `SPEC_CRITIQUED` only when the critic returns a positive verdict. A `SPEC_BLOCKED` verdict — triggered by any Blocking observation — sends the PRD back to the analyst for revision and a critic re-run. The `researcher` MUST refuse a PRD that is still at `PRD_READY`; `RESEARCH_DONE` is only reachable from `SPEC_CRITIQUED`.
+
+## Spec-critic
+
+Two passes (`SPEC_BLOCKED → revision → SPEC_CRITIQUED`) is the expected cadence for PRDs under Critical or Professional lane. It is not a sign of low-quality PRD authoring; it is the gate working as designed. Spec-critic findings on pass 1 surface predicted-shape mismatches, AC durability nits, and exclusion-pattern hygiene gaps that the analyst could not anticipate without a second adversarial read. Tickets that pass on a single sweep are the exception, not the target.
 
 ### Gate → external skill mapping
 
@@ -185,6 +169,8 @@ chore(BW-XXXX): short description
 - `research/TICKET-phase-N.md`
 - `qa/TICKET-phase-N.md`
 - `security/TICKET-phase-N.md` for `Critical`
+- `critique/TICKET-phase-N-critique.md`   (spec-critic output)
+- `discovery/TICKET-phase-N-discovery.md` (optional)
 - `TICKET-phase-N-summary.md`
 - `metrics.log`
 
@@ -234,6 +220,44 @@ Authored by `analyst`; lives at
 PRD links to it from `## Alternatives` (or equivalent). Existing tickets
 that pre-date Phase 3 do NOT retroactively need a discovery file.
 
+## Verifiable AC
+
+Every PRD acceptance criterion ships as a `test:` / `command:` / `manual:` shell-evaluable predicate. The patterns below codify the durable shapes that emerged from spec-critic feedback.
+
+### Verifiable AC — anti-patterns
+
+Literal-token-grep is the dominant anti-pattern: an AC that asserts the presence of a specific word, header, or section name will break on any harmless rename or rewording, even when the artifact still satisfies the underlying intent. The BW-META-001 Phase 3 spec-critic cycle hit this directly — the original `AC-1`, `AC-2`, `AC-5`, and `AC-18` all encoded section names verbatim and required a Route-2 PRD revision before the gate could close.
+
+Replace literal-token-grep with one of three durable shapes:
+
+- **count-based** — assert a structural count rather than a specific token. Example: `grep -c "^## " docs/project/vision.md` ≥ N. Survives section renames.
+- **file-existence** — assert that an artifact lives at a contract path. Example: `test -f docs/<TICKET>/discovery/<TICKET>-phase-<N>-discovery.md`. Survives content edits.
+- **semantic comparison** — assert that two sets are equal (or one is contained in the other) via `comm`. Example: `comm -23 <(printf '%s\n' <expected sections> | sort) <(grep "^## " <file> | sed 's/^## //' | sort)` returns empty. Names the missing element when it fails.
+
+### Anti-leak AC — canonical shape
+
+The anti-leak AC for any vault- or cross-repository diff sweep MUST be expressed as two legs under `set -e`:
+
+```sh
+set -e
+# keyword leg — forbidden domain tokens
+git diff <SHA> | grep -iE "^\+.*(bitcoin|wallet|satoshi|seed|btc)" | wc -l   # MUST be 0
+# ticket leg — allowlisted ticket placeholders only
+git diff <SHA> | grep -v -E "<allowlist>" | grep -E "\bBW-[0-9A-Z]+\b" | wc -l   # MUST be 0
+```
+
+Both the **keyword leg** and the **ticket leg** must each return a zero count independently. A single-pipe compound form (`... | grep keywords | grep tickets`) is forbidden: it lets a non-ticket keyword leak escape because the final ticket grep drops the line. The **two-leg** shape is the only acceptable form for anti-leak ACs.
+
+### Exclusion-pattern hygiene
+
+When an AC uses `grep -v` to carve out historical or intentionally-retained references, the exclusion patterns MUST anchor each filename to its enclosing directory segment. Use `/phase/phase-3.md`, NOT bare `/phase-3.md` — the unanchored form will also match `phase-30.md`, `phase-3.md.bak`, or any stray `phase-3.md` placed under an unintended subdirectory later.
+
+Exclusion list is exhaustive; if a stale reference surfaces under a non-excluded subdir, fix the artifact rather than widen the exclusion. Operator drift toward broader exclusions hides regressions that the AC was built to catch.
+
+### AC remediation routes
+
+When a `command:` AC fails on first sweep, ask: did the implementation drift, or did the AC predict the wrong shape? Route 1 (edit content to match AC) if AC describes the intended shape and the artifact missed it. Route 2 (revise the AC) if the artifact is correct and the AC was over-specified. Route 1 is the default; Route 2 requires a one-line rationale in the critique trail so the revision history stays auditable and future authors can see which ACs were tightened versus loosened.
+
 ## Roles
 
 | Agent | Input | Output | Gate |
@@ -247,12 +271,7 @@ that pre-date Phase 3 do NOT retroactively need a discovery file.
 | `security-reviewer` | diff + `plan` + `prd` + review summary | security record | `REVIEW_OK → SECURITY_REVIEW_OK` |
 | `qa` | `prd` + `phase` + `plan` + review/security artifacts | QA record | `REVIEW_OK / SECURITY_REVIEW_OK → QA_PASS / QA_FAIL` |
 
-Role rules:
-
-- `implementer` is the primary write-capable execution role
-- `reviewer`, `qa`, and `security-reviewer` are read-mostly roles
-- `researcher` may run in the background
-- `security-reviewer` is mandatory only for `Critical`
+`reviewer`, `qa`, and `security-reviewer` are read-mostly roles — no code edits.
 
 ## Execution Stack
 
@@ -333,24 +352,7 @@ Workflow control commands must remain explicit-use only. `/aidd-init` is the boo
 
 ## External Agent Skills
 
-Vendor-maintained recipes for stack-specific tasks. Installed from `flutter/skills` and `dart-lang/skills`.
-
-### Installation
-
-```bash
-# With node/npx
-npx skills add flutter/skills    --skill '*' --agent universal
-npx skills add dart-lang/skills  --skill '*' --agent universal
-
-# Without node — direct git copy
-cd /tmp && \
-  git clone --depth 1 https://github.com/flutter/skills.git flutter-skills && \
-  git clone --depth 1 https://github.com/dart-lang/skills.git  dart-skills && \
-  cd <project>/.claude/skills && \
-  for d in /tmp/flutter-skills/skills/* /tmp/dart-skills/skills/*; do \
-    rm -rf "$(basename $d)" && cp -R "$d" "$(basename $d)"; \
-  done
-```
+Vendor-maintained recipes for stack-specific tasks from `flutter/skills` and `dart-lang/skills`.
 
 ### Active set in this repository
 
@@ -372,15 +374,6 @@ When an external skill conflicts with project conventions, the project wins. Pri
 5. Framework default
 
 The implementer must apply project post-processing on top of any skill output: no relative imports (`code-style-guide.md:19`), empty line before `return`, BLoC-only state management, test helpers in separate files under `test/helpers/`, selective catches in use cases.
-
-### Updating
-
-```bash
-npx skills update   # if node available
-# or repeat the git copy above
-```
-
-Re-run `/aidd-validate` after updates. Bump `Workflow Version` only if a gate–skill contract changes, not on every upstream refresh.
 
 ## Execution Cadence
 
@@ -421,75 +414,7 @@ It verifies:
 - stale legacy slash commands do not remain
 - docs and Claude runtime stay aligned
 
-It does not verify:
-
-- application business logic
-- feature architecture quality
-- test depth
-- release content outside the workflow layer
-
 Run it after workflow changes and before declaring the process updated.
-
-## Lane Flows
-
-`Professional`
-
-```text
-idea → analyst → researcher → planner
-→ implement batches → reviewer → qa
-```
-
-`Critical`
-
-```text
-idea → analyst → researcher → planner
-→ implement batches → reviewer → security-reviewer → qa
-```
-
-`Trivial`
-
-```text
-direct edit → review
-```
-
-`Trivial` is the exception path, not the default engineering mode.
-
-## Retrospective triggers
-
-A methodology retrospective is held when ANY of these conditions occur first:
-
-1. Every closed `Critical` lane ticket — retrospective immediately on QA_PASS.
-2. Any phase reaching `SPEC_BLOCKED` with cumulative ≥ 2 Blocking findings
-   across all spec-critic passes (cumulative Blocking count) — retrospective
-   at end of phase. The cumulative count resets when the phase reaches
-   `QA_PASS`.
-3. After every 3 closed `Professional` or `Critical` tickets, whichever
-   accumulates first.
-
-The retrospective reviews: deferred findings (Improvement/Nit), classes of
-recurring critique (e.g. brittle literal-token AC), methodology friction the
-team noticed mid-flight, and any v3.2 → v3.3 candidate changes. Inputs read
-include phase summaries of the closing ticket (or batch of three), all
-critique artifacts (spec-critic outputs), all security reviews (especially
-INFO-level non-blocking observations), and the deferred F-finding log.
-Output is one summary file per retrospective at the recommended path
-`docs/project/retrospectives/YYYY-MM-DD-<n>.md` — or an ADR / new
-meta-ticket (e.g. BW-META-NNN) carrying the proposed methodology revision.
-
-The first retrospective for v3.2 is seeded by Phase 3 of BW-META-001:
-deferred findings from the spec-critic critique cycle (see
-`docs/BW-META-001/critique/BW-META-001-phase-3-critique.md`):
-
-- F11 — brittle literal-token AC pattern (carries over from Phase 2).
-- F12 — anti-leak compound-pipeline blind spot.
-- F13 — narrow exclusion pattern in validator regex.
-- F14 — durability-sugar in PRD scaffolds.
-- F15 — minor critique-trail wording gap.
-- F16 — Improvement / Nit aggregation backlog entry.
-
-Plus 2 security-reviewer INFO recommendations (literal-anchor inline
-comment; sensitive-discovery sub-rule — see
-`docs/BW-META-001/security/BW-META-001-phase-3-security-review.md`).
 
 ## Team Mode
 
@@ -543,9 +468,6 @@ Use `Agent` tool with `subagent_type` matching the role and pass full context fr
 
 Recovery:
 
-- `QA_FAIL`: fix, re-run checks, and re-enter review if design changed
-- repeated `QA_FAIL`: reopen plan or research the broken assumption
-- blocked security review: do not continue to QA until resolved or re-scoped
 - scope creep mid-phase: create a new phase
 - architecture uncertainty: create ADR, then update vision and plan
 
