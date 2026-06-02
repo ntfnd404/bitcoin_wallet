@@ -38,7 +38,7 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
     MineBlockRequested event,
     Emitter<RegtestMiningState> emit,
   ) async {
-    await _mine(event.toAddress, emit);
+    await _mine(event.toAddress, 1, emit);
   }
 
   Future<void> _onMineBlockWithWallet(
@@ -72,13 +72,13 @@ final class RegtestMiningBloc extends Bloc<RegtestMiningEvent, RegtestMiningStat
       return;
     }
 
-    await _mine(toAddress, emit);
+    await _mine(toAddress, event.count, emit);
   }
 
-  Future<void> _mine(String toAddress, Emitter<RegtestMiningState> emit) async {
+  Future<void> _mine(String toAddress, int count, Emitter<RegtestMiningState> emit) async {
     emit(state.copyWith(status: RegtestMiningStatus.processing));
     try {
-      await _blockGenerationGateway.generateToAddress(1, toAddress);
+      await _blockGenerationGateway.generateToAddress(count, toAddress);
       if (isClosed) return;
       emit(state.copyWith(status: RegtestMiningStatus.successful));
       _eventBus.emit(BlockMined(walletId: _walletId));

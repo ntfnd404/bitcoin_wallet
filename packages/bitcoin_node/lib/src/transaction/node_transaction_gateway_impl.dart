@@ -24,6 +24,8 @@ final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
       );
 
       return result as String;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
     }
@@ -49,6 +51,8 @@ final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
       );
 
       return result as String;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionPreparationException(), stack);
     }
@@ -80,6 +84,8 @@ final class NodeTransactionGatewayImpl implements NodeTransactionGateway {
     } on TransactionSigningException {
       // Local incomplete-signing throw — preserve type, do not re-wrap.
       rethrow;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionSigningException(), stack);
     }

@@ -45,14 +45,7 @@ class _RegtestMiningScopeState extends State<RegtestMiningScope> {
       eventBus: deps.eventBus,
       walletId: walletId,
       addressResolver: (wallet) => switch (wallet) {
-        NodeWallet() =>
-          tx
-              .prepareNodeSend(
-                walletName: wallet.name,
-                targetSat: const Satoshi(1),
-                feeRateSatPerVbyte: 1,
-              )
-              .then((prep) => prep.changeAddress),
+        NodeWallet() => tx.nodeTransactionGateway.getNewAddress(wallet.name),
         HdWallet() => addressRepository.getAddresses(wallet.id).then((addrs) {
           final native = addrs.where((a) => a.type == AddressType.nativeSegwit).toList();
 

@@ -92,9 +92,10 @@ void main() {
 
     // B3
     test('emits SendInsufficientFundsAction action and error status when strategies empty', () async {
-      fakeWorkflow.prepareResult = SendPreparation.forTest(
+      fakeWorkflow.prepareResult = const SendPreparationResult(
         strategies: [],
         changeAddress: 'bcrt1qchange',
+        signingContext: NodeSignerPayload(),
       );
 
       final actions = <SendAction>[];
@@ -353,24 +354,22 @@ CoinSelectionStrategyResult _fakeStrategy(
   result: _fakeCoinResult(fee: fee, change: change),
 );
 
-/// Builds a test [SendPreparation] for BLoC tests.
-///
-/// Uses [SendPreparation.forTest] to avoid depending on internal subtypes
-/// ([NodeSendResult]/[HdSendResult]) from the test layer.
-SendPreparation _fakePrep([String strategyName = 'fifo']) => SendPreparation.forTest(
+SendPreparation _fakePrep([String strategyName = 'fifo']) => SendPreparationResult(
   strategies: [_fakeStrategy(strategyName)],
   changeAddress: 'bcrt1qchange',
+  signingContext: const NodeSignerPayload(),
 );
 
 /// Multi-strategy prep. With feeRate=10 (used in tests):
 /// - fifo:       score = 2000 + 68*10 = 2680
 /// - lifo:       score = 1500 + 68*10 = 2180
 /// - min_change: score = 1000 + 68*10 = 1680  ← recommended
-SendPreparation _fakeMultiPrep() => SendPreparation.forTest(
+SendPreparation _fakeMultiPrep() => SendPreparationResult(
   strategies: [
     _fakeStrategy('fifo', fee: 2000, change: 48000),
     _fakeStrategy('lifo', fee: 1500, change: 48500),
     _fakeStrategy('min_change'),
   ],
   changeAddress: 'bcrt1qchange',
+  signingContext: const NodeSignerPayload(),
 );

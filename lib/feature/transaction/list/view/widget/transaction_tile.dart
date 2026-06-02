@@ -18,15 +18,19 @@ class TransactionTile extends StatelessWidget {
     final amountBtc = transaction.amountSat.btcDisplay;
     final confirmations = transaction.confirmations;
 
+    final address = transaction.address;
+    final addressShort = address != null && address.length > 20
+        ? '${address.substring(0, 10)}…${address.substring(address.length - 8)}'
+        : address;
+    final statusLabel = isMempool ? 'Unconfirmed' : 'Confirmed ($confirmations)';
+    final subtitleText = addressShort != null ? '$statusLabel · $addressShort' : statusLabel;
+
     return Material(
       color: isMempool ? Colors.amber.shade50 : Colors.transparent,
       child: ListTile(
         onTap: onTap,
         title: Text(amountBtc),
-        subtitle: Text(
-          isMempool ? 'Unconfirmed' : 'Confirmed ($confirmations)',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        subtitle: Text(subtitleText, style: Theme.of(context).textTheme.bodySmall),
         leading: Icon(
           isIncoming ? Icons.arrow_downward : Icons.arrow_upward,
           color: isIncoming ? Colors.green : Colors.red,

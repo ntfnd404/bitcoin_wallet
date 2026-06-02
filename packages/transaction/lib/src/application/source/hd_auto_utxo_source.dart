@@ -3,14 +3,14 @@ import 'package:transaction/src/domain/contract/utxo_source.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/gateway/utxo_scan_gateway.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/signing_context.dart';
+import 'package:transaction/src/domain/value_object/signer_payload.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
 import 'package:transaction/src/domain/value_object/utxo_source_result.dart';
 import 'package:wallet/wallet.dart';
 
 /// UTXO source for the HD Wallet (auto-selection variant).
 ///
-/// Mirrors steps 1–9 of `PrepareHdSendUseCase`:
+/// Steps performed by [resolve]:
 /// 1. Load all stored HD addresses; keep only native-segwit entries.
 /// 2. Scan the UTXO set for those addresses.
 /// 3. Sort scanned UTXOs by block height ASC (oldest first) — assigns each
@@ -34,17 +34,21 @@ final class HdAutoUtxoSource implements UtxoSource {
   @override
   Future<UtxoSourceResult> resolve() async {
     try {
+      // 1. Load all HD addresses; keep only native-segwit entries.
       final entries = await _addressRepository.getAddresses(_walletId);
       final nativeSegwit = entries.where((e) => e.type == AddressType.nativeSegwit).toList();
 
+      // 2. Scan UTXO set for those addresses.
       final addressStrings = nativeSegwit.map((e) => e.value).toList();
       final scanned = await _utxoScanGateway.scanForAddresses(addressStrings);
 
       final addressLookup = {for (final e in nativeSegwit) e.value: e};
 
+      // 3. Sort by block height ASC — oldest UTXO gets highest age rank.
       scanned.sort((a, b) => a.height.compareTo(b.height));
       final sortedByHeight = scanned;
 
+      // 4. Map to CoinCandidate + build signingInputs keyed by (txid, vout).
       final candidates = <CoinCandidate>[];
       final signingInputs = <(String, int), SigningInput>{};
 
@@ -76,6 +80,7 @@ final class HdAutoUtxoSource implements UtxoSource {
         }
       }
 
+      // 5. Change address = highest-derivation-index native-segwit entry.
       final changeAddress = nativeSegwit.isEmpty
           ? ''
           : (nativeSegwit..sort((a, b) => b.index.compareTo(a.index))).first.value;
@@ -83,7 +88,7 @@ final class HdAutoUtxoSource implements UtxoSource {
       return UtxoSourceResult(
         candidates: candidates,
         changeAddress: changeAddress,
-        signingContext: HdSigningContext(signingInputs),
+        signingContext: HdSignerPayload(signingInputs),
       );
     } on TransactionException {
       rethrow;

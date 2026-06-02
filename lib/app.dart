@@ -27,6 +27,13 @@ class _AppState extends State<App> {
   }
 
   @override
+  void dispose() {
+    _delegate.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => AppScope(
     dependencies: widget.dependencies,
     child: MaterialApp.router(

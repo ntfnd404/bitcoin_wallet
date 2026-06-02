@@ -30,7 +30,7 @@ void main() {
     test('happy path — returns broadcast txid; captures walletId and bech32Hrp', () async {
       final txid = await signer.signAndBroadcast(
         strategy: _buildStrategy(),
-        signingContext: HdSigningContext({
+        signingContext: HdSignerPayload({
           (_kChosenTxid, 0): _signingInputFor(_kChosenAddress, 0, derivationIndex: 7),
         }),
         recipientAddress: 'bc1qrecipient',
@@ -43,11 +43,11 @@ void main() {
       expect(txSigner.capturedBech32Hrp, 'bc');
     });
 
-    test('rejection — NodeSigningContext throws TransactionSigningException; no sign call', () async {
+    test('rejection — NodeSignerPayload throws TransactionSigningException; no sign call', () async {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: const NodeSigningContext(),
+          signingContext: const NodeSignerPayload(),
           recipientAddress: 'bc1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bc1qchange',
@@ -61,7 +61,7 @@ void main() {
     test('chosen-subset iteration — extra unrelated map entry is ignored (PRD req #1)', () async {
       await signer.signAndBroadcast(
         strategy: _buildStrategy(),
-        signingContext: HdSigningContext({
+        signingContext: HdSignerPayload({
           (_kChosenTxid, 0): _signingInputFor(_kChosenAddress, 0, derivationIndex: 7),
           ('unrelated_txid', 5): _signingInputFor(_kUnrelatedAddress, 5, derivationIndex: 99),
         }),
@@ -84,7 +84,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: HdSigningContext(const {}),
+          signingContext: HdSignerPayload(const {}),
           recipientAddress: 'bc1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bc1qchange',
@@ -107,7 +107,7 @@ void main() {
       try {
         await signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: HdSigningContext({
+          signingContext: HdSignerPayload({
             (unrelatedTxid, 99): _signingInputFor(_kChosenAddress, 99, derivationIndex: 42),
           }),
           recipientAddress: 'bc1qrecipient',
@@ -131,7 +131,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: HdSigningContext({
+          signingContext: HdSignerPayload({
             (_kChosenTxid, 0): _signingInputFor(_kChosenAddress, 0, derivationIndex: 7),
           }),
           recipientAddress: 'bc1qrecipient',
@@ -148,7 +148,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: HdSigningContext({
+          signingContext: HdSignerPayload({
             (_kChosenTxid, 0): _signingInputFor(_kChosenAddress, 0, derivationIndex: 7),
           }),
           recipientAddress: 'bc1qrecipient',
@@ -173,7 +173,7 @@ void main() {
         await expectLater(
           signer.signAndBroadcast(
             strategy: _buildStrategy(),
-            signingContext: HdSigningContext({
+            signingContext: HdSignerPayload({
               (_kChosenTxid, 0): _signingInputFor(_kChosenAddress, 0, derivationIndex: 7),
             }),
             recipientAddress: 'bc1qrecipient',

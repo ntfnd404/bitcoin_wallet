@@ -35,6 +35,10 @@ final class Utxo with Confirmable {
   /// (e.g. `m/84'/1'/0'/0/5`). Null if the descriptor is unavailable.
   final String? derivationPath;
 
+  /// True if this output is a coinbase (block mining reward).
+  /// False means it came from a regular transfer.
+  final bool isCoinbase;
+
   @override
   int get hashCode => Object.hash(txid, vout);
 
@@ -48,6 +52,7 @@ final class Utxo with Confirmable {
     required this.type,
     required this.spendable,
     this.derivationPath,
+    this.isCoinbase = false,
   });
 
   @override

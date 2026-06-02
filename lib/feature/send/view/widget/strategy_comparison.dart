@@ -32,157 +32,243 @@ class StrategyComparison extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Table(
-          border: TableBorder.all(color: Theme.of(context).dividerColor, width: 0.5),
-          columnWidths: const {
-            0: FlexColumnWidth(2),
-            1: FlexColumnWidth(),
-            2: FlexColumnWidth(2),
-            3: FlexColumnWidth(2),
-          },
-          children: [
-            StrategyHeaderRow(textTheme: textTheme),
-            ...strategies.map(
-              (e) => StrategyDataRow(
-                context: context,
-                name: e.name,
-                result: e.result,
-                isStochastic: e.isStochastic,
-                isSelected: state.selectedStrategy == e.name,
-                isRecommended: isAuto && state.selectedStrategy == e.name,
-                textTheme: textTheme,
-              ),
-            ),
-          ],
+        _StrategyTable(
+          strategies: strategies,
+          failedStrategies: state.failedStrategies ?? const [],
+          selectedStrategy: state.selectedStrategy,
+          isAuto: isAuto,
         ),
       ],
     );
   }
 }
 
-class StrategyHeaderRow extends TableRow {
-  StrategyHeaderRow({required TextTheme textTheme})
-      : super(
-          decoration: const BoxDecoration(color: Color(0xFFEEEEEE)),
-          children: ['Strategy', 'Inputs', 'Change', 'Fee']
-              .map(
-                (h) => Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Text(
-                    h,
-                    style: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-              .toList(),
-        );
-}
+class _StrategyTable extends StatelessWidget {
+  const _StrategyTable({
+    required this.strategies,
+    required this.failedStrategies,
+    required this.selectedStrategy,
+    required this.isAuto,
+  });
 
-class StrategyDataRow extends TableRow {
-  StrategyDataRow({
-    required BuildContext context,
-    required String name,
-    required CoinSelectionResult result,
-    required bool isStochastic,
-    required bool isSelected,
-    required bool isRecommended,
-    required TextTheme textTheme,
-  }) : super(
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Colors.transparent,
-          ),
-          children: [
-            GestureDetector(
-              onTap: () => context
-                  .read<SendBloc>()
-                  .add(SendStrategySelected(strategyName: name)),
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Row(
-                  children: [
-                    Text(
-                      name,
-                      style: textTheme.bodySmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    if (isRecommended) ...[
-                      const SizedBox(width: 4),
-                      _AutoBadge(textTheme: textTheme, context: context),
-                    ],
-                    if (isStochastic) ...[
-                      const SizedBox(width: 4),
-                      _StochasticBadge(textTheme: textTheme, context: context),
-                    ],
-                  ],
-                ),
-              ),
+  final List<CoinSelectionStrategyResult> strategies;
+  final List<String> failedStrategies;
+  final String? selectedStrategy;
+  final bool isAuto;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final headerStyle = textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold);
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.dividerColor, width: 0.5),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Column(
+        children: [
+          // Header row
+          ColoredBox(
+            color: const Color(0xFFEEEEEE),
+            child: Row(
+              children: [
+                _HeaderCell(text: 'Strategy', flex: 2, style: headerStyle),
+                _HeaderCell(text: 'Inputs', flex: 1, style: headerStyle),
+                _HeaderCell(text: 'Change', flex: 2, style: headerStyle),
+                _HeaderCell(text: 'Fee', flex: 2, style: headerStyle),
+              ],
             ),
-            StrategyCell(text: '${result.inputs.length}', textTheme: textTheme),
-            StrategyCell(
-                text: '${result.changeSat.value} sat', textTheme: textTheme),
-            StrategyCell(
-                text: '${result.feeSat.value} sat', textTheme: textTheme),
-          ],
-        );
+          ),
+          const Divider(height: 0.5, thickness: 0.5),
+          // Data rows — successful strategies
+          ...strategies.map((e) {
+            final isSelected = selectedStrategy == e.name;
+            final isRecommended = isAuto && isSelected;
+
+            return _StrategyRow(
+              name: e.name,
+              result: e.result,
+              isStochastic: e.isStochastic,
+              isSelected: isSelected,
+              isRecommended: isRecommended,
+            );
+          }),
+          // Failed strategies — shown greyed out so the user knows they exist
+          ...failedStrategies.map(_FailedStrategyRow.new),
+        ],
+      ),
+    );
+  }
 }
 
-class StrategyCell extends StatelessWidget {
-  const StrategyCell({super.key, required this.text, required this.textTheme});
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.text, required this.flex, this.style});
 
   final String text;
-  final TextTheme textTheme;
+  final int flex;
+  final TextStyle? style;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(6),
-        child: Text(text, style: textTheme.bodySmall),
-      );
+  Widget build(BuildContext context) => Expanded(
+    flex: flex,
+    child: Padding(
+      padding: const EdgeInsets.all(6),
+      child: Text(text, style: style),
+    ),
+  );
 }
 
-class _AutoBadge extends StatelessWidget {
-  const _AutoBadge({required this.textTheme, required this.context});
+class _StrategyRow extends StatelessWidget {
+  const _StrategyRow({
+    required this.name,
+    required this.result,
+    required this.isStochastic,
+    required this.isSelected,
+    required this.isRecommended,
+  });
 
-  final TextTheme textTheme;
-  final BuildContext context;
+  final String name;
+  final CoinSelectionResult result;
+  final bool isStochastic;
+  final bool isSelected;
+  final bool isRecommended;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
+    return Material(
+      color: isSelected ? theme.colorScheme.primaryContainer : Colors.transparent,
+      child: InkWell(
+        onTap: () => context.read<SendBloc>().add(SendStrategySelected(strategyName: name)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isRecommended) ...[
+                        const SizedBox(width: 4),
+                        _Badge(
+                          label: 'Auto',
+                          bg: theme.colorScheme.primary,
+                          fg: theme.colorScheme.onPrimary,
+                        ),
+                      ],
+                      if (isStochastic) ...[
+                        const SizedBox(width: 4),
+                        _Badge(
+                          label: '~',
+                          bg: theme.colorScheme.tertiary,
+                          fg: theme.colorScheme.onTertiary,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              _DataCell(text: '${result.inputs.length}', flex: 1),
+              _DataCell(text: '${result.changeSat.value} sat', flex: 2),
+              _DataCell(text: '${result.feeSat.value} sat', flex: 2),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FailedStrategyRow extends StatelessWidget {
+  const _FailedStrategyRow(this.name);
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final grey = textTheme.bodySmall?.copyWith(color: Colors.grey);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      style: grey?.copyWith(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  _Badge(
+                    label: 'No match',
+                    bg: Colors.grey.shade300,
+                    fg: Colors.grey.shade700,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(child: Padding(padding: const EdgeInsets.all(6), child: Text('—', style: grey))),
+          Expanded(flex: 2, child: Padding(padding: const EdgeInsets.all(6), child: Text('—', style: grey))),
+          Expanded(flex: 2, child: Padding(padding: const EdgeInsets.all(6), child: Text('—', style: grey))),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({required this.text, required this.flex});
+
+  final String text;
+  final int flex;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    flex: flex,
+    child: Padding(
+      padding: const EdgeInsets.all(6),
+      child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+    ),
+  );
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({required this.label, required this.bg, required this.fg});
+
+  final String label;
+  final Color bg;
+  final Color fg;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          'Auto',
-          style: textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontSize: 9,
-          ),
-        ),
-      );
-}
-
-class _StochasticBadge extends StatelessWidget {
-  const _StochasticBadge({required this.textTheme, required this.context});
-
-  final TextTheme textTheme;
-  final BuildContext context;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.tertiary,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          '~',
-          style: textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onTertiary,
-            fontSize: 9,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+    child: Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: fg, fontSize: 9),
+    ),
+  );
 }

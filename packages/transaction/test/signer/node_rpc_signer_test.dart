@@ -23,10 +23,10 @@ void main() {
       );
     });
 
-    test('happy path — returns broadcast txid for NodeSigningContext', () async {
+    test('happy path — returns broadcast txid for NodeSignerPayload', () async {
       final txid = await signer.signAndBroadcast(
         strategy: _buildStrategy(),
-        signingContext: const NodeSigningContext(),
+        signingContext: const NodeSignerPayload(),
         recipientAddress: 'bcrt1qrecipient',
         amountSat: const Satoshi(99000),
         changeAddress: 'bcrt1qchange',
@@ -36,11 +36,11 @@ void main() {
       expect(nodeGateway.capturedSignWalletName, 'node_wallet_1');
     });
 
-    test('rejection — HdSigningContext throws TransactionSigningException with no RPC side effect', () async {
+    test('rejection — HdSignerPayload throws TransactionSigningException with no RPC side effect', () async {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: HdSigningContext(const {}),
+          signingContext: HdSignerPayload(const {}),
           recipientAddress: 'bcrt1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bcrt1qchange',
@@ -56,7 +56,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: const NodeSigningContext(),
+          signingContext: const NodeSignerPayload(),
           recipientAddress: 'bcrt1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bcrt1qchange',
@@ -74,7 +74,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: const NodeSigningContext(),
+          signingContext: const NodeSignerPayload(),
           recipientAddress: 'bcrt1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bcrt1qchange',
@@ -89,7 +89,7 @@ void main() {
       await expectLater(
         signer.signAndBroadcast(
           strategy: _buildStrategy(),
-          signingContext: const NodeSigningContext(),
+          signingContext: const NodeSignerPayload(),
           recipientAddress: 'bcrt1qrecipient',
           amountSat: const Satoshi(99000),
           changeAddress: 'bcrt1qchange',

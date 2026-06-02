@@ -27,6 +27,11 @@ final class Transaction with Confirmable {
   /// Time of the transaction (block time if confirmed, receive time otherwise).
   final DateTime timestamp;
 
+  /// Address involved in this transaction.
+  /// For incoming/coinbase: the receiving address. For outgoing: the destination address.
+  /// Null if Bitcoin Core did not report a single address (e.g. multi-output sends).
+  final String? address;
+
   @override
   int get hashCode => txid.hashCode;
 
@@ -37,6 +42,7 @@ final class Transaction with Confirmable {
     required this.confirmations,
     required this.timestamp,
     this.feeSat,
+    this.address,
   });
 
   @override

@@ -33,7 +33,7 @@ void main() {
       final result = await source.resolve();
 
       expect(result.candidates, hasLength(2));
-      final hdCtx = result.signingContext as HdSigningContext;
+      final hdCtx = result.signingContext as HdSignerPayload;
       expect(hdCtx.inputs.keys, containsAll(<(String, int)>[('a', 0), ('b', 0)]));
       expect(hdCtx.inputs[('a', 0)]!.derivationIndex, equals(0));
       expect(hdCtx.inputs[('b', 0)]!.derivationIndex, equals(1));
@@ -49,8 +49,8 @@ void main() {
         addressRepository: addressRepo,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(
           isA<UnknownPinnedInputAddressException>()
               .having((e) => e.txid, 'txid', 'unknown')
@@ -70,8 +70,8 @@ void main() {
         addressRepository: addressRepo,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<UnknownPinnedInputAddressException>()),
       );
     });
@@ -84,8 +84,8 @@ void main() {
         addressRepository: addressRepo,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<TransactionPreparationException>()),
       );
     });

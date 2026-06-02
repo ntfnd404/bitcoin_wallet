@@ -1,29 +1,30 @@
 import 'package:action_bloc/action_bloc.dart';
-import 'package:bitcoin_wallet/core/di/app_scope.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/bloc/regtest_mining_bloc.dart';
 import 'package:bitcoin_wallet/feature/regtest_mining/di/regtest_mining_scope.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_action.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_bloc.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_state.dart';
 import 'package:bitcoin_wallet/feature/send/bloc/send_status.dart';
+import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/broadcast_result.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/send_form.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/send_summary.dart';
 import 'package:bitcoin_wallet/feature/send/view/widget/strategy_comparison.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:transaction/transaction.dart' show SendWorkflow;
+import 'package:transaction/transaction.dart';
 import 'package:wallet/wallet.dart';
 
 /// Two-step send flow: form → strategy comparison → confirm → broadcast.
-///
-/// [workflow] determines the coin-selection strategy. The caller is responsible
-/// for building the correct [SendWorkflow] before pushing this screen.
 class SendScreen extends StatefulWidget {
-  const SendScreen({super.key, required this.wallet, required this.workflow});
+  const SendScreen({
+    super.key,
+    required this.wallet,
+    this.pinned = const [],
+  });
 
   final Wallet wallet;
-  final SendWorkflow workflow;
+  final List<Utxo> pinned;
 
   @override
   State<SendScreen> createState() => _SendScreenState();
@@ -45,11 +46,7 @@ class _SendScreenState extends State<SendScreen> {
 
   @override
   Widget build(BuildContext context) => BlocProvider<SendBloc>(
-    create: (ctx) => SendBloc(
-      workflow: widget.workflow,
-      eventBus: AppScope.of(ctx).eventBus,
-      walletId: widget.wallet.id,
-    ),
+    create: (ctx) => SendScope.newBloc(ctx, widget.wallet, pinned: widget.pinned),
     child: Scaffold(
       appBar: AppBar(title: const Text('Send')),
       body: ActionBlocConsumer<SendBloc, SendState, SendAction>(
@@ -57,7 +54,12 @@ class _SendScreenState extends State<SendScreen> {
           switch (action) {
             case SendInsufficientFundsAction():
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Insufficient funds for any strategy')),
+                const SnackBar(
+                  content: Text(
+                    'No spendable UTXOs. Go to Wallet Detail → Mine block to fund the wallet first.',
+                  ),
+                  duration: Duration(seconds: 6),
+                ),
               );
             case SendFailedAction(:final exception):
               ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +76,7 @@ class _SendScreenState extends State<SendScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (state.status == SendStatus.idle || state.status == SendStatus.preparing)
+              if (state.status != SendStatus.successful)
                 SendForm(
                   formKey: _formKey,
                   recipientController: _recipientController,
@@ -82,8 +84,10 @@ class _SendScreenState extends State<SendScreen> {
                   feeRateController: _feeRateController,
                   wallet: widget.wallet,
                   isLoading: state.status == SendStatus.preparing,
+                  canSend: state.status == SendStatus.awaitingConfirmation,
                 ),
               if (state.status == SendStatus.awaitingConfirmation || state.status == SendStatus.sending) ...[
+                const SizedBox(height: 24),
                 StrategyComparison(state: state),
                 const SizedBox(height: 24),
                 SendSummary(state: state, wallet: widget.wallet),

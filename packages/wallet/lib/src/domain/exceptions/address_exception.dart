@@ -29,3 +29,11 @@ final class AddressStorageException extends AddressException {
   @override
   String toString() => 'Address storage error';
 }
+
+/// Bitcoin Core node is not reachable — Docker container is likely not running.
+final class AddressNodeUnreachableException extends AddressException {
+  const AddressNodeUnreachableException();
+
+  @override
+  String toString() => 'Bitcoin Core node is not running. Start the Docker container and try again.';
+}

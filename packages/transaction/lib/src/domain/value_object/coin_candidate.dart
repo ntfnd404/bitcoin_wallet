@@ -7,7 +7,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 ///
 /// [age] is normalised so that **higher = older**:
 /// - Node wallet: `age = confirmations`
-/// - HD wallet: `age = rank` assigned by [PrepareHdSendUseCase] where the
+/// - HD wallet: `age = rank` assigned by [HdAutoUtxoSource] where the
 ///   oldest UTXO (lowest block height) receives the highest rank.
 final class CoinCandidate {
   final String txid;

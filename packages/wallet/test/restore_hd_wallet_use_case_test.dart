@@ -57,7 +57,7 @@ void main() {
       expect(walletRepo.saved.first.id, wallet.id);
     });
 
-    test('throws WalletInvalidMnemonicException for invalid mnemonic', () async {
+    test('throws WalletInvalidMnemonicException for invalid mnemonic', () {
       bip39.isValid = false;
 
       expect(

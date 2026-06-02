@@ -26,6 +26,8 @@ final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
       final list = result as List<Object?>;
 
       return list.cast<Map<String, Object?>>().map(_mapTransaction).toList().reversed.toList(); // most recent first
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionFetchException(), stack);
     }
@@ -79,6 +81,8 @@ final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
         weight: weight,
         hex: hex,
       );
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionFetchException(), stack);
     }
@@ -102,6 +106,7 @@ final class TransactionHistoryGatewayImpl implements TransactionHistoryGateway {
       feeSat: btcFee != null ? _btcToSat(btcFee) : null,
       confirmations: confirmations,
       timestamp: DateTime.fromMillisecondsSinceEpoch(unixTime * 1000),
+      address: raw['address'] as String?,
     );
   }
 

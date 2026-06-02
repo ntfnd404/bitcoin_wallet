@@ -11,9 +11,10 @@ final class MineBlockRequested extends RegtestMiningEvent {
   const MineBlockRequested({required this.toAddress});
 }
 
-/// Mine one block resolving the target address from the wallet (wallet detail flow).
+/// Mine [count] blocks resolving the target address from the wallet (wallet detail flow).
 final class MineBlockWithWallet extends RegtestMiningEvent {
   final Wallet wallet;
+  final int count;
 
-  const MineBlockWithWallet({required this.wallet});
+  const MineBlockWithWallet({required this.wallet, this.count = 1});
 }

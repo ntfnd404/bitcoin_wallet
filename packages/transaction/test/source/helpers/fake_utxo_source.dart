@@ -8,7 +8,7 @@ final class FakeUtxoSource implements UtxoSource {
   UtxoSourceResult result = const UtxoSourceResult(
     candidates: [],
     changeAddress: '',
-    signingContext: NodeSigningContext(),
+    signingContext: NodeSignerPayload(),
   );
 
   Object? throwOnResolve;

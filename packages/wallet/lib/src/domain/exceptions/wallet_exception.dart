@@ -48,3 +48,11 @@ final class WalletNodeException extends WalletException {
   @override
   String toString() => 'Bitcoin Core node error';
 }
+
+/// Bitcoin Core node is not reachable — Docker container is likely not running.
+final class WalletNodeUnreachableException extends WalletException {
+  const WalletNodeUnreachableException();
+
+  @override
+  String toString() => 'Bitcoin Core node is not running. Start the Docker container and try again.';
+}

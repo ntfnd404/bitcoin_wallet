@@ -25,6 +25,8 @@ final class UtxoGatewayImpl implements UtxoGateway {
       final list = result as List<Object?>;
 
       return list.cast<Map<String, Object?>>().map(_mapUtxo).toList();
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionFetchException(), stack);
     }
@@ -50,6 +52,7 @@ final class UtxoGatewayImpl implements UtxoGateway {
       type: type,
       spendable: raw['spendable'] as bool? ?? false,
       derivationPath: _parseDerivationPath(desc),
+      isCoinbase: raw['coinbase'] as bool? ?? false,
     );
   }
 

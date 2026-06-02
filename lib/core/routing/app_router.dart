@@ -1,5 +1,4 @@
 import 'package:bitcoin_wallet/feature/address/view/screen/address_screen.dart';
-import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
 import 'package:bitcoin_wallet/feature/send/view/screen/send_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/view/screen/signing_demo_screen.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/view/screen/xpub_screen.dart';
@@ -153,10 +152,7 @@ final class AppRouter {
     context,
     MaterialPageRoute(
       settings: const RouteSettings(name: send),
-      builder: (ctx) => SendScreen(
-        wallet: wallet,
-        workflow: SendScope.buildWorkflow(ctx, wallet),
-      ),
+      builder: (_) => SendScreen(wallet: wallet),
     ),
   );
 
@@ -188,10 +184,7 @@ final class AppRouter {
     context,
     MaterialPageRoute(
       settings: const RouteSettings(name: sendWithPinnedInputs),
-      builder: (ctx) => SendScreen(
-        wallet: wallet,
-        workflow: SendScope.buildPinnedWorkflow(ctx, wallet, pinnedInputs),
-      ),
+      builder: (_) => SendScreen(wallet: wallet, pinned: pinnedInputs),
     ),
   );
 

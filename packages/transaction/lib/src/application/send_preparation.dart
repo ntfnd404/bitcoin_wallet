@@ -1,6 +1,5 @@
-import 'package:transaction/src/application/hd/hd_send_preparation.dart';
-import 'package:transaction/src/application/node/node_send_preparation.dart';
 import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
+import 'package:transaction/src/domain/value_object/signer_payload.dart';
 
 /// Opaque result of [SendWorkflow.prepare].
 ///
@@ -10,52 +9,32 @@ sealed class SendPreparation {
   /// All coin-selection results computed during preparation, ordered by strategy.
   final List<CoinSelectionStrategyResult> strategies;
 
+  /// Strategy names that were skipped because they found no viable solution
+  /// (e.g. BnB requires an exact match; SmallestSingle needs a single coin ≥ target).
+  final List<String> failedStrategies;
+
   /// Change address allocated for this preparation.
   final String changeAddress;
+
+  /// Signing context produced during UTXO resolution — used by [SendWorkflow.confirm].
+  SignerPayload get signingContext;
 
   const SendPreparation({
     required this.strategies,
     required this.changeAddress,
-  });
-
-  /// Creates a [SendPreparation] for use in tests.
-  ///
-  /// Provides a concrete instance without requiring access to the internal
-  /// [NodeSendResult]/[HdSendResult] subtypes.
-  static SendPreparation forTest({
-    required List<CoinSelectionStrategyResult> strategies,
-    required String changeAddress,
-  }) =>
-      _TestSendPreparation(strategies: strategies, changeAddress: changeAddress);
-}
-
-final class _TestSendPreparation extends SendPreparation {
-  const _TestSendPreparation({
-    required super.strategies,
-    required super.changeAddress,
+    this.failedStrategies = const [],
   });
 }
 
-/// Node-wallet variant. Internal — not exported from transaction barrel separately.
-final class NodeSendResult extends SendPreparation {
-  /// Not accessible from outside the transaction package application layer.
-  final NodeSendPreparation inner;
+/// Returned by [PrepareSendUseCase] — carries [signingContext] directly without a legacy inner wrapper.
+final class SendPreparationResult extends SendPreparation {
+  @override
+  final SignerPayload signingContext;
 
-  const NodeSendResult({
+  const SendPreparationResult({
     required super.strategies,
     required super.changeAddress,
-    required this.inner,
-  });
-}
-
-/// HD-wallet variant. Internal — not exported from transaction barrel separately.
-final class HdSendResult extends SendPreparation {
-  /// Not accessible from outside the transaction package application layer.
-  final HdSendPreparation inner;
-
-  const HdSendResult({
-    required super.strategies,
-    required super.changeAddress,
-    required this.inner,
+    required this.signingContext,
+    super.failedStrategies,
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:rpc_client/src/exceptions/rpc_exception.dart';
@@ -45,14 +46,19 @@ final class BitcoinRpcClient {
 
     log('RPC[$requestId] → $method $params', name: 'bitcoin_rpc');
 
-    final response = await _client.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic $_credentials',
-      },
-      body: requestBody,
-    );
+    final http.Response response;
+    try {
+      response = await _client.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic $_credentials',
+        },
+        body: requestBody,
+      );
+    } on SocketException {
+      throw RpcNodeUnreachableException(method);
+    }
 
     log('RPC[$requestId] ← ${response.statusCode}', name: 'bitcoin_rpc');
 

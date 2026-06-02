@@ -70,7 +70,7 @@ void main() {
       expect(result.changeAddress, equals('bcrt1qchange-from-node'));
     });
 
-    test('signingContext is NodeSigningContext', () async {
+    test('signingContext is NodeSignerPayload', () async {
       repo.utxos = const [];
 
       final source = NodeAutoUtxoSource(
@@ -81,7 +81,7 @@ void main() {
 
       final result = await source.resolve();
 
-      expect(result.signingContext, isA<NodeSigningContext>());
+      expect(result.signingContext, isA<NodeSignerPayload>());
     });
 
     test('wraps generic infra exception into TransactionPreparationException', () async {
@@ -93,8 +93,8 @@ void main() {
         nodeTransactionGateway: gateway,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<TransactionPreparationException>()),
       );
     });
@@ -108,8 +108,8 @@ void main() {
         nodeTransactionGateway: gateway,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<TransactionFetchException>()),
       );
     });
