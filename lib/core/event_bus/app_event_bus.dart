@@ -2,22 +2,40 @@ import 'dart:async';
 
 import 'package:bitcoin_wallet/core/event_bus/domain_event.dart';
 
-/// Application-wide broadcast event bus for cross-feature communication.
+/// In-process broadcast bus for application-level domain events.
 ///
-/// BLoCs subscribe in their constructor and unsubscribe in [close()].
-/// Features must not import each other's BLoC layers directly — use
-/// this bus instead.
+/// Use this for decoupled notifications between independently owned parts of
+/// an application. Event producers publish immutable [DomainEvent] objects with
+/// [emit], and consumers subscribe to the event type they care about with
+/// [on<T>].
 ///
-/// Usage (emitter):
+/// The bus is intentionally a regular object, not a global singleton. Create it
+/// in the application's composition root and pass it through dependency
+/// injection. The same owner that creates the bus should call [dispose] when the
+/// application scope is torn down.
+///
+/// Subscribers own their subscriptions and must cancel them with the rest of
+/// their lifecycle.
+///
+/// Example:
 /// ```dart
-/// _eventBus.emit(TransactionBroadcasted(txid: txid, walletId: id));
-/// ```
+/// sealed class ItemDomainEvent extends DomainEvent {
+///   const ItemDomainEvent();
+/// }
 ///
-/// Usage (listener):
-/// ```dart
-/// _sub = _eventBus.stream.listen((event) {
-///   if (event is TransactionEvent) _handleTransactionEvent(event);
+/// final class ItemCreated extends ItemDomainEvent {
+///   final String itemId;
+///
+///   const ItemCreated(this.itemId);
+/// }
+///
+/// eventBus.emit(const ItemCreated('item-1'));
+///
+/// final subscription = eventBus.on<ItemCreated>().listen((event) {
+///   // React to event.itemId.
 /// });
+///
+/// await subscription.cancel();
 /// ```
 final class AppEventBus {
   final _controller = StreamController<DomainEvent>.broadcast();

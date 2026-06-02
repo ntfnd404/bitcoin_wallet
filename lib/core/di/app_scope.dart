@@ -1,6 +1,5 @@
+import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
 import 'package:flutter/widgets.dart';
-
-import 'app_dependencies.dart';
 
 /// InheritedWidget that propagates [AppDependencies] down the widget tree.
 ///

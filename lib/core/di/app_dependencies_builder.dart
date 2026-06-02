@@ -2,6 +2,7 @@ import 'package:bitcoin_node/bitcoin_node.dart';
 import 'package:bitcoin_wallet/core/adapters/hd_transaction_signer.dart';
 import 'package:bitcoin_wallet/core/config/config.dart';
 import 'package:bitcoin_wallet/core/di/app_dependencies.dart';
+import 'package:bitcoin_wallet/core/di/rpc_client_factory.dart';
 import 'package:bitcoin_wallet/core/event_bus/app_event_bus.dart';
 import 'package:keys/keys_assembly.dart';
 import 'package:rpc_client/rpc_client.dart';
@@ -9,13 +10,6 @@ import 'package:storage/storage.dart';
 import 'package:transaction/transaction.dart';
 import 'package:transaction/transaction_assembly.dart';
 import 'package:wallet/wallet_assembly.dart';
-
-typedef RpcClientFactory =
-    BitcoinRpcClient Function({
-      required String url,
-      required String user,
-      required String password,
-    });
 
 /// Composition root — wires all concrete infrastructure implementations.
 final class AppDependenciesBuilder {
