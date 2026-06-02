@@ -21,6 +21,8 @@ final class NodeAddressGatewayImpl implements NodeAddressGateway {
       );
 
       return result as String;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const AddressNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const AddressGenerationException(), stack);
     }

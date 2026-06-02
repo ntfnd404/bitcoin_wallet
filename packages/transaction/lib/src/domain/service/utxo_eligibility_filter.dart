@@ -17,6 +17,28 @@ abstract interface class UtxoEligibilityFilter {
   );
 }
 
+/// Eligibility filter for manually pinned UTXOs.
+///
+/// Skips the confirmation check entirely — the user explicitly chose these
+/// inputs, so confirmation policy is not our call. Still removes dust inputs
+/// (effectiveSatoshis ≤ 0) because signing them costs more than they contribute.
+final class PinnedUtxoEligibilityFilter implements UtxoEligibilityFilter {
+  const PinnedUtxoEligibilityFilter();
+
+  @override
+  List<CoinCandidate> filter(
+    List<CoinCandidate> candidates,
+    EligibilityPolicy policy,
+    FeeEstimator feeEstimator,
+    int feeRateSatPerVbyte,
+  ) =>
+      candidates.where((c) {
+        final inputW = feeEstimator.inputVbytes(c.scriptType);
+
+        return c.effectiveSatoshis(feeRateSatPerVbyte, inputW) > 0;
+      }).toList();
+}
+
 /// Default eligibility filter implementation.
 final class DefaultUtxoEligibilityFilter implements UtxoEligibilityFilter {
   const DefaultUtxoEligibilityFilter();

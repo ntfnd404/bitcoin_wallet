@@ -32,6 +32,8 @@ final class UtxoScanGatewayImpl implements UtxoScanGateway {
     } on TransactionUtxoScanException {
       // Local "success: false" throw — preserve type, do not re-wrap.
       rethrow;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionUtxoScanException(), stack);
     }

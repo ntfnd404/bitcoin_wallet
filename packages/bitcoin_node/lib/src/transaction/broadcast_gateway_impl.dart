@@ -18,6 +18,14 @@ final class BroadcastGatewayImpl implements BroadcastGateway {
       final result = await _rpcClient.call('sendrawtransaction', [rawHex]);
 
       return result as String;
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
+    } on RpcException catch (e, stack) {
+      // -26 = transaction rejected by mempool policy (dust, fee-too-low, etc.)
+      if (e.code == -26) {
+        Error.throwWithStackTrace(const TransactionDustOutputException(), stack);
+      }
+      Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }
@@ -35,6 +43,8 @@ final class BroadcastGatewayImpl implements BroadcastGateway {
         confirmations: (map['confirmations'] as num?)?.toInt() ?? 0,
         hex: map['hex'] as String? ?? '',
       );
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionFetchException(), stack);
     }

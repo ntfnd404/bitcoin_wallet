@@ -4,17 +4,16 @@ import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/gateway/broadcast_gateway.dart';
 import 'package:transaction/src/domain/service/transaction_signer.dart';
 import 'package:transaction/src/domain/value_object/coin_selection_strategy_result.dart';
-import 'package:transaction/src/domain/value_object/signing_context.dart';
+import 'package:transaction/src/domain/value_object/signer_payload.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
 
 /// HD-wallet [Signer] — assembles `SigningInput`s for the chosen candidate
 /// subset, asks the [TransactionSigner] to produce a signed transaction
 /// hex, and broadcasts it.
 ///
-/// Mirrors the legacy `SendHdTransactionUseCase` body verbatim with two
-/// security upgrades carried forward from BW-0018 Phase 1 security review:
+/// Security invariants (from BW-0018 Phase 1 security review):
 /// - Iterates only the chosen `CoinSelectionStrategyResult.inputs` subset,
-///   never the full [HdSigningContext.inputs] map (security req #1).
+///   never the full [HdSignerPayload.inputs] map (security req #1).
 /// - Rejects a missing chosen-vin entry with a typed
 ///   [MissingSigningInputException] carrying only `(txid, vout)` — never
 ///   the input's address or derivation index (security req #3, #4).
@@ -34,12 +33,13 @@ final class HdInAppSigner implements Signer {
   @override
   Future<String> signAndBroadcast({
     required CoinSelectionStrategyResult strategy,
-    required SigningContext signingContext,
+    required SignerPayload signingContext,
     required String recipientAddress,
     required Satoshi amountSat,
     required String changeAddress,
   }) async {
-    if (signingContext is! HdSigningContext) {
+    // 1. Verify signingContext is HdSignerPayload.
+    if (signingContext is! HdSignerPayload) {
       throw const TransactionSigningException();
     }
     final hd = signingContext;
@@ -47,6 +47,8 @@ final class HdInAppSigner implements Signer {
 
     final String hexSigned;
     try {
+      // 2. Assemble SigningInputs for chosen inputs only (security req #1:
+      //    never iterate the full HdSignerPayload.inputs map).
       final signingInputs = <SigningInput>[];
       for (final c in result.inputs) {
         final input = hd.inputs[(c.txid, c.vout)];
@@ -56,6 +58,7 @@ final class HdInAppSigner implements Signer {
         signingInputs.add(input);
       }
 
+      // 3. Sign via TransactionSigner (offline, in-app key derivation).
       hexSigned = await _transactionSigner.sign(
         walletId: _walletId,
         inputs: signingInputs,
@@ -83,6 +86,7 @@ final class HdInAppSigner implements Signer {
     }
     // Programmer errors from signing propagate to the zone handler.
 
+    // 4. Broadcast signed hex.
     try {
       return await _broadcastGateway.broadcast(hexSigned);
     } on TransactionException {

@@ -23,6 +23,8 @@ final class NodeWalletGatewayImpl implements NodeWalletGateway {
           rethrow;
         }
       }
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const WalletNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const WalletNodeException(), stack);
     }

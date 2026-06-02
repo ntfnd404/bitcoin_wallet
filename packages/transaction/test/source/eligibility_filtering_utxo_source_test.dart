@@ -28,7 +28,7 @@ void main() {
       inner.result = UtxoSourceResult(
         candidates: all,
         changeAddress: 'bcrt1qchange-node',
-        signingContext: const NodeSigningContext(),
+        signingContext: const NodeSignerPayload(),
       );
       filter.result = kept;
 
@@ -44,7 +44,7 @@ void main() {
 
       expect(result.candidates, equals(kept));
       expect(result.changeAddress, equals('bcrt1qchange-node'));
-      expect(result.signingContext, isA<NodeSigningContext>());
+      expect(result.signingContext, isA<NodeSignerPayload>());
       expect(filter.capturedCandidates, equals(all));
       expect(filter.capturedPolicy, equals(EligibilityPolicy.node));
     });
@@ -53,7 +53,7 @@ void main() {
       inner.result = const UtxoSourceResult(
         candidates: [],
         changeAddress: 'bcrt1qempty',
-        signingContext: NodeSigningContext(),
+        signingContext: NodeSignerPayload(),
       );
       filter.result = const [];
 
@@ -71,7 +71,7 @@ void main() {
       expect(result.changeAddress, equals('bcrt1qempty'));
     });
 
-    test('passes through HdSigningContext unchanged', () async {
+    test('passes through HdSignerPayload unchanged', () async {
       const si = SigningInput(
         txid: 'a',
         vout: 0,
@@ -80,7 +80,7 @@ void main() {
         derivationIndex: 4,
         addressType: AddressType.nativeSegwit,
       );
-      final hdCtx = HdSigningContext(<(String, int), SigningInput>{('a', 0): si});
+      final hdCtx = HdSignerPayload(<(String, int), SigningInput>{('a', 0): si});
       final candidates = [_candidate(txid: 'a', sat: 1000)];
       inner.result = UtxoSourceResult(
         candidates: candidates,
@@ -115,8 +115,8 @@ void main() {
         feeRateSatPerVbyte: 5,
       );
 
-      expect(
-        decorator.resolve,
+      await expectLater(
+        () => decorator.resolve(),
         throwsA(isA<TransactionFetchException>()),
       );
     });

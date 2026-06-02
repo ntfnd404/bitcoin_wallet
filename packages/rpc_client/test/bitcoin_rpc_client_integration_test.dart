@@ -28,7 +28,7 @@ void main() {
       expect(result['chain'], equals('regtest'));
     });
 
-    test('unknown method throws RpcException', () async {
+    test('unknown method throws RpcException', () {
       expect(
         () => client.call('nonexistentmethod'),
         throwsA(isA<RpcException>()),

@@ -2,7 +2,7 @@ import 'package:shared_kernel/shared_kernel.dart';
 
 /// Type-safe signing context for a single HD-wallet input.
 ///
-/// Produced by [PrepareHdSendUseCase] and consumed by [TransactionSigner].
+/// Produced by [HdAutoUtxoSource] / [HdPinnedUtxoSource] and consumed by [TransactionSigner].
 /// Carries everything the signer needs to derive the private key and build
 /// the BIP-143 sighash for a P2WPKH input.
 final class SigningInput {

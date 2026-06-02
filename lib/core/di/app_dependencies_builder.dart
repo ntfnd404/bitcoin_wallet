@@ -94,6 +94,7 @@ final class AppDependenciesBuilder {
         ],
         feeEstimator: const P2wpkhFeeEstimator(),
         hdSigner: hdSigner,
+        bech32Hrp: _environment.network.bech32Hrp,
       );
 
       _builder(

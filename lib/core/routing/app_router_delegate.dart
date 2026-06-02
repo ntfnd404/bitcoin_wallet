@@ -1,5 +1,4 @@
 import 'package:bitcoin_wallet/feature/address/di/address_scope.dart';
-import 'package:bitcoin_wallet/feature/send/di/send_scope.dart';
 import 'package:bitcoin_wallet/feature/signing/manual_utxo/di/manual_utxo_scope.dart';
 import 'package:bitcoin_wallet/feature/signing/xpub/di/xpub_scope.dart';
 import 'package:bitcoin_wallet/feature/transaction/detail/di/transaction_detail_scope.dart';
@@ -29,8 +28,7 @@ final class AppRouterDelegate extends RouterDelegate<Object>
             child: XpubScope(
               child: ManualUtxoScope(
                 child: OpReturnScope(
-                  child: SendScope(
-                    child: Navigator(
+                  child: Navigator(
                       key: navigatorKey,
                       onGenerateInitialRoutes: (navigator, initialRoute) => [
                         MaterialPageRoute<void>(
@@ -41,7 +39,6 @@ final class AppRouterDelegate extends RouterDelegate<Object>
                       onUnknownRoute: (_) => MaterialPageRoute<void>(
                         builder: (_) => const WalletListScreen(),
                       ),
-                    ),
                   ),
                 ),
               ),

@@ -23,6 +23,7 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
   }) : super(const TransactionState()) {
     on<TransactionListRequested>(_onTransactionListRequested);
     on<TransactionRefreshRequested>(_onTransactionRefreshRequested);
+    on<TransactionFilterChanged>(_onFilterChanged);
 
     _eventSub = eventBus.on<TransactionDomainEvent>().listen((event) {
       final wallet = _currentWallet;
@@ -59,6 +60,13 @@ final class TransactionBloc extends Bloc<TransactionEvent, TransactionState>
       if (isClosed) return;
       emit(state.copyWith(status: FetchStatus.idle));
     }
+  }
+
+  void _onFilterChanged(
+    TransactionFilterChanged event,
+    Emitter<TransactionState> emit,
+  ) {
+    emit(state.copyWith(filter: event.filter));
   }
 
   Future<void> _onTransactionRefreshRequested(

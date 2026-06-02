@@ -85,6 +85,7 @@ linter:
     cancel_subscriptions: true
     close_sinks: true
     unawaited_futures: true
+    unnecessary_async: true
     unnecessary_await_in_return: true
 
     # Flutter

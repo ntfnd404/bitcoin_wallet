@@ -36,7 +36,7 @@ class UtxoPickerTile extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            '$addressLabel · ${utxo.type.shortLabel} · $confirmLabel',
+            '$addressLabel · ${utxo.type.shortLabel} · $confirmLabel · ${utxo.isCoinbase ? 'Mined' : 'Transfer'}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           controlAffinity: ListTileControlAffinity.leading,

@@ -18,6 +18,8 @@ final class BlockGenerationGatewayImpl implements BlockGenerationGateway {
       final list = result as List<Object?>;
 
       return list.cast<String>();
+    } on RpcNodeUnreachableException catch (_, stack) {
+      Error.throwWithStackTrace(const TransactionNodeUnreachableException(), stack);
     } catch (_, stack) {
       Error.throwWithStackTrace(const TransactionBroadcastException(), stack);
     }

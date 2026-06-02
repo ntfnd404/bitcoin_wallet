@@ -6,6 +6,7 @@ final class SendState {
   final SendStatus status;
   final SendPreparation? preparation;
   final List<CoinSelectionStrategyResult>? strategies;
+  final List<String>? failedStrategies;
   final String? selectedStrategy;
   final CoinSelectionMode selectionMode;
   final String? changeAddress;
@@ -18,6 +19,7 @@ final class SendState {
     this.status = SendStatus.idle,
     this.preparation,
     this.strategies,
+    this.failedStrategies,
     this.selectedStrategy,
     this.selectionMode = CoinSelectionMode.auto,
     this.changeAddress,
@@ -31,6 +33,7 @@ final class SendState {
     SendStatus? status,
     SendPreparation? preparation,
     List<CoinSelectionStrategyResult>? strategies,
+    List<String>? failedStrategies,
     String? selectedStrategy,
     CoinSelectionMode? selectionMode,
     String? changeAddress,
@@ -42,6 +45,7 @@ final class SendState {
     status: status ?? this.status,
     preparation: preparation ?? this.preparation,
     strategies: strategies ?? this.strategies,
+    failedStrategies: failedStrategies ?? this.failedStrategies,
     selectedStrategy: selectedStrategy ?? this.selectedStrategy,
     selectionMode: selectionMode ?? this.selectionMode,
     changeAddress: changeAddress ?? this.changeAddress,

@@ -3,18 +3,18 @@ import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/gateway/node_transaction_gateway.dart';
 import 'package:transaction/src/domain/repository/utxo_repository.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/signing_context.dart';
+import 'package:transaction/src/domain/value_object/signer_payload.dart';
 import 'package:transaction/src/domain/value_object/utxo_source_result.dart';
 
 /// UTXO source for the Node Wallet (auto-selection variant).
 ///
-/// Mirrors steps 1–5 of `PrepareNodeSendUseCase`:
+/// Steps performed by [resolve]:
 /// 1. Fetch all wallet UTXOs from the repository.
 /// 2. Drop non-spendable rows (the `spendable` bit is not carried by
 ///    [CoinCandidate], so it must be applied here).
 /// 3. Map to [CoinCandidate].
 /// 4. Request a fresh change address from Bitcoin Core via `getnewaddress`.
-/// 5. Emit a [NodeSigningContext] marker — Node Wallet signs server-side and
+/// 5. Emit a [NodeSignerPayload] marker — Node Wallet signs server-side and
 ///    needs no per-input material.
 ///
 /// Eligibility filtering is **not** applied here — it is the responsibility of
@@ -34,8 +34,10 @@ final class NodeAutoUtxoSource implements UtxoSource {
   @override
   Future<UtxoSourceResult> resolve() async {
     try {
+      // 1. Fetch all wallet UTXOs from repository.
       final utxos = await _utxoRepository.getUtxos(_walletName);
 
+      // 2. Drop non-spendable, map to CoinCandidate.
       final candidates = utxos
           .where((u) => u.spendable)
           .map(
@@ -51,12 +53,14 @@ final class NodeAutoUtxoSource implements UtxoSource {
           )
           .toList();
 
+      // 3. Request fresh change address from Bitcoin Core.
       final changeAddress = await _nodeTransactionGateway.getNewAddress(_walletName);
 
+      // 4. Return result with NodeSignerPayload marker (Node signs server-side).
       return UtxoSourceResult(
         candidates: candidates,
         changeAddress: changeAddress,
-        signingContext: const NodeSigningContext(),
+        signingContext: const NodeSignerPayload(),
       );
     } on TransactionException {
       rethrow;

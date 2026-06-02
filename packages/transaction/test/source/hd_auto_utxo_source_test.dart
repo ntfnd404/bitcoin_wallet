@@ -59,8 +59,8 @@ void main() {
       final result = await source.resolve();
       final ctx = result.signingContext;
 
-      expect(ctx, isA<HdSigningContext>());
-      final hdCtx = ctx as HdSigningContext;
+      expect(ctx, isA<HdSignerPayload>());
+      final hdCtx = ctx as HdSignerPayload;
       expect(hdCtx.inputs.keys, contains(('a', 1)));
       final si = hdCtx.inputs[('a', 1)]!;
       expect(si.derivationIndex, equals(5));
@@ -101,7 +101,7 @@ void main() {
       expect(result.changeAddress, isEmpty);
     });
 
-    test('HdSigningContext.inputs is unmodifiable', () async {
+    test('HdSignerPayload.inputs is unmodifiable', () async {
       addressRepo.addresses = [_address('bcrt1qknown', index: 0)];
       scanGateway.scanResult = [
         _scanned(txid: 'a', height: 1, address: 'bcrt1qknown'),
@@ -114,7 +114,7 @@ void main() {
       );
 
       final result = await source.resolve();
-      final hdCtx = result.signingContext as HdSigningContext;
+      final hdCtx = result.signingContext as HdSignerPayload;
 
       expect(
         () => hdCtx.inputs[('zzz', 99)] = const SigningInput(
@@ -138,8 +138,8 @@ void main() {
         utxoScanGateway: scanGateway,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<TransactionPreparationException>()),
       );
     });

@@ -29,11 +29,27 @@ class UtxoTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(addressLabel, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 2),
-            Text(
-              '${utxo.type.shortLabel} • ${isMempool ? 'Unconfirmed' : utxo.confirmations}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
-              ),
+            Row(
+              children: [
+                Text(
+                  '${utxo.type.shortLabel} • ${isMempool ? 'Unconfirmed' : utxo.confirmations}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: utxo.isCoinbase ? Colors.orange.shade100 : Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    utxo.isCoinbase ? 'Mined' : 'Transfer',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: utxo.isCoinbase ? Colors.orange.shade800 : Colors.blue.shade700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

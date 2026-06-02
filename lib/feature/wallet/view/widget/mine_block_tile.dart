@@ -34,22 +34,42 @@ class MineBlockTile extends StatelessWidget {
     builder: (context, state) {
       final isProcessing = state.status == RegtestMiningStatus.processing;
 
-      return ListTile(
-        title: Text(
-          state.status == RegtestMiningStatus.successful ? 'Block mined!' : 'Mine 1 block (dev)',
-        ),
-        leading: isProcessing
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.construction_outlined),
-        onTap: isProcessing
-            ? null
-            : () => context.read<RegtestMiningBloc>().add(
-                MineBlockWithWallet(wallet: wallet),
-              ),
+      return Column(
+        children: [
+          ListTile(
+            title: Text(
+              state.status == RegtestMiningStatus.successful ? 'Block mined!' : 'Mine 1 block (dev)',
+            ),
+            leading: isProcessing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.construction_outlined),
+            onTap: isProcessing
+                ? null
+                : () => context.read<RegtestMiningBloc>().add(
+                      MineBlockWithWallet(wallet: wallet),
+                    ),
+          ),
+          ListTile(
+            title: const Text('Fund wallet — mine 101 blocks (dev)'),
+            subtitle: const Text('Makes coinbase outputs spendable'),
+            leading: isProcessing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.savings_outlined),
+            onTap: isProcessing
+                ? null
+                : () => context.read<RegtestMiningBloc>().add(
+                      MineBlockWithWallet(wallet: wallet, count: 101),
+                    ),
+          ),
+        ],
       );
     },
   );

@@ -13,7 +13,7 @@ void main() {
   group('UtxoPickerBloc', () {
     late UtxoPickerBloc bloc;
 
-    tearDown(() async => bloc.close());
+    tearDown(() => bloc.close());
 
     // UP1: load success + spendable filter
     test('UP1: load filters non-spendable UTXOs', () async {

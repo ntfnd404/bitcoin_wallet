@@ -50,7 +50,7 @@ void main() {
       expect(result.candidates.map((c) => c.txid).toList(), equals(['a', 'b']));
     });
 
-    test('signingContext is NodeSigningContext', () async {
+    test('signingContext is NodeSignerPayload', () async {
       final source = NodePinnedUtxoSource(
         walletName: 'w',
         pinnedInputs: const [],
@@ -59,7 +59,7 @@ void main() {
 
       final result = await source.resolve();
 
-      expect(result.signingContext, isA<NodeSigningContext>());
+      expect(result.signingContext, isA<NodeSignerPayload>());
     });
 
     test('changeAddress comes from gateway', () async {
@@ -85,8 +85,8 @@ void main() {
         nodeTransactionGateway: gateway,
       );
 
-      expect(
-        source.resolve,
+      await expectLater(
+        () => source.resolve(),
         throwsA(isA<TransactionPreparationException>()),
       );
     });

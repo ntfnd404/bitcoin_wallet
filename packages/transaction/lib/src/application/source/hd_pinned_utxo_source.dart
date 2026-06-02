@@ -3,7 +3,7 @@ import 'package:transaction/src/domain/contract/utxo_source.dart';
 import 'package:transaction/src/domain/entity/utxo.dart';
 import 'package:transaction/src/domain/exception/transaction_exception.dart';
 import 'package:transaction/src/domain/value_object/coin_candidate.dart';
-import 'package:transaction/src/domain/value_object/signing_context.dart';
+import 'package:transaction/src/domain/value_object/signer_payload.dart';
 import 'package:transaction/src/domain/value_object/signing_input.dart';
 import 'package:transaction/src/domain/value_object/utxo_source_result.dart';
 import 'package:wallet/wallet.dart';
@@ -33,11 +33,13 @@ final class HdPinnedUtxoSource implements UtxoSource {
   @override
   Future<UtxoSourceResult> resolve() async {
     try {
+      // 1. Load all HD addresses; build address → entry lookup.
       final entries = await _addressRepository.getAddresses(_walletId);
       final nativeSegwit = entries.where((e) => e.type == AddressType.nativeSegwit).toList();
 
       final addressLookup = {for (final e in entries) e.value: e};
 
+      // 2. For each pinned input: verify address is known, build CoinCandidate + SigningInput.
       final candidates = <CoinCandidate>[];
       final signingInputs = <(String, int), SigningInput>{};
 
@@ -73,8 +75,8 @@ final class HdPinnedUtxoSource implements UtxoSource {
         );
       }
 
-      // Local mutable copy used solely for the change-address sort —
-      // the caller-supplied list is never mutated.
+      // 3. Change address = highest-derivation-index native-segwit entry.
+      // Local mutable copy used solely for the sort — caller-supplied list is never mutated.
       final changeAddress = nativeSegwit.isEmpty
           ? ''
           : (List.of(nativeSegwit)..sort((a, b) => b.index.compareTo(a.index))).first.value;
@@ -82,7 +84,7 @@ final class HdPinnedUtxoSource implements UtxoSource {
       return UtxoSourceResult(
         candidates: candidates,
         changeAddress: changeAddress,
-        signingContext: HdSigningContext(signingInputs),
+        signingContext: HdSignerPayload(signingInputs),
       );
     } on TransactionException {
       rethrow;

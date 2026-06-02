@@ -33,45 +33,118 @@ class BroadcastResult extends StatelessWidget {
     },
     builder: (context, regTestState) {
       final isProcessing = regTestState.status == RegtestMiningStatus.processing;
-      final isSuccessful = regTestState.status == RegtestMiningStatus.successful;
+      final isConfirmed = regTestState.status == RegtestMiningStatus.successful;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Broadcasted',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.green),
+          // Step 1 — Broadcast
+          const _StepTile(
+            number: 1,
+            title: 'Broadcasted to mempool',
+            subtitle: 'The transaction is signed and sent to the Bitcoin node. '
+                'It is unconfirmed until included in a block.',
+            status: _StepStatus.done,
           ),
-          const SizedBox(height: 8),
           if (txid case final t?)
-            SelectableText(
-              t,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            ),
-          const SizedBox(height: 16),
-          if (isSuccessful)
-            Text(
-              'Block mined!',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.green),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 0, 12),
+              child: SelectableText(
+                t,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+              ),
             )
           else
-            ElevatedButton.icon(
-              onPressed: isProcessing || changeAddress.isEmpty
-                  ? null
-                  : () => context.read<RegtestMiningBloc>().add(
-                      MineBlockRequested(toAddress: changeAddress),
-                    ),
-              icon: isProcessing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.settings_outlined),
-              label: Text(isProcessing ? 'Mining…' : 'Mine 1 block'),
+            const SizedBox(height: 12),
+
+          // Step 2 — Confirm
+          _StepTile(
+            number: 2,
+            title: isConfirmed ? 'Confirmed — block mined!' : 'Mine a block to confirm',
+            subtitle: isConfirmed
+                ? 'The transaction now has 1 confirmation. '
+                    'It will appear in your transaction history.'
+                : 'In regtest there are no real miners. '
+                    'Mine 1 block manually to include this transaction in the blockchain.',
+            status: isConfirmed
+                ? _StepStatus.done
+                : isProcessing
+                    ? _StepStatus.inProgress
+                    : _StepStatus.pending,
+          ),
+          if (!isConfirmed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 0, 0),
+              child: ElevatedButton.icon(
+                onPressed: isProcessing || changeAddress.isEmpty
+                    ? null
+                    : () => context.read<RegtestMiningBloc>().add(
+                        MineBlockRequested(toAddress: changeAddress),
+                      ),
+                icon: isProcessing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.settings_outlined),
+                label: Text(isProcessing ? 'Mining…' : 'Mine 1 block'),
+              ),
             ),
         ],
       );
     },
   );
+}
+
+enum _StepStatus { pending, inProgress, done }
+
+class _StepTile extends StatelessWidget {
+  const _StepTile({
+    required this.number,
+    required this.title,
+    required this.subtitle,
+    required this.status,
+  });
+
+  final int number;
+  final String title;
+  final String subtitle;
+  final _StepStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final (icon, color) = switch (status) {
+      _StepStatus.done => (Icons.check_circle, Colors.green),
+      _StepStatus.inProgress => (Icons.hourglass_top, Colors.orange),
+      _StepStatus.pending => (Icons.radio_button_unchecked, Colors.grey),
+    };
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Step $number — $title',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: status == _StepStatus.pending ? Colors.grey : null,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

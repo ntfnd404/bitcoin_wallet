@@ -59,6 +59,7 @@ final class SendBloc extends Bloc<SendEvent, SendState> with ActionBlocMixin<Sen
           status: SendStatus.awaitingConfirmation,
           preparation: preparation,
           strategies: preparation.strategies,
+          failedStrategies: preparation.failedStrategies,
           selectedStrategy: _recommender.recommend(
             preparation.strategies,
             event.feeRateSatPerVbyte,

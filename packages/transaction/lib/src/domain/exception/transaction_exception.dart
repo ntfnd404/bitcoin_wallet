@@ -71,8 +71,29 @@ final class UnknownPinnedInputAddressException extends TransactionException {
   String toString() => 'UnknownPinnedInputAddressException(txid: $txid, vout: $vout, address: $address)';
 }
 
+/// Output amount is below Bitcoin Core's dust threshold for the recipient address type.
+///
+/// Bitcoin Core returns RPC code -26 when the output value is below the
+/// minimum relay threshold (294 sat for P2WPKH, 330 sat for P2TR, 546 sat for P2PKH/P2SH).
+final class TransactionDustOutputException extends TransactionException {
+  const TransactionDustOutputException();
+
+  @override
+  String toString() =>
+      'Amount is below the dust limit for this address type. '
+      'Increase the amount (min ~546 sat for legacy, ~330 sat for taproot, ~294 sat for segwit).';
+}
+
+/// Bitcoin Core node is not reachable — Docker container is likely not running.
+final class TransactionNodeUnreachableException extends TransactionException {
+  const TransactionNodeUnreachableException();
+
+  @override
+  String toString() => 'Bitcoin Core node is not running. Start the Docker container and try again.';
+}
+
 /// A chosen [CoinCandidate] has no matching entry in
-/// [HdSigningContext.inputs] — the signer cannot produce a signature for it.
+/// [HdSignerPayload.inputs] — the signer cannot produce a signature for it.
 ///
 /// Carries only `(txid, vout)` to identify the offending input. The
 /// candidate's address and BIP-32 derivation index are deliberately **not**
