@@ -16,8 +16,9 @@ The default mode is intentionally professional. Process quality comes from clear
 | Lane | Use when | Required path |
 |------|----------|---------------|
 | `Trivial` | typo, rename, tiny local fix | implement → review |
+| `Professional Short` | UI-only, ≤2 modules, no security/storage/auth/migrations | spec-critic (no security-reviewer) |
 | `Professional` | medium/large feature, multi-file refactor, user-visible behavior change | full pipeline |
-| `Critical` | wallet, seed, keys, auth, crypto, signing, storage migration, API contract, cross-cutting architecture | full pipeline + security review |
+| `Critical` | wallet, seed, keys, auth, crypto, signing, storage migration, API contract | full pipeline + security review |
 
 Repository default: `Professional`  
 Security-sensitive default: `Critical`
@@ -43,6 +44,24 @@ Canonical definition lives in the AIDD methodology vault: `Methodology/Lanes.md`
 > - There are security/privacy/storage consequences
 
 Commit-trace rule: every Trivial commit must carry the `trivial:` prefix OR an issue link in the commit message. Without one of those two markers the short path is not auditable and the commit must be reclassified to `Professional`.
+
+### Professional Short lane
+
+Entry criteria — a ticket qualifies for Professional Short only when ALL of the following hold:
+
+- Change is UI-only (visual layout, widget tree, styling, copy changes)
+- No more than 2 modules are affected
+- No database or storage migrations
+- Does NOT touch any of these surfaces: security, storage, domain-API, or auth
+- No public contract changes (no API additions, removals, or breaking renames)
+
+Artifact cut — PRD contains Goal + Scope + AC only; no full scenario matrix required. Research is optional. Vision is optional.
+
+Phase count: 1–3 phases maximum.
+
+Gate preservation: spec-critic is retained and runs as normal. security-reviewer is omitted. All other gates apply.
+
+Reclassification rule: if any batch during implementation reveals a security, storage, domain-API, or auth surface that was not anticipated at ticket creation, the ticket is immediately reclassified to full Professional or Critical. The reclassification is recorded in the tasklist and phase brief before continuing.
 
 ## Runtime Sources Of Truth
 
@@ -220,6 +239,10 @@ Authored by `analyst`; lives at
 PRD links to it from `## Alternatives` (or equivalent). Existing tickets
 that pre-date Phase 3 do NOT retroactively need a discovery file.
 
+### Critical-lane discovery
+
+When a discovery artifact exists for a Critical ticket, rejected alternatives MUST be preserved with reasons. Dispositions of "noted" or "summarised" are not acceptable — the full rationale for each rejection must be present so that future reviewers can reconstruct the decision context.
+
 ## Verifiable AC
 
 Every PRD acceptance criterion ships as a `test:` / `command:` / `manual:` shell-evaluable predicate. The patterns below codify the durable shapes that emerged from spec-critic feedback.
@@ -247,12 +270,6 @@ git diff <SHA> | grep -v -E "<allowlist>" | grep -E "\bBW-[0-9A-Z]+\b" | wc -l  
 ```
 
 Both the **keyword leg** and the **ticket leg** must each return a zero count independently. A single-pipe compound form (`... | grep keywords | grep tickets`) is forbidden: it lets a non-ticket keyword leak escape because the final ticket grep drops the line. The **two-leg** shape is the only acceptable form for anti-leak ACs.
-
-### Exclusion-pattern hygiene
-
-When an AC uses `grep -v` to carve out historical or intentionally-retained references, the exclusion patterns MUST anchor each filename to its enclosing directory segment. Use `/phase/phase-3.md`, NOT bare `/phase-3.md` — the unanchored form will also match `phase-30.md`, `phase-3.md.bak`, or any stray `phase-3.md` placed under an unintended subdirectory later.
-
-Exclusion list is exhaustive; if a stale reference surfaces under a non-excluded subdir, fix the artifact rather than widen the exclusion. Operator drift toward broader exclusions hides regressions that the AC was built to catch.
 
 ### AC remediation routes
 
@@ -379,6 +396,17 @@ The implementer must apply project post-processing on top of any skill output: n
 
 Implementation is batch-based.
 
+### Phase budget
+
+Maximum phases per lane:
+
+| Lane | Phase limit | Note |
+|------|-------------|------|
+| `Critical` | No limit | Driven by risk and security boundaries |
+| `Professional` | Soft 3–5 | If scope exceeds 5, consider splitting into a second ticket |
+| `Professional Short` | 1–3 | Hard cap; exceeding 3 triggers reclassification to Professional |
+| `Trivial` | No phases | Single commit; no phase structure |
+
 Batch rules:
 
 - one batch is one coherent bounded change set
@@ -470,6 +498,7 @@ Recovery:
 
 - scope creep mid-phase: create a new phase
 - architecture uncertainty: create ADR, then update vision and plan
+- QA_FAIL: reviewer re-opens the phase, implementer fixes the failing checks, QA re-runs from a fresh shell
 
 `RELEASE_READY` requires:
 
@@ -478,3 +507,4 @@ Recovery:
 - every `Critical` phase at `SECURITY_REVIEW_OK` and `QA_PASS`
 - validator clean
 - docs sync completed
+
